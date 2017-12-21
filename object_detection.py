@@ -11,7 +11,6 @@ import six.moves.urllib as urllib
 import sys
 import tarfile
 import tensorflow as tf
-import zipfile
 import cv2
 
 # Protobuf Compilation (once necessary)
