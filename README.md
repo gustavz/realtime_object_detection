@@ -8,6 +8,6 @@ My Setup:
 - OpenCV 3.3.1
 
 
-Getting Started:
-run object_detection.py Script
+Getting Started:  <br />
+run object_detection.py Script  <br />
 Enjoy!
