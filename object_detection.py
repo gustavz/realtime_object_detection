@@ -3,9 +3,8 @@
 """
 Created on Thu Dec 21 12:01:40 2017
 
-@author: gustav
+@author: GustavZ
 """
-# Default Google ipynb tutorial
 import numpy as np
 import os
 import six.moves.urllib as urllib
@@ -13,16 +12,10 @@ import sys
 import tarfile
 import tensorflow as tf
 import zipfile
-
 import cv2
 
-# Add Libraries to PYTHONPATH
-#sys.path.append('../models/research')
-#sys.path.append('../models/research/slim')
-#sys.path.append('../object_detection')
-
-# Protobuf Compilation
-#os.system('protoc object_detection/protos/*.proto --python_out=.')
+# Protobuf Compilation (once necessary)
+os.system('protoc object_detection/protos/*.proto --python_out=.')
 
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
@@ -32,9 +25,6 @@ from object_detection.utils import visualization_utils as vis_util
 video_input = 0
 width = 480
 height = 360
-
-#Current working path
-CWD_PATH = os.getcwd()
 
 # Model preparation
 # What model to download.
@@ -76,13 +66,13 @@ label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
 categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
 category_index = label_map_util.create_category_index(categories)
 
-print ("Press 'q' to Exit")
-
+# Start Video Stream
 video_stream = cv2.VideoCapture(video_input)
 video_stream.set(cv2.CAP_PROP_FRAME_WIDTH, width)
 video_stream.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 
 # Detection
+print ("Press 'q' to Exit")
 with detection_graph.as_default():
   with tf.Session(graph=detection_graph) as sess: # config=tf.ConfigProto(log_device_placement=True)
     # Definite input and output Tensors for detection_graph
