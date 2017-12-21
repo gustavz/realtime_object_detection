@@ -9,5 +9,5 @@ My Setup:
 
 
 Getting Started:  <br />
-run object_detection.py Script  <br />
-Enjoy!
+- run object_detection.py Script  <br />
+- Enjoy!
