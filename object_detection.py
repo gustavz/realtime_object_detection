@@ -8,22 +8,25 @@ Created on Thu Dec 21 12:01:40 2017
 import numpy as np
 import os
 import six.moves.urllib as urllib
-import sys
 import tarfile
 import tensorflow as tf
 import cv2
+
 
 # Protobuf Compilation (once necessary)
 os.system('protoc object_detection/protos/*.proto --python_out=.')
 
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
+from stuff.helper import FPS2
 
 # Define Video Input
+# Must be OpenCV readable
 # 0 = Default Camera
 video_input = 0
-width = 480
-height = 360
+width = 640
+height = 480
+fps_interval = 3
 
 # Model preparation
 # What model to download.
@@ -31,7 +34,7 @@ MODEL_NAME = 'ssd_mobilenet_v1_coco_2017_11_17'
 MODEL_FILE = MODEL_NAME + '.tar.gz'
 DOWNLOAD_BASE = 'http://download.tensorflow.org/models/object_detection/'
 # Path to frozen detection graph. This is the actual model that is used for the object detection.
-PATH_TO_CKPT = MODEL_NAME + '/frozen_inference_graph.pb'
+PATH_TO_CKPT = 'models/' + MODEL_NAME + '/frozen_inference_graph.pb'
 # List of the strings that is used to add correct label for each box.
 LABEL_MAP = 'mscoco_label_map.pbtxt'
 PATH_TO_LABELS = 'object_detection/data/' + LABEL_MAP
@@ -83,7 +86,8 @@ with detection_graph.as_default():
     detection_scores = detection_graph.get_tensor_by_name('detection_scores:0')
     detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')
     num_detections = detection_graph.get_tensor_by_name('num_detections:0')
-    
+    # fps calculation
+    fps = FPS2(fps_interval).start()
     while video_stream.isOpened():
       ret_val,image_np = video_stream.read()
       # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
@@ -101,10 +105,16 @@ with detection_graph.as_default():
           category_index,
           use_normalized_coordinates=True,
           line_thickness=8)
-      cv2.imshow('Visualizer', image_np)
+      cv2.imshow('object_detection', image_np)
       # Exit Option
       if cv2.waitKey(1) & 0xFF == ord('q'):
           break
-      
+      fps.update()
+
+# End everything
+video_stream.release()     
 cv2.destroyAllWindows()
+fps.stop()
+print('[INFO] elapsed time (total): {:.2f}'.format(fps.elapsed()))
+print('[INFO] approx. FPS: {:.2f}'.format(fps.fps()))
 
