@@ -18,8 +18,8 @@ My Setup:
 Current Performance on SSD Mobilenet:
 - Dell Laptop with i7 and GeForce GTX 1050: 22fps
 - Nvidia Jetson Tx2: 5fps
-
  <br />
- Known Issues:
- - if the script won't compile correctly: just re-run it two or three timese. Seems random.
- - ...
+
+Known Issues:
+- if the script won't compile correctly: just re-run it two or three timese. Seems random.
+- ...
