@@ -3,9 +3,9 @@ My Version of Googles Object Detection API. Plug and Play Video Object Detection
 <br />
 
 ## Getting Started:  
-- Optional: change Input Params at the beginning of object_detection.py
+- Optional: change Input Params at the beginning of object_detection.py (default is onboard-Cam = 0)
 - run object_detection.py Script  <br />
-- Enjoy
+- Enjoy!
 <br />
 
 ## My Setup:
