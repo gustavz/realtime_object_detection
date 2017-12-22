@@ -9,6 +9,12 @@ My Setup:
 - OpenCV 3.3.1
  <br />
 
-Getting Started:  <br />
+Getting Started:  
+- Optional: change Input Params at the beginning of object_detection.py
 - run object_detection.py Script  <br />
-- Enjoy!
+- Enjoy
+<br />
+
+Current Performance on SSD Mobilenet:
+- Dell Laptop with i7 and GeForce GTX 1050: 22fps
+- Nvidia Jetson Tx2: 5fps
