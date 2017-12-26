@@ -1,5 +1,6 @@
 # Tensorflow-Object-Detection
-My Version of Googles Object Detection API. Plug and Play Video Object Detection.
+My Version of Googles Object Detection API. Plug and Play Video Object Detection. <br />
+It displays reached fps every three seconds and also the final mean value after ending the Visualizer.
 <br />
 
 ## Getting Started:  
