@@ -4,9 +4,9 @@ It displays reached fps every three seconds and also the final mean value after 
 <br />
 
 ## Getting Started:  
-- Optional: change *Input Params* at the beginning of object_detection.py
+- Optional: change *INPUT PARAMS* at the beginning of *object_detection.py*
 - If you are not interested in Visualization and want to increase FPS: set *visualize* to False
-- run object_detection.py Script  <br />
+- run *object_detection.py* Script  <br />
 - Enjoy!
 <br />
 
@@ -24,4 +24,5 @@ It displays reached fps every three seconds and also the final mean value after 
 
 ## Known Issues:
 - if the script won't compile correctly: just re-run it two or three timese. Seems random.
+- if you somehow closed or e the script/terminal before it finished successfully it might be necsessary to restart python/terminal/system
 - ...
