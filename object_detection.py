@@ -24,7 +24,7 @@ from stuff.helper import FPS2, WebcamVideoStream
 # Must be OpenCV readable
 # 0 = Default Camera
 video_input = 0
-visualize = False
+visualize = True
 max_frames = 300 #only used if visualize==False
 width = 640
 height = 480
