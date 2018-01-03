@@ -4,8 +4,8 @@ It displays reached fps every three seconds and also the final mean value after 
 <br />
 
 ## Getting Started:  
-- Optional: change *INPUT PARAMS* at the beginning of *object_detection.py*
-- If you are not interested in Visualization and want to increase FPS: set *visualize* to False
+- Optional: change *INPUT PARAMS* at the beginning of *object_detection.py* (default input is *video0* with size 480x640)
+- If you are not interested in Visualization and want to increase FPS: set *visualize* to False. If you do this make sure to chose a proper *max_frames* value (default is 300)
 - run *object_detection.py* Script  <br />
 - Enjoy!
 <br />
