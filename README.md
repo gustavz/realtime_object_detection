@@ -4,7 +4,8 @@ It displays reached fps every three seconds and also the final mean value after 
 <br />
 
 ## Getting Started:  
-- Optional: change Input Params at the beginning of object_detection.py (default is onboard-Cam = 0)
+- Optional: change *Input Params* at the beginning of object_detection.py
+- If you are not interested in Visualization and want to increase FPS: set *visualize* to False
 - run object_detection.py Script  <br />
 - Enjoy!
 <br />
@@ -16,8 +17,8 @@ It displays reached fps every three seconds and also the final mean value after 
 - OpenCV 3.3.1
  <br />
 
-## Current Performance on SSD Mobilenet:
-- Dell Laptop with i7 and GeForce GTX 1050: 22fps
+## Current Performance on SSD Mobilenet (with|without visualzation):
+- Dell Laptop with i7 and GeForce GTX 1050: 22fps | 25fps
 - Nvidia Jetson Tx2: 5fps
  <br />
 
