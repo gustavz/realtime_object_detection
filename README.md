@@ -24,5 +24,5 @@ It displays reached fps every three seconds and also the final mean value after 
 
 ## Known Issues:
 - if the script won't compile correctly: just re-run it two or three timese. Seems random.
-- if you somehow closed or e the script/terminal before it finished successfully it might be necsessary to restart python/terminal/system
+- if you somehow closed or interrupted the script/terminal before it finished successfully it might be necessary to restart python/terminal/system
 - ...
