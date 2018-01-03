@@ -20,12 +20,12 @@ from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
 from stuff.helper import FPS2, WebcamVideoStream
 
-# Define Video Input
+# INPUT PARAMS
 # Must be OpenCV readable
 # 0 = Default Camera
+video_input = 0
 visualize = False
 max_frames = 300 #only used if visualize==False
-video_input = 0
 width = 640
 height = 480
 fps_interval = 3
