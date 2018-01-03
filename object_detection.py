@@ -18,15 +18,18 @@ os.system('protoc object_detection/protos/*.proto --python_out=.')
 
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
-from stuff.helper import FPS2
+from stuff.helper import FPS2, WebcamVideoStream
 
 # Define Video Input
 # Must be OpenCV readable
 # 0 = Default Camera
+visualize = False
+max_frames = 300 #only used if visualize==False
 video_input = 0
 width = 640
 height = 480
 fps_interval = 3
+bbox_thickness = 8
 
 # Model preparation
 # What model to download.
@@ -69,14 +72,11 @@ categories = label_map_util.convert_label_map_to_categories(label_map, max_num_c
 category_index = label_map_util.create_category_index(categories)
 
 # Start Video Stream
-video_stream = cv2.VideoCapture(video_input)
-video_stream.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-video_stream.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-
+video_stream = WebcamVideoStream(video_input,width,height).start()
+cur_frames = 0
 # Detection
-print ("Press 'q' to Exit")
 with detection_graph.as_default():
-  with tf.Session(graph=detection_graph) as sess: # config=tf.ConfigProto(log_device_placement=True)
+  with tf.Session(graph=detection_graph) as sess:
     # Definite input and output Tensors for detection_graph
     image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
     # Each box represents a part of the image where a particular object was detected.
@@ -88,8 +88,9 @@ with detection_graph.as_default():
     num_detections = detection_graph.get_tensor_by_name('num_detections:0')
     # fps calculation
     fps = FPS2(fps_interval).start()
-    while video_stream.isOpened():
-      ret_val,image_np = video_stream.read()
+    print ("Press 'q' to Exit")
+    while video_stream.isActive():
+      image_np = video_stream.read()
       # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
       image_np_expanded = np.expand_dims(image_np, axis=0)
       # Actual detection.
@@ -104,17 +105,22 @@ with detection_graph.as_default():
           np.squeeze(scores),
           category_index,
           use_normalized_coordinates=True,
-          line_thickness=8)
-      cv2.imshow('object_detection', image_np)
-      # Exit Option
-      if cv2.waitKey(1) & 0xFF == ord('q'):
-          break
+          line_thickness=bbox_thickness)
+      if visualize:
+          cv2.imshow('object_detection', image_np)
+          # Exit Option
+          if cv2.waitKey(1) & 0xFF == ord('q'):
+              break
+      else:
+          cur_frames += 1
+          if cur_frames >= max_frames:
+              break
+      # fps calculation
       fps.update()
 
 # End everything
-video_stream.release()     
-cv2.destroyAllWindows()
 fps.stop()
+video_stream.stop()     
+cv2.destroyAllWindows()
 print('[INFO] elapsed time (total): {:.2f}'.format(fps.elapsed()))
 print('[INFO] approx. FPS: {:.2f}'.format(fps.fps()))
-
