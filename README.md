@@ -17,7 +17,7 @@ It displays reached fps every three seconds and also the final mean value after 
 - OpenCV 3.3.1
  <br />
 
-## Current Performance on SSD Mobilenet (with|without visualzation):
+## Current Performance on SSD Mobilenet (with|without visualization):
 - Dell Laptop with i7 and GeForce GTX 1050: 22fps | 29fps
 - Nvidia Jetson Tx2: 5fps
  <br />
