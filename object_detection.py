@@ -12,24 +12,26 @@ import tarfile
 import tensorflow as tf
 import cv2
 
-
 # Protobuf Compilation (once necessary)
-os.system('protoc object_detection/protos/*.proto --python_out=.')
+#os.system('protoc object_detection/protos/*.proto --python_out=.')
 
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
 from stuff.helper import FPS2, WebcamVideoStream
 
-# INPUT PARAMS
-# Must be OpenCV readable
-# 0 = Default Camera
-video_input = 0
+
+############## INPUT PARAMS ##############
+
+video_input = 0              # Input Must be OpenCV readable 
 visualize = True
-max_frames = 300 #only used if visualize==False
-width = 640
-height = 480
-fps_interval = 3
+max_frames = 500             # only used if visualize==False
+width = 300                  # 300x300 is used by SSD_Mobilenet -> highest fps
+height = 300
+fps_interval = 3             # Intervall to print fps in console
 bbox_thickness = 8
+allow_memory_growth = True   # restart python to apply changes on memory usage
+
+##########################################
 
 # Model preparation
 # What model to download.
@@ -71,12 +73,15 @@ label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
 categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
 category_index = label_map_util.create_category_index(categories)
 
-# Start Video Stream
-video_stream = WebcamVideoStream(video_input,width,height).start()
+# Session Config: Limit GPU Memory Usage
+config = tf.ConfigProto()
+config.gpu_options.allow_growth=allow_memory_growth
+
+print (config)
 cur_frames = 0
 # Detection
 with detection_graph.as_default():
-  with tf.Session(graph=detection_graph) as sess:
+  with tf.Session(graph=detection_graph, config = config) as sess:
     # Definite input and output Tensors for detection_graph
     image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
     # Each box represents a part of the image where a particular object was detected.
@@ -88,6 +93,8 @@ with detection_graph.as_default():
     num_detections = detection_graph.get_tensor_by_name('num_detections:0')
     # fps calculation
     fps = FPS2(fps_interval).start()
+    # Start Video Stream
+    video_stream = WebcamVideoStream(video_input,width,height).start()
     print ("Press 'q' to Exit")
     while video_stream.isActive():
       image_np = video_stream.read()
@@ -97,8 +104,9 @@ with detection_graph.as_default():
       (boxes, scores, classes, num) = sess.run(
           [detection_boxes, detection_scores, detection_classes, num_detections],
           feed_dict={image_tensor: image_np_expanded})
-      # Visualization of the results of a detection.
-      vis_util.visualize_boxes_and_labels_on_image_array(
+      if visualize:
+          # Visualization of the results of a detection.
+          vis_util.visualize_boxes_and_labels_on_image_array(
           image_np,
           np.squeeze(boxes),
           np.squeeze(classes).astype(np.int32),
@@ -106,7 +114,6 @@ with detection_graph.as_default():
           category_index,
           use_normalized_coordinates=True,
           line_thickness=bbox_thickness)
-      if visualize:
           cv2.imshow('object_detection', image_np)
           # Exit Option
           if cv2.waitKey(1) & 0xFF == ord('q'):
