@@ -27,15 +27,17 @@ visualize = True
 max_frames = 500             # only used if visualize==False
 width = 300                  # 300x300 is used by SSD_Mobilenet -> highest fps
 height = 300
-fps_interval = 3             # Intervall to print fps in console
+fps_interval = 3             # Intervall [s] to print fps in console
 bbox_thickness = 8
 allow_memory_growth = True   # restart python to apply changes on memory usage
+det_intervall = 75           # intervall [frames] to print detections to console
+det_th = 0.5                 # detection threshold for det_intervall
 
 ##########################################
 
 # Model preparation
 # What model to download.
-MODEL_NAME = 'ssd_mobilenet_v1_coco_2017_11_17'
+MODEL_NAME = 'ssd_mobilenet_v1_coco_2017_11_17' 
 MODEL_FILE = MODEL_NAME + '.tar.gz'
 DOWNLOAD_BASE = 'http://download.tensorflow.org/models/object_detection/'
 # Path to frozen detection graph. This is the actual model that is used for the object detection.
@@ -54,8 +56,8 @@ if not os.path.isfile(PATH_TO_CKPT):
     for file in tar_file.getmembers():
       file_name = os.path.basename(file.name)
       if 'frozen_inference_graph.pb' in file_name:
-        tar_file.extract(file, os.getcwd())
-    os.remove('../' + MODEL_FILE)
+        tar_file.extract(file, os.getcwd() + '/models/')
+    os.remove(os.getcwd() + '/' + MODEL_FILE)
 else:
     print('Model found. Proceed.')
 
@@ -77,7 +79,6 @@ category_index = label_map_util.create_category_index(categories)
 config = tf.ConfigProto()
 config.gpu_options.allow_growth=allow_memory_growth
 
-print (config)
 cur_frames = 0
 # Detection
 with detection_graph.as_default():
@@ -120,6 +121,10 @@ with detection_graph.as_default():
               break
       else:
           cur_frames += 1
+          for box, score, _class in zip(np.squeeze(boxes), np.squeeze(scores), np.squeeze(classes)):
+                if cur_frames%det_intervall==0 and score > det_th:
+                    label = category_index[_class]['name']
+                    print(label, score, box)
           if cur_frames >= max_frames:
               break
       # fps calculation
