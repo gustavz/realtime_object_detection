@@ -18,8 +18,8 @@ It displays reached fps every three seconds and also the final mean value after 
  <br />
 
 ## Current Performance on SSD Mobilenet (with|without visualization):
-- Dell Laptop with i7 and GeForce GTX 1050: 22fps | 29fps
-- Nvidia Jetson Tx2: 5fps
+- Dell Laptop with i7 and GeForce GTX 1050: **24fps | 29fps**
+- Nvidia Jetson Tx2: **5fps**
  <br />
 
 ## Known Issues:
