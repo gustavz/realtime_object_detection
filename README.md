@@ -5,7 +5,10 @@ It displays reached fps every three seconds and also the final mean value after 
 
 ## Getting Started:  
 - Optional: change **INPUT PARAMS** at the beginning of **object_detection.py**
-- If you are not interested in Visualization and want to increase FPS: set **visualize** to **False**. If you do this make sure to chose a proper **max_frames** value
+- If you are not interested in Visualization and want to increase FPS: set **visualize** to **False**. <br /> 
+If you do this make sure to chose a proper **max_frames** value
+- if you want to import the pre-trained frozen Model *.pb file* to Tensorboard to visualize the Graph, <br />
+run **frozenmodel_to_tensorboard.py** (inside change Model_Name if necessary)
 - run **object_detection.py** Script  <br />
 - Enjoy!
 <br />
