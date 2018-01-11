@@ -11,7 +11,7 @@ The following work has been done based on the original API:
 - Added Option for detection without visualization to increase performance
 - Gathered necessary files to be able to quickly export new Protobuf-files based on pre-trained Models
 - Exported new frozen Model based on *ssd_mobilenet_v1_coco* with altered *score_threshold* for *batch_non_max_suppression* to increase perfomance
-- Added a script to be able to create a tfEvent-file for Tensorboard Graph visualizationt
+- Added a script to be able to create tfEvent-files for Tensorboard Graph visualizationt
 - **Results: Overall Performance Increase of up to 100%** depending on the running system
 <br />
 
