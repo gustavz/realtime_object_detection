@@ -10,8 +10,8 @@ The following work has been done based on the original API:
 - Calculate Fps, print the current value to console in a given intervall aswell as the overall mean value at the end
 - Added Option for detection without visualization to increase performance
 - Gathered necessary files to be able to quickly export new Protobuf-files based on pre-trained Models
-- Exported new frozen Model based on ssd_mobilenet_v1 with altered score_threshold for batch_non_max_suppression to increase perfomance
-- Added a script to be able to create a tfEvent file for Tensorboard Graph visualizationt
+- Exported new frozen Model based on *ssd_mobilenet_v1_coco* with altered *score_threshold* for *batch_non_max_suppression* to increase perfomance
+- Added a script to be able to create a tfEvent-file for Tensorboard Graph visualizationt
 - **Results: Overall Performance Increase of up to 100%** depending on the running system
 <br />
 
