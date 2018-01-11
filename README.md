@@ -1,11 +1,23 @@
 # Tensorflow-Object-Detection
-My Version of Googles Object Detection API. Plug and Play Video Object Detection. <br />
-It displays reached fps every three seconds and also the final mean value after ending the Visualizer.
+My Version of Googles Object Detection API.<br />
+<br />
+
+## About the Project
+The Idea was to create a realtime capable object detection pipeline on various machines. <br />
+Plug and play, ready to use without deep previous knowledge.<br /> <br />
+The following work has been done based on the original API:
+- Capturing frames of a Camera-Input using OpenCV in seperate thread to increase performance
+- Calculate Fps, print the current value to console in a given intervall aswell as the overall mean value at the end
+- Added Option for detection without visualization to increase performance
+- Gathered necessary files to be able to quickly export new Models based on pre-trained Models and added a HowTo-Wiki
+- Exported new frozen Model based on ssd_mobilenet_v1 with altered score_threshold for batch_non_max_suppression to increase perfomance
+- Added a script to be able to create a tfEvent file for Tensorboard Graph visualizationt
+- **Results: Overall Performance Increase of up to 100%** depending on the running system
 <br />
 
 ## Getting Started:  
 - Optional: change **INPUT PARAMS** at the beginning of **object_detection.py**
-- If you are not interested in Visualization and want to increase FPS: set **visualize** to **False**. <br /> 
+- If you are not interested in visualization: set **visualize** to **False**. <br /> 
 If you do this make sure to chose a proper **max_frames** value
 - if you want to import the pre-trained frozen Model *.pb file* to Tensorboard to visualize the Graph, <br />
 run **frozenmodel_to_tensorboard.py** and follow the command line instructions <br />
@@ -22,8 +34,8 @@ run **frozenmodel_to_tensorboard.py** and follow the command line instructions <
  <br />
 
 ## Current Performance on SSD Mobilenet (with|without visualization):
-- Dell Laptop with i7 and GeForce GTX 1050: **24fps | 29fps**
-- Nvidia Jetson Tx2: **5fps**
+- Dell Laptop with i7 and GeForce GTX 1050: **35fps | 45fps**
+- Nvidia Jetson Tx2: **8fps | 10 fps**
  <br />
 
 ## Known Issues:

@@ -7,6 +7,6 @@ protoc object_detection/protos/*.proto --python_out=.
 # from the object_detection directory
 python export_inference_graph.py \
     --input_type image_tensor \
-    --pipeline_config_path /home/gustav/workspace/realtime_object_detection/tests/ssd_mobilenet_v12_coco.config \
-    --trained_checkpoint_prefix /home/gustav/workspace/realtime_object_detection/models/ssd_mobilenet_v1_coco_2017_11_17/model.ckpt \
-    --output_directory /home/gustav/workspace/realtime_object_detection/models/ssd_mobilenet_v12_coco
+    --pipeline_config_path /home/gustav/workspace/realtime_object_detection/tests/ssd_mobilenet_v11_coco.config \
+    --trained_checkpoint_prefix /home/gustav/workspace/realtime_object_detection/tests/ssd_mobilenet_checkpoints/model.ckpt \
+    --output_directory /home/gustav/workspace/realtime_object_detection/models/ssd_mobilenet_v11_coco
