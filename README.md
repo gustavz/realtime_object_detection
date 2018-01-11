@@ -1,5 +1,5 @@
-# Tensorflow-Object-Detection
-My Version of [Googles Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection).<br />
+# Realtime-Object-Detection
+My Version of [Tensorflows Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection).<br />
 <br />
 
 ## About the Project
