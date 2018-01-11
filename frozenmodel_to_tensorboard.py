@@ -8,9 +8,9 @@ Created on Wed Jan 10 09:45:23 2018
 import tensorflow as tf
 from tensorflow.python.platform import gfile
 
-MODEL_NAME = 'ssd_mobilenet_v1_coco_2017_11_17'
+MODEL_NAME = 'ssd_mobilenet_v11_coco'
 MODEL_FILE ='models/' + MODEL_NAME +'/frozen_inference_graph.pb'
-LOG_DIR='models/ssd_mobilenet_v1_coco_2017_11_17/log/'
+LOG_DIR='models/ssd_mobilenet_v11_coco/log/'
 
 with tf.Session() as sess:
     

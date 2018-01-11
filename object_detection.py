@@ -23,7 +23,7 @@ from stuff.helper import FPS2, WebcamVideoStream
 ############## INPUT PARAMS ##############
 
 video_input = 0              # Input Must be OpenCV readable 
-visualize = False
+visualize = True
 max_frames = 500             # only used if visualize==False
 width = 300                  # 300x300 is used by SSD_Mobilenet -> highest fps
 height = 300
