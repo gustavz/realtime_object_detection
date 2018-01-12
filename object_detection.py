@@ -17,7 +17,7 @@ os.system('protoc object_detection/protos/*.proto --python_out=.')
 
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
-from stuff.helper import FPS2, WebcamVideoStream
+from helper.helper import FPS2, WebcamVideoStream
 
 
 ############## INPUT PARAMS ##############
@@ -37,7 +37,7 @@ det_th = 0.5                 # detection threshold for det_intervall
 
 # Model preparation
 # What model to download.
-MODEL_NAME = 'ssd_mobilenet_v11_coco' #'ssd_mobilenet_v1_coco_2017_11_17' 
+MODEL_NAME = 'ssd_mobilenet_v11_coco' 
 MODEL_FILE = MODEL_NAME + '.tar.gz'
 DOWNLOAD_BASE = 'http://download.tensorflow.org/models/object_detection/'
 # Path to frozen detection graph. This is the actual model that is used for the object detection.
