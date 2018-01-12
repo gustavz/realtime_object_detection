@@ -17,7 +17,7 @@ import cv2
 
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
-from helper.helper import FPS2, WebcamVideoStream
+from stuff.helper import FPS2, WebcamVideoStream
 
 
 ############## INPUT PARAMS ##############
