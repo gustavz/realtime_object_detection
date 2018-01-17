@@ -1,9 +1,13 @@
 ### HowTo Wiki for some very usefull tensorflow scripts
 ## change paths according to your system
 
-## make sure to do protobuf compilation before anything else
-# from the realtime_object_detection directory
+## make sure to do protobuf compilation and add pyton path before anything else
+
+# From tensorflow/models/research
 protoc object_detection/protos/*.proto --python_out=.
+
+# From tensorflow/models/research
+export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
 
 ## export new frozen model from a pre-trained checkpoint
 # from the object_detection directory
@@ -22,7 +26,11 @@ python -m tensorflow.python.tools.optimize_for_inference \
 
 
 
-## MAYBE DEPRECATED (Not tested yet)
+
+
+
+
+### MAYBE DEPRECATED (Not tested yet)
 
 # summarize graph to get information about the model content
 bazel build tensorflow/tools/graph_transforms:summarize_graph && \
