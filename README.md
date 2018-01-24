@@ -12,16 +12,15 @@ The following work has been done based on the original API:
 - Added Option for detection without visualization to increase performance
 - Added optional automated model download from [model-zoo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md) if necessary
 - Added a script to be able to create tfEvent-files for Tensorboard Graph visualizationt
-- Gathered necessary files to be able to quickly export new Protobuf-files based on pre-trained Checkpoints
+- Gathered necessary files to be able to export new frozen Models based on trained Checkpoints
 - Exported new frozen Model based on *ssd_mobilenet_v1_coco* with altered *score_threshold* for *batch_non_max_suppression* to increase perfomance
 - Added a script to be able to create tfEvent-files for Tensorboard Graph visualization
 - **Results: Overall Performance Increase of up to 100%** depending on the running system
 <br />
 
 ## Getting Started:  
-- Optional: change **INPUT PARAMS** at the beginning of **object_detection.py**
-- If you are not interested in visualization: set **visualize** to **False**. <br /> 
-If you do this make sure to chose a proper **max_frames** value
+- Optional: change **INPUT PARAMS** which can be passed to **object_detection.detection**
+- For example: If you are not interested in visualization: set **visualize** to **False**. <br />
 - if you want to import the pre-trained frozen Model *.pb file* to Tensorboard to visualize the Graph, <br />
 run **frozenmodel_to_tensorboard.py** and follow the command line instructions <br />
 (opt: change **MODEL_NAME**  inside if necessary)
@@ -40,8 +39,3 @@ run **frozenmodel_to_tensorboard.py** and follow the command line instructions <
 - Dell Laptop with i7 and GeForce GTX 1050: **35fps | 45fps**
 - Nvidia Jetson Tx2: **8fps | 10 fps**
  <br />
-
-## Known Issues:
-- if the script won't compile correctly: just re-run it two or three timese. Seems random.
-- if you somehow closed or interrupted the script/terminal before it finished successfully it might be necessary to restart python/terminal/system
-- ...
