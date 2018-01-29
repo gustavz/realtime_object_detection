@@ -11,6 +11,7 @@ import six.moves.urllib as urllib
 import tarfile
 import tensorflow as tf
 import cv2
+import yaml
 
 # Protobuf Compilation (once necessary)
 #os.system('protoc object_detection/protos/*.proto --python_out=.')
@@ -19,13 +20,25 @@ from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
 from stuff.helper import FPS2, WebcamVideoStream
 
+## LOAD CONFIG PARAMS ##
+with open("config.yml", 'r') as ymlfile:
+    cfg = yaml.load(ymlfile)
+video_input = cfg['video_input']
+visualize = cfg['visualize']
+max_frames = cfg['max_frames']
+width = cfg['width']
+height = cfg['height']
+fps_interval = cfg['fps_interval']
+allow_memory_growth = cfg['allow_memory_growth']
+det_interval = cfg['det_interval']
+det_th = cfg['det_th']
+model_name = cfg['model_name']
+model_path = cfg['model_path']
+label_path = cfg['label_path']
+num_classes = cfg['num_classes']
 
-def download_model(model_name=None, model_path=None):
-    if model_name is None:
-        model_name = 'ssd_mobilenet_v11_coco'
-    if model_path is None:
-        model_path = 'models/' + model_name + '/frozen_inference_graph.pb'
-    
+
+def download_model():
     model_file = model_name + '.tar.gz'
     download_base = 'http://download.tensorflow.org/models/object_detection/'   
     if not os.path.isfile(model_path):
@@ -42,13 +55,7 @@ def download_model(model_name=None, model_path=None):
         print('Model found. Proceed.')
         
         
-def load_frozenmodel(model_name=None, model_path=None, label_path=None, num_classes=90):
-    if model_name is None:
-        model_name = 'ssd_mobilenet_v11_coco'
-    if model_path is None:
-        model_path = 'models/' + model_name + '/frozen_inference_graph.pb'
-    if label_path is None:
-        label_path = 'object_detection/data/mscoco_label_map.pbtxt'
+def load_frozenmodel():
     # Load a (frozen) Tensorflow model into memory.
     detection_graph = tf.Graph()
     with detection_graph.as_default():
@@ -64,9 +71,7 @@ def load_frozenmodel(model_name=None, model_path=None, label_path=None, num_clas
     return detection_graph, category_index
     
 
-def detection(detection_graph, category_index, video_input=0, visualize=True, max_frames=500, 
-              width=300 , height=300, fps_interval=3, allow_memory_growth=True , det_intervall=75, det_th=0.5):
-    
+def detection(detection_graph, category_index):
     # Session Config: Limit GPU Memory Usage
     config = tf.ConfigProto()
     config.gpu_options.allow_growth=allow_memory_growth
@@ -114,14 +119,12 @@ def detection(detection_graph, category_index, video_input=0, visualize=True, ma
           else:
               cur_frames += 1
               for box, score, _class in zip(np.squeeze(boxes), np.squeeze(scores), np.squeeze(classes)):
-                    if cur_frames%det_intervall==0 and score > det_th:
+                    if cur_frames%det_interval==0 and score > det_th:
                         label = category_index[_class]['name']
                         print(label, score, box)
               if cur_frames >= max_frames:
                   break
-          # fps calculation
           fps.update()
-    
     # End everything
     fps.stop()
     video_stream.stop()     
@@ -129,30 +132,10 @@ def detection(detection_graph, category_index, video_input=0, visualize=True, ma
     print('[INFO] elapsed time (total): {:.2f}'.format(fps.elapsed()))
     print('[INFO] approx. FPS: {:.2f}'.format(fps.fps()))
 
-def main():
-    '''
-    ############## INPUT PARAMS ##############
-    # those values are default for detection #
-    # if you want to change them, uncomment  #
-    # and pass them to the detection() fun   #
-    #                                        #
-    video_input = 0              # Input Must be OpenCV readable 
-    visualize = True             # Disable for performance increase
-    max_frames = 500             # only used if visualize==False
-    width = 300                  # 300x300 is used by SSD_Mobilenet -> highest fps
-    height = 300
-    fps_interval = 3             # Intervall [s] to print fps in console
-    allow_memory_growth = True   # restart python to apply changes on memory usage
-    det_intervall = 75           # intervall [frames] to print detections to console
-    det_th = 0.5                 # detection threshold for det_intervall
-    #                                        #
-    ##########################################
-    '''
-                                    # Optional Arguments
-    download_model()                # model_name, model_path
-    dg, ci = load_frozenmodel()     # model_name, model_path, label_path, num_classes
-    detection(dg, ci)               # video_input, visualize, max_frames, width , height, fps_interval, allow_memory_growth , det_intervall, det_th
-    
+def main():                                
+    download_model()    
+    dg, ci = load_frozenmodel()  
+    detection(dg, ci)
     
 if __name__ == '__main__':
     main()
