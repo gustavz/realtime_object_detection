@@ -13,17 +13,17 @@ The following work has been done based on the original API:
 - Added optional automated model download from [model-zoo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md) if necessary
 - Added *Yaml* config file for quick&easy parameter parsing
 - Exported new frozen Model based on *ssd_mobilenet_v1_coco* with altered *score_threshold* for *batch_non_max_suppression* to increase perfomance
-- Added various scripts in */stuff* to make use of tf's API
+- Added various scripts in `/stuff` to make use of tf's API
 - **Results: Overall Performance Increase of up to 100%** depending on the running system
 <br />
 
 ## Getting Started:  
-- Optional: Change Parameters in **config.yml** to laod another model or ot modify input params.
-- For example: If you are not interested in visualization: set **visualize** to **False**. <br />
-- if you want to import the pre-trained frozen Model *.pb file* to Tensorboard to visualize the Graph, <br />
-run **frozenmodel_to_tensorboard.py** and follow the command line instructions <br />
-(opt: change **MODEL_NAME**  inside if necessary)
-- run **object_detection.py** Script  <br />
+- Optional: Change Parameters in `config.yml` to laod another model or ot modify input params.
+- For example: If you are not interested in visualization: set `visualize` to `False`. <br />
+- if you want to import the pre-trained frozen Model `.pb` file to Tensorboard to visualize the Graph, <br />
+run `stuff/frozenmodel_to_tensorboard.py` and follow the command line instructions <br />
+(opt: change `MODEL_NAME`  inside if necessary)
+- run `object_detection.py` Script  <br />
 - Enjoy!
 <br />
 
