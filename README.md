@@ -35,6 +35,6 @@ run `stuff/frozenmodel_to_tensorboard.py` and follow the command line instructio
  <br />
 
 ## Current Performance on SSD Mobilenet (with|without visualization):
-- Dell XPS 15 with i7 @ 2.80GHZ x8 and GeForce GTX 1050 4GB: **35fps | 45fps**
-- Nvidia Jetson Tx2 with Tegra 8GB: **8fps | 10 fps**
+- Dell XPS 15 with i7 @ 2.80GHZ x8 and GeForce GTX 1050 4GB:  **35fps | 45fps**
+- Nvidia Jetson Tx2 with Tegra 8GB:                           **8fps | 10 fps**
  <br />
