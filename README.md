@@ -11,8 +11,8 @@ The following work has been done based on the original API:
 - Allows Models to grow GPU memory allocation. *(ssd_mobilenet_v11_coco needs 350 MB)*
 - Added Option for detection without visualization to increase performance
 - Added optional automated model download from [model-zoo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md) if necessary
-- Added *Yaml* config file for quick&easy parameter parsing
-- Exported new frozen Model based on *ssd_mobilenet_v1_coco* with altered *score_threshold* for *batch_non_max_suppression* to increase perfomance
+- Added `config.yml` for quick&easy parameter parsing
+- Exported new frozen Model based on `ssd_mobilenet_v1_coco` with altered `batch_non_max_suppression.score_threshold` to increase perfomance
 - Added various scripts in `/stuff` to make use of tf's API
 - **Results: Overall Performance Increase of up to 100%** depending on the running system
 <br />
@@ -35,6 +35,6 @@ run `stuff/frozenmodel_to_tensorboard.py` and follow the command line instructio
  <br />
 
 ## Current Performance on SSD Mobilenet (with|without visualization):
-- Dell Laptop with i7 and GeForce GTX 1050: **35fps | 45fps**
-- Nvidia Jetson Tx2: **8fps | 10 fps**
+- Dell XPS 15 with i7 @ 2.80GHZ x8 and GeForce GTX 1050 4GB: **35fps | 45fps**
+- Nvidia Jetson Tx2 with Tegra 8GB: **8fps | 10 fps**
  <br />
