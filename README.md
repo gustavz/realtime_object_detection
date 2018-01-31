@@ -14,7 +14,6 @@ The following work has been done based on the original API:
 - Added `config.yml` for quick&easy parameter parsing
 - Exported new frozen Model based on `ssd_mobilenet_v1_coco` with altered `batch_non_max_suppression.score_threshold` to increase perfomance
 - Added various scripts in `/stuff` to make use of tf's API
-- Added Option to publish detections as RosNode
 - **Results: Overall Performance Increase of up to 100%** depending on the running system
 <br />
 
