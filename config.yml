@@ -8,7 +8,7 @@ fps_interval: 3             # Intervall [s] to print fps in console
 allow_memory_growth: True   # restart python to apply changes on memory usage
 det_interval: 75            # intervall [frames] to print detections to console
 det_th: 0.5                 # detection threshold for det_intervall
-enable_ros: True           # If True object_detection is set as RosNode for Publishing Messages
+enable_ros: False           # If True object_detection is set as RosNode for Publishing Messages
 
 # Change only if you use another model
 model_name: 'ssd_mobilenet_v11_coco'

@@ -13,7 +13,6 @@ import tensorflow as tf
 import cv2
 import yaml
 
-
 # Protobuf Compilation (once necessary)
 #os.system('protoc object_detection/protos/*.proto --python_out=.')
 
@@ -37,21 +36,6 @@ model_name          = cfg['model_name']
 model_path          = cfg['model_path']
 label_path          = cfg['label_path']
 num_classes         = cfg['num_classes']
-enable_ros          = cfg['enable_ros']
-
-# Init Rosnode and msg Publisher
-if enable_ros:
-    rosInstalled = True
-    try:
-        import rospy
-        from stuff.helper import RosDetectionPublisher
-    except ImportError:
-        rosInstalled = False
-        print("no ros packages installed\nstarting without ros")
-    if rosInstalled:
-        print("##\nroscore must run and catkin_ws/devel/setup.bash must be sourced\n##")
-        rospy.init_node('object_detection')        
-        rospub = RosDetectionPublisher() 
 
 
 # Download Model form TF's Model Zoo
@@ -119,10 +103,6 @@ def detection(detection_graph, category_index):
           (boxes, scores, classes, num) = sess.run(
               [detection_boxes, detection_scores, detection_classes, num_detections],
               feed_dict={image_tensor: image_np_expanded})
-          # Publish Ros Msg
-          if enable_ros and rosInstalled:
-              rospub.publish(np.squeeze(boxes), np.squeeze(scores), 
-                             np.squeeze(classes).astype(np.int32), num, image_np.shape, category_index)
           # Visualization of the results of a detection.
           if visualize:
               vis_util.visualize_boxes_and_labels_on_image_array(

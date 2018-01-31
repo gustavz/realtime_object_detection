@@ -9,12 +9,6 @@ import datetime
 import cv2
 from threading import Thread
 
-try:
-    import rospy
-    from ros import Detection, Object
-except ImportError:
-    pass
-
 class FPS:
     def __init__(self):
         # store the start time, end time, and total number of frames
@@ -131,39 +125,3 @@ class WebcamVideoStream:
     def isActive(self):
         # check if VideoCapture is still Opened
         return self.stream.isOpened
-    
-class RosDetectionPublisher:
-   def __init__(self):
-       self.objDetPub = rospy.Publisher('objectDetection', Detection, queue_size=10)
-
-   def publish(self, boxes, scores, classes, num, image_shape, category_index):
-
-       #obj = []
-       # create an empty python array
-       msg = Detection()
-       for i in range(boxes.shape[0]):
-         if scores[i] > 0.5:
-           if classes[i] in category_index.keys():
-             class_name = category_index[classes[i]]['name']
-           else:
-             class_name = 'N/A'
-           ymin, xmin, ymax, xmax = tuple(boxes[i].tolist())
-           (left, right, top, bottom) = (int(xmin * image_shape[1]), int(xmax * image_shape[1]), int(ymin * image_shape[0]), int(ymax * image_shape[0]))
-           #obj.append([class_name, int(100*scores[i]), left, top, right, bottom])
-           display_str = '##\nnumber {} {}: {}% at image coordinates (({}, {}) to ({}, {}))\n##'.format(i, class_name, int(100*scores[i]), left, top, right, bottom)
-           print(display_str)
-           # fill array with data
-           object = Object()
-           object.class_name = class_name
-           object.certainty = int(100*scores[i])
-           object.p1.x = left
-           object.p1.y = top
-           object.p2.x = right
-           object.p2.y = bottom
-           msg.objects.append(object)
-          #print('OBJECT', object)
-
-       # publish msg
-       #for i in range(len(msg.objects)):
-       #    print('MSG ',i, msg.objects[i])
-       self.objDetPub.publish(msg)
