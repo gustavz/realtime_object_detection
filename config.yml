@@ -8,15 +8,15 @@ fps_interval: 3             # Intervall [s] to print fps in console
 allow_memory_growth: True   # restart python to apply changes on memory usage
 det_interval: 75            # intervall [frames] to print detections to console
 det_th: 0.5                 # detection threshold for det_intervall
-enable_ros: false	    # If True object_detection is set as RosNode for Publishing Messages
+enable_ros: False           # If True object_detection is set as RosNode for Publishing Messages
 
 # Change only if you use another model
-#model_name: 'ssd_mobilenet_v11_coco'
-#model_path: 'models/ssd_mobilenet_v11_coco/frozen_inference_graph.pb'
-#label_path: 'object_detection/data/mscoco_label_map.pbtxt'
-#num_classes: 90
+model_name: 'ssd_mobilenet_v11_coco'
+model_path: 'models/ssd_mobilenet_v11_coco/frozen_inference_graph.pb'
+label_path: 'object_detection/data/mscoco_label_map.pbtxt'
+num_classes: 90
 
-model_name: 'frcnni_handsnet_200_ss'
-model_path: 'models/frcnni_handsnet_27/frozen_inference_graph.pb'
-label_path: 'models/frcnni_handsnet_27/label_map.pbtxt'
-num_classes: 1
+#model_name: 'frcnni_handsnet_200_ss'
+#model_path: 'models/frcnni_handsnet_27/frozen_inference_graph.pb'
+#label_path: 'models/frcnni_handsnet_27/label_map.pbtxt'
+#num_classes: 1

@@ -8,8 +8,12 @@ Created on Fri Dec 22 11:53:52 2017
 import datetime
 import cv2
 from threading import Thread
-import rospy
-from ros import Detection, Object
+
+try:
+    import rospy
+    from ros import Detection, Object
+except ImportError:
+    pass
 
 class FPS:
     def __init__(self):
