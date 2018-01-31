@@ -18,26 +18,35 @@ import yaml
 
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
-from stuff.helper import FPS2, WebcamVideoStream
+from stuff.helper import FPS2, WebcamVideoStream, RosDetectionPublisher
+import rospy
 
 ## LOAD CONFIG PARAMS ##
 with open("config.yml", 'r') as ymlfile:
     cfg = yaml.load(ymlfile)
-video_input = cfg['video_input']
-visualize = cfg['visualize']
-max_frames = cfg['max_frames']
-width = cfg['width']
-height = cfg['height']
-fps_interval = cfg['fps_interval']
+video_input         = cfg['video_input']
+visualize           = cfg['visualize']
+max_frames          = cfg['max_frames']
+width               = cfg['width']
+height              = cfg['height']
+fps_interval        = cfg['fps_interval']
 allow_memory_growth = cfg['allow_memory_growth']
-det_interval = cfg['det_interval']
-det_th = cfg['det_th']
-model_name = cfg['model_name']
-model_path = cfg['model_path']
-label_path = cfg['label_path']
-num_classes = cfg['num_classes']
+det_interval        = cfg['det_interval']
+det_th              = cfg['det_th']
+model_name          = cfg['model_name']
+model_path          = cfg['model_path']
+label_path          = cfg['label_path']
+num_classes         = cfg['num_classes']
+enable_ros          = cfg['enable_ros']
+
+# Init Rosnode and msg Publisher
+if enable_ros:
+    print("##\nroscore must run and catkin_ws/devel/setup.bash must be sourced\n##")
+    rospy.init_node('object_detection')        
+    rospub = RosDetectionPublisher() 
 
 
+# Download Model form TF's Model Zoo
 def download_model():
     model_file = model_name + '.tar.gz'
     download_base = 'http://download.tensorflow.org/models/object_detection/'   
@@ -102,8 +111,12 @@ def detection(detection_graph, category_index):
           (boxes, scores, classes, num) = sess.run(
               [detection_boxes, detection_scores, detection_classes, num_detections],
               feed_dict={image_tensor: image_np_expanded})
+          # Publish Ros Msg
+          if enable_ros:
+              rospub.publish(np.squeeze(boxes), np.squeeze(scores), 
+                             np.squeeze(classes).astype(np.int32), num, image_np.shape, category_index)
+          # Visualization of the results of a detection.
           if visualize:
-              # Visualization of the results of a detection.
               vis_util.visualize_boxes_and_labels_on_image_array(
               image_np,
               np.squeeze(boxes),
@@ -112,6 +125,8 @@ def detection(detection_graph, category_index):
               category_index,
               use_normalized_coordinates=True,
               line_thickness=8)
+              cv2.putText(image_np,"fps: {}".format(fps.fps()), (0,20),
+                          cv2.FONT_HERSHEY_SIMPLEX, 0.75, (77, 255, 9), 2)
               cv2.imshow('object_detection', image_np)
               # Exit Option
               if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -132,7 +147,7 @@ def detection(detection_graph, category_index):
     print('[INFO] elapsed time (total): {:.2f}'.format(fps.elapsed()))
     print('[INFO] approx. FPS: {:.2f}'.format(fps.fps()))
 
-def main():                                
+def main():                  
     download_model()    
     dg, ci = load_frozenmodel()  
     detection(dg, ci)
