@@ -41,13 +41,14 @@ enable_ros          = cfg['enable_ros']
 
 # Init Rosnode and msg Publisher
 if enable_ros:
+    rosInstalled = True
     try:
         import rospy
         from stuff.helper import RosDetectionPublisher
     except ImportError:
-        noros = True
+        rosInstalled = False
         print("no ros packages installed")
-    if not noros:
+    if rosInstalled:
         print("##\nroscore must run and catkin_ws/devel/setup.bash must be sourced\n##")
         rospy.init_node('object_detection')        
         rospub = RosDetectionPublisher() 
@@ -119,7 +120,7 @@ def detection(detection_graph, category_index):
               [detection_boxes, detection_scores, detection_classes, num_detections],
               feed_dict={image_tensor: image_np_expanded})
           # Publish Ros Msg
-          if enable_ros and not noros:
+          if enable_ros and rosInstalled:
               rospub.publish(np.squeeze(boxes), np.squeeze(scores), 
                              np.squeeze(classes).astype(np.int32), num, image_np.shape, category_index)
           # Visualization of the results of a detection.
