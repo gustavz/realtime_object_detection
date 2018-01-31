@@ -133,8 +133,7 @@ def detection(detection_graph, category_index):
               category_index,
               use_normalized_coordinates=True,
               line_thickness=8)
-              cv2.putText(image_np,"fps: {}".format(fps.fps()), (0,20),
-                          cv2.FONT_HERSHEY_SIMPLEX, 0.75, (77, 255, 9), 2)
+              cv2.putText(image_np,"fps: {}".format(fps.fps()), (0,20),cv2.FONT_HERSHEY_SIMPLEX, 0.75, (77, 255, 9), 2)
               cv2.imshow('object_detection', image_np)
               # Exit Option
               if cv2.waitKey(1) & 0xFF == ord('q'):

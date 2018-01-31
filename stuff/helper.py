@@ -55,6 +55,7 @@ class FPS2:
         self._local_start = None
         self._local_numFrames = 0
         self._interval = interval
+        self.curr_local_elapsed = 1
 
     def start(self):
         self._glob_start = datetime.datetime.now()
@@ -66,13 +67,15 @@ class FPS2:
 
     def update(self):
         curr_time = datetime.datetime.now()
-        curr_local_elapsed = (curr_time - self._local_start).total_seconds()
+        self.curr_local_elapsed = (curr_time - self._local_start).total_seconds()
         self._glob_numFrames += 1
         self._local_numFrames += 1
-        if curr_local_elapsed > self._interval:
-          print("FPS: ", round(self._local_numFrames / curr_local_elapsed,1))
+        if self.curr_local_elapsed > self._interval:
+          print("FPS: ", round(self.elapsed_local(),1))
           self._local_numFrames = 0
           self._local_start = curr_time
+    def elapsed_local(self):
+        return self._local_numFrames / self.curr_local_elapsed
 
     def elapsed(self):
         return (self._glob_end - self._glob_start).total_seconds()
