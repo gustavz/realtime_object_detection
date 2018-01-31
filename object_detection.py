@@ -47,7 +47,7 @@ if enable_ros:
         from stuff.helper import RosDetectionPublisher
     except ImportError:
         rosInstalled = False
-        print("no ros packages installed")
+        print("no ros packages installed\nstarting without ros")
     if rosInstalled:
         print("##\nroscore must run and catkin_ws/devel/setup.bash must be sourced\n##")
         rospy.init_node('object_detection')        
@@ -133,7 +133,8 @@ def detection(detection_graph, category_index):
               category_index,
               use_normalized_coordinates=True,
               line_thickness=8)
-              cv2.putText(image_np,"fps: {}".format(fps.fps()), (0,20),cv2.FONT_HERSHEY_SIMPLEX, 0.75, (77, 255, 9), 2)
+              cv2.putText(image_np,"fps: {}".format(fps.fps_local()), (10,30),
+                          cv2.FONT_HERSHEY_SIMPLEX, 0.75, (77, 255, 9), 2)
               cv2.imshow('object_detection', image_np)
               # Exit Option
               if cv2.waitKey(1) & 0xFF == ord('q'):
