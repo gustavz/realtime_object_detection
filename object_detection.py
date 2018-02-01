@@ -25,6 +25,7 @@ with open("config.yml", 'r') as ymlfile:
     cfg = yaml.load(ymlfile)
 video_input         = cfg['video_input']
 visualize           = cfg['visualize']
+vis_text            = cfg['vis_text']
 max_frames          = cfg['max_frames']
 width               = cfg['width']
 height              = cfg['height']
@@ -113,8 +114,9 @@ def detection(detection_graph, category_index):
               category_index,
               use_normalized_coordinates=True,
               line_thickness=8)
-              cv2.putText(image_np,"fps: {}".format(fps.fps_local()), (10,30),
-                          cv2.FONT_HERSHEY_SIMPLEX, 0.75, (77, 255, 9), 2)
+              if vis_text:
+                  cv2.putText(image_np,"fps: {}".format(fps.fps_local()), (10,30),
+                              cv2.FONT_HERSHEY_SIMPLEX, 0.75, (77, 255, 9), 2)
               cv2.imshow('object_detection', image_np)
               # Exit Option
               if cv2.waitKey(1) & 0xFF == ord('q'):

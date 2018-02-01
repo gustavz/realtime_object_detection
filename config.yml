@@ -1,6 +1,7 @@
 ---
 video_input: 0              # Input Must be OpenCV readable 
 visualize: True             # Disable for performance increase
+vis_text: True              # Display fps on visualization stream
 max_frames: 500             # only used if visualize==False
 width: 300                  # 300x300 is used by SSD_Mobilenet -> highest fps
 height: 300
