@@ -1,8 +1,7 @@
 # realtime_object_detection
-My Version of [Tensorflows Object Detection API.](https://github.com/tensorflow/models/tree/master/research/object_detection)
+My Version of [Tensorflows Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection)
 <br />
 <br />
-
 ## About the Project
 The Idea was to create a realtime capable object detection pipeline on various machines. <br />
 Plug and play, ready to use without deep previous knowledge.<br /> <br />
