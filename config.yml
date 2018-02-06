@@ -8,7 +8,7 @@ height: 300
 fps_interval: 3             # Intervall [s] to print fps in console
 det_interval: 75            # intervall [frames] to print detections to console
 det_th: 0.5                 # detection threshold for det_intervall
-split_model: False           # Splits Model into a GPU and CPU session (currently only works for ssd_mobilenets)
+split_model: True           # Splits Model into a GPU and CPU session (currently only works for ssd_mobilenets)
 log_device: True            # Logs GPU / CPU device placement
 allow_memory_growth: True   # limits memory allocation to the actual needs
 
