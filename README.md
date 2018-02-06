@@ -1,5 +1,6 @@
 # realtime_object_detection
-My Version of [Tensorflows Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection) optimized for ssd_mobilenets.<br />
+My Version of [Tensorflows Object Detection API.](https://github.com/tensorflow/models/tree/master/research/object_detection)
+<br />
 <br />
 
 ## About the Project
