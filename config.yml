@@ -2,14 +2,14 @@
 video_input: 0              # Input Must be OpenCV readable 
 visualize: True             # Disable for performance increase
 vis_text: True              # Display fps on visualization stream
-max_frames: 500             # only used if visualize==False
+max_frames: 1000             # only used if visualize==False
 width: 300                  # 300x300 is used by SSD_Mobilenet -> highest fps
 height: 300
 fps_interval: 3             # Intervall [s] to print fps in console
 allow_memory_growth: True   # restart python to apply changes on memory usage
 det_interval: 75            # intervall [frames] to print detections to console
 det_th: 0.5                 # detection threshold for det_intervall
-enable_ros: False           # If True object_detection is set as RosNode for Publishing Messages
+split_model: True           # Splits Model into a GPU and CPU session (currently only works for ssd_mobilenets)
 
 # Change only if you use another model
 model_name: 'ssd_mobilenet_v11_coco'
@@ -17,7 +17,7 @@ model_path: 'models/ssd_mobilenet_v11_coco/frozen_inference_graph.pb'
 label_path: 'object_detection/data/mscoco_label_map.pbtxt'
 num_classes: 90
 
-#model_name: 'frcnni_handsnet_200_ss'
-#model_path: 'models/frcnni_handsnet_27/frozen_inference_graph.pb'
-#label_path: 'models/frcnni_handsnet_27/label_map.pbtxt'
+#model_name: 'frcnni_handsnet_116_ss'
+#model_path: 'models/frcnni_handsnet_116_ss/frozen_inference_graph.pb'
+#label_path: 'models/frcnni_handsnet_116_ss/label_map.pbtxt'
 #num_classes: 1

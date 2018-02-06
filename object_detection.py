@@ -7,11 +7,13 @@ Created on Thu Dec 21 12:01:40 2017
 """
 import numpy as np
 import os
-import six.moves.urllib as urllib
-import tarfile
 import tensorflow as tf
-import cv2
+import copy
 import yaml
+import cv2
+import tarfile
+import six.moves.urllib as urllib
+from tensorflow.core.framework import graph_pb2
 
 # Protobuf Compilation (once necessary)
 #os.system('protoc object_detection/protos/*.proto --python_out=.')
@@ -19,6 +21,7 @@ import yaml
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
 from stuff.helper import FPS2, WebcamVideoStream
+
 
 ## LOAD CONFIG PARAMS ##
 with open("config.yml", 'r') as ymlfile:
@@ -37,6 +40,14 @@ model_name          = cfg['model_name']
 model_path          = cfg['model_path']
 label_path          = cfg['label_path']
 num_classes         = cfg['num_classes']
+split_model         = cfg['split_model']
+
+
+def _node_name(n):
+  if n.startswith("^"):
+    return n[1:]
+  else:
+    return n.split(":")[0]
 
 
 # Download Model form TF's Model Zoo
@@ -55,55 +66,137 @@ def download_model():
         os.remove(os.getcwd() + '/' + model_file)
     else:
         print('Model found. Proceed.')
+     
         
-        
+# Load a (frozen) Tensorflow model into memory.
 def load_frozenmodel():
-    # Load a (frozen) Tensorflow model into memory.
-    detection_graph = tf.Graph()
-    with detection_graph.as_default():
-      od_graph_def = tf.GraphDef()
-      with tf.gfile.GFile(model_path, 'rb') as fid:
-        serialized_graph = fid.read()
-        od_graph_def.ParseFromString(serialized_graph)
-        tf.import_graph_def(od_graph_def, name='')
-    # Loading label map
+    if not split_model:
+        detection_graph = tf.Graph()
+        with detection_graph.as_default():
+          od_graph_def = tf.GraphDef()
+          with tf.gfile.GFile(model_path, 'rb') as fid:
+            serialized_graph = fid.read()
+            od_graph_def.ParseFromString(serialized_graph)
+            tf.import_graph_def(od_graph_def, name='')
+        score, expand = None
+        return detection_graph, score, expand
+    
+    else:
+        # load a frozen Model and split it into GPU and CPU graphs
+        input_graph = tf.Graph()
+        with tf.Session(graph=input_graph):
+            score = tf.placeholder(tf.float32, shape=(None, 1917, 90), name="Postprocessor/convert_scores")
+            expand = tf.placeholder(tf.float32, shape=(None, 1917, 1, 4), name="Postprocessor/ExpandDims_1")
+            for node in input_graph.as_graph_def().node:
+                if node.name == "Postprocessor/convert_scores":
+                    score_def = node
+                if node.name == "Postprocessor/ExpandDims_1":
+                    expand_def = node
+                    
+        detection_graph = tf.Graph()
+        with detection_graph.as_default():
+          od_graph_def = tf.GraphDef()
+          with tf.gfile.GFile(model_path, 'rb') as fid:
+            serialized_graph = fid.read()
+            od_graph_def.ParseFromString(serialized_graph)
+            dest_nodes = ['Postprocessor/convert_scores','Postprocessor/ExpandDims_1']
+        
+            edges = {}
+            name_to_node_map = {}
+            node_seq = {}
+            seq = 0
+            for node in od_graph_def.node:
+              n = _node_name(node.name)
+              name_to_node_map[n] = node
+              edges[n] = [_node_name(x) for x in node.input]
+              node_seq[n] = seq
+              seq += 1
+        
+            for d in dest_nodes:
+              assert d in name_to_node_map, "%s is not in graph" % d
+        
+            nodes_to_keep = set()
+            next_to_visit = dest_nodes[:]
+            while next_to_visit:
+              n = next_to_visit[0]
+              del next_to_visit[0]
+              if n in nodes_to_keep:
+                continue
+              nodes_to_keep.add(n)
+              next_to_visit += edges[n]
+        
+            nodes_to_keep_list = sorted(list(nodes_to_keep), key=lambda n: node_seq[n])
+        
+            nodes_to_remove = set()
+            for n in node_seq:
+              if n in nodes_to_keep_list: continue
+              nodes_to_remove.add(n)
+            nodes_to_remove_list = sorted(list(nodes_to_remove), key=lambda n: node_seq[n])
+        
+            keep = graph_pb2.GraphDef()
+            for n in nodes_to_keep_list:
+              keep.node.extend([copy.deepcopy(name_to_node_map[n])])
+        
+            remove = graph_pb2.GraphDef()
+            remove.node.extend([score_def])
+            remove.node.extend([expand_def])
+            for n in nodes_to_remove_list:
+              remove.node.extend([copy.deepcopy(name_to_node_map[n])])
+        
+            with tf.device('/gpu:0'):
+              tf.import_graph_def(keep, name='')
+            with tf.device('/cpu:0'):
+              tf.import_graph_def(remove, name='')
+              
+        return detection_graph, score, expand
+
+
+def load_labelmap():
     label_map = label_map_util.load_labelmap(label_path)
     categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=num_classes, use_display_name=True)
     category_index = label_map_util.create_category_index(categories)
-    return detection_graph, category_index
-    
+    return category_index
 
-def detection(detection_graph, category_index):
-    # Session Config: Limit GPU Memory Usage
-    config = tf.ConfigProto()
+
+def detection(detection_graph, category_index, score, expand):
+    # Session Config: allow seperate GPU/CPU adressing and limit memory allocation
+    config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
     config.gpu_options.allow_growth=allow_memory_growth
-    
     cur_frames = 0
-    # Detection
     with detection_graph.as_default():
-      with tf.Session(graph=detection_graph, config = config) as sess:
-        # Definite input and output Tensors for detection_graph
+      with tf.Session(graph=detection_graph,config=config) as sess:
+        # Define Input and Ouput tensors
         image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
-        # Each box represents a part of the image where a particular object was detected.
         detection_boxes = detection_graph.get_tensor_by_name('detection_boxes:0')
-        # Each score represent how level of confidence for each of the objects.
-        # Score is shown on the result image, together with the class label.
         detection_scores = detection_graph.get_tensor_by_name('detection_scores:0')
         detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')
         num_detections = detection_graph.get_tensor_by_name('num_detections:0')
-        # fps calculation
-        fps = FPS2(fps_interval).start()
+        if split_model:
+            score_out = detection_graph.get_tensor_by_name('Postprocessor/convert_scores:0')
+            expand_out = detection_graph.get_tensor_by_name('Postprocessor/ExpandDims_1:0')
+            score_in = detection_graph.get_tensor_by_name('Postprocessor/convert_scores_1:0')
+            expand_in = detection_graph.get_tensor_by_name('Postprocessor/ExpandDims_1_1:0')
         # Start Video Stream
         video_stream = WebcamVideoStream(video_input,width,height).start()
         print ("Press 'q' to Exit")
+        # fps calculation
+        fps = FPS2(fps_interval).start()
+        cur_frames = 0
         while video_stream.isActive():
+          # read video frame and expand dimensions
           image_np = video_stream.read()
-          # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
           image_np_expanded = np.expand_dims(image_np, axis=0)
-          # Actual detection.
-          (boxes, scores, classes, num) = sess.run(
-              [detection_boxes, detection_scores, detection_classes, num_detections],
-              feed_dict={image_tensor: image_np_expanded})
+          # actual Detection
+          if not split_model:
+              (boxes, scores, classes, num) = sess.run(
+                      [detection_boxes, detection_scores, detection_classes, num_detections],
+                      feed_dict={image_tensor: image_np_expanded})
+          else:
+              # Split Detection in two sessions.
+              (score, expand) = sess.run([score_out, expand_out], feed_dict={image_tensor: image_np_expanded})
+              (boxes, scores, classes, num) = sess.run(
+                      [detection_boxes, detection_scores, detection_classes, num_detections],
+                      feed_dict={score_in:score, expand_in: expand}) 
           # Visualization of the results of a detection.
           if visualize:
               vis_util.visualize_boxes_and_labels_on_image_array(
@@ -122,6 +215,7 @@ def detection(detection_graph, category_index):
               if cv2.waitKey(1) & 0xFF == ord('q'):
                   break
           else:
+              # Exit after max frames if no visualization
               cur_frames += 1
               for box, score, _class in zip(np.squeeze(boxes), np.squeeze(scores), np.squeeze(classes)):
                     if cur_frames%det_interval==0 and score > det_th:
@@ -137,10 +231,13 @@ def detection(detection_graph, category_index):
     print('[INFO] elapsed time (total): {:.2f}'.format(fps.elapsed()))
     print('[INFO] approx. FPS: {:.2f}'.format(fps.fps()))
 
-def main():                  
-    download_model()    
-    dg, ci = load_frozenmodel()  
-    detection(dg, ci)
+
+def main():  
+    download_model()                 
+    graph, score, expand = load_frozenmodel()
+    category = load_labelmap()
+    detection(graph, category, score, expand)
+    
     
 if __name__ == '__main__':
     main()
