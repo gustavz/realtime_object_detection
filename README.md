@@ -1,5 +1,5 @@
 # realtime_object_detection
-My Version of [Tensorflows Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection).<br />
+My Version of [Tensorflows Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection) optimized for ssd_mobilenets.<br />
 <br />
 
 ## About the Project
@@ -15,7 +15,7 @@ The following work has been done based on the original API:
 - Exported new frozen Model based on `ssd_mobilenet_v1_coco` with altered `batch_non_max_suppression.score_threshold` to increase perfomance
 - Added various scripts in `/stuff` to make use of tf's API
 - Added `split_model` Option to split frozen graph into a GPU and CPU session. <br />
-Works only for SSD_Mobilenet models but results in significant performance increase. 
+Works only for `ssd_mobilenet` models but results in significant performance increase. 
 - **Results: Overall Performance Increase of up to 300%** depending on the config and the running system
 <br />
 
@@ -38,5 +38,5 @@ run `stuff/frozenmodel_to_tensorboard.py` and follow the command line instructio
 
 ## Current max Performance on `ssd_mobilenet` (with|without visualization):
 - Dell XPS 15 with i7 @ 2.80GHZ x8 and GeForce GTX 1050 4GB:  **42fps | 76fps**
-- Nvidia Jetson Tx2 with Tegra 8GB:                           **8fps | 10 fps**
+- Nvidia Jetson Tx2 with Tegra 8GB:                           **5fps | 14 fps**
  <br />
