@@ -41,6 +41,7 @@ model_path          = cfg['model_path']
 label_path          = cfg['label_path']
 num_classes         = cfg['num_classes']
 split_model         = cfg['split_model']
+log_device          = cfg['log_device']
 
 
 def _node_name(n):
@@ -70,6 +71,7 @@ def download_model():
         
 # Load a (frozen) Tensorflow model into memory.
 def load_frozenmodel():
+    print('Loading frozen model into memory')
     if not split_model:
         detection_graph = tf.Graph()
         with detection_graph.as_default():
@@ -78,8 +80,7 @@ def load_frozenmodel():
             serialized_graph = fid.read()
             od_graph_def.ParseFromString(serialized_graph)
             tf.import_graph_def(od_graph_def, name='')
-        score, expand = None
-        return detection_graph, score, expand
+        return detection_graph, None, None
     
     else:
         # load a frozen Model and split it into GPU and CPU graphs
@@ -152,6 +153,7 @@ def load_frozenmodel():
 
 
 def load_labelmap():
+    print('Loading label map')
     label_map = label_map_util.load_labelmap(label_path)
     categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=num_classes, use_display_name=True)
     category_index = label_map_util.create_category_index(categories)
@@ -159,8 +161,9 @@ def load_labelmap():
 
 
 def detection(detection_graph, category_index, score, expand):
+    print('Starting detection')
     # Session Config: allow seperate GPU/CPU adressing and limit memory allocation
-    config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
+    config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=log_device)
     config.gpu_options.allow_growth=allow_memory_growth
     cur_frames = 0
     with detection_graph.as_default():
