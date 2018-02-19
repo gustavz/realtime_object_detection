@@ -223,7 +223,7 @@ def detection(detection_graph, category_index, score, expand):
               for box, score, _class in zip(np.squeeze(boxes), np.squeeze(scores), np.squeeze(classes)):
                     if cur_frames%det_interval==0 and score > det_th:
                         label = category_index[_class]['name']
-                        print(label, score, box)
+                        print("label: {}\nscore: {}\nbox: {}".format(label, score, box))
               if cur_frames >= max_frames:
                   break
           fps.update()

@@ -3,14 +3,15 @@ video_input: 0              # Input Must be OpenCV readable
 visualize: True             # Disable for performance increase
 vis_text: True              # Display fps on visualization stream
 max_frames: 500             # only used if visualize==False
-width: 300                  # 300x300 is used by SSD_Mobilenet -> highest fps
-height: 300
+width: 600                  # 300x300 is used by SSD_Mobilenet -> highest fps
+height: 600
 fps_interval: 3             # Intervall [s] to print fps in console
 det_interval: 75            # intervall [frames] to print detections to console
 det_th: 0.5                 # detection threshold for det_intervall
-split_model: False           # Splits Model into a GPU and CPU session (currently only works for ssd_mobilenets)
+split_model: True           # Splits Model into a GPU and CPU session (currently only works for ssd_mobilenets)
 log_device: True            # Logs GPU / CPU device placement
 allow_memory_growth: True   # limits memory allocation to the actual needs
+image_path: 'test_images'   # used for image_detection.py
 
 # Change only if you use another model
 model_name: 'ssd_mobilenet_v11_coco'

@@ -15,7 +15,7 @@ The following work has been done based on the original API:
 - Exported new frozen Model based on `ssd_mobilenet_v1_coco` with altered `batch_non_max_suppression.score_threshold` to increase perfomance
 - Added various scripts in `/stuff` to make use of tf's API
 - Added `split_model` Option to split frozen graph into a GPU and CPU session. <br />
-Works only for SSD_Mobilenet models but results in significant performance increase. 
+Works only for `ssd_mobilenet` models but results in significant performance increase. 
 - **Results: Overall Performance Increase of up to 300%** depending on the config and the running system
 <br />
 
