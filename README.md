@@ -25,8 +25,8 @@ Works only for `ssd_mobilenet` models but results in significant performance inc
 - if you want to import the pre-trained frozen Model `.pb` file to Tensorboard to visualize the Graph, <br />
 run `stuff/frozenmodel_to_tensorboard.py` and follow the command line instructions <br />
 (opt: change `MODEL_NAME`  inside if necessary)
-- run `images_detection.py` for single test image detection
-- run `object_detection.py` for realtime object detection using openCV
+- run `image_detection.py` for single test image detection
+- run `object_detection.py` for realtime object detection
 - Enjoy!
 <br />
 

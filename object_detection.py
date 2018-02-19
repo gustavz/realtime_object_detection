@@ -43,6 +43,7 @@ num_classes         = cfg['num_classes']
 split_model         = cfg['split_model']
 log_device          = cfg['log_device']
 convert_rgb         = cfg['convert_rgb']
+ssd_shape           = cfg['ssd_shape']
 
 
 def _node_name(n):
@@ -85,10 +86,15 @@ def load_frozenmodel():
     
     else:
         # load a frozen Model and split it into GPU and CPU graphs
+        # Hardcoded for ssd_mobilenet
         input_graph = tf.Graph()
         with tf.Session(graph=input_graph):
-            score = tf.placeholder(tf.float32, shape=(None, 1917, num_classes), name="Postprocessor/convert_scores")
-            expand = tf.placeholder(tf.float32, shape=(None, 1917, 1, 4), name="Postprocessor/ExpandDims_1")
+            if ssd_shape == 600:
+                shape = 7326
+            else:
+                shape = 1917
+            score = tf.placeholder(tf.float32, shape=(None, shape, num_classes), name="Postprocessor/convert_scores")
+            expand = tf.placeholder(tf.float32, shape=(None, shape, 1, 4), name="Postprocessor/ExpandDims_1")
             for node in input_graph.as_graph_def().node:
                 if node.name == "Postprocessor/convert_scores":
                     score_def = node
@@ -193,16 +199,18 @@ def detection(detection_graph, category_index, score, expand):
               image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
           image_np_expanded = np.expand_dims(image_np, axis=0)
           # actual Detection
-          if not split_model:
-              (boxes, scores, classes, num) = sess.run(
-                      [detection_boxes, detection_scores, detection_classes, num_detections],
-                      feed_dict={image_tensor: image_np_expanded})
-          else:
+          if split_model:
               # Split Detection in two sessions.
               (score, expand) = sess.run([score_out, expand_out], feed_dict={image_tensor: image_np_expanded})
               (boxes, scores, classes, num) = sess.run(
                       [detection_boxes, detection_scores, detection_classes, num_detections],
                       feed_dict={score_in:score, expand_in: expand}) 
+          else:
+              # default session
+              (boxes, scores, classes, num) = sess.run(
+                      [detection_boxes, detection_scores, detection_classes, num_detections],
+                      feed_dict={image_tensor: image_np_expanded})              
+
           # Visualization of the results of a detection.
           if visualize:
               if convert_rgb:
