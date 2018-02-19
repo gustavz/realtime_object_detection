@@ -205,6 +205,8 @@ def detection(detection_graph, category_index, score, expand):
                       feed_dict={score_in:score, expand_in: expand}) 
           # Visualization of the results of a detection.
           if visualize:
+              if convert_rgb:
+                  image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
               vis_util.visualize_boxes_and_labels_on_image_array(
               image_np,
               np.squeeze(boxes),
@@ -216,8 +218,6 @@ def detection(detection_graph, category_index, score, expand):
               if vis_text:
                   cv2.putText(image_np,"fps: {}".format(fps.fps_local()), (10,30),
                               cv2.FONT_HERSHEY_SIMPLEX, 0.75, (77, 255, 9), 2)
-              if convert_rgb:
-                  image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
               cv2.imshow('object_detection', image_np)
               # Exit Option
               if cv2.waitKey(1) & 0xFF == ord('q'):

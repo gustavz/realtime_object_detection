@@ -31,6 +31,7 @@ for root, dirs, files in os.walk(image_path):
     for file in files:
         if file.endswith(".jpg"):
             images.append(os.path.join(root, file))
+images.sort()
 
 #Load a (frozen) Tensorflow model into memory.
 detection_graph = tf.Graph()
@@ -71,6 +72,8 @@ with detection_graph.as_default():
           feed_dict={image_tensor: image_np_expanded})
       stop = datetime.datetime.now()
       # Visualization of the results of a detection.
+      if convert_rgb:
+          image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
       vis_util.visualize_boxes_and_labels_on_image_array(
           image_np,
           np.squeeze(boxes),
@@ -84,8 +87,6 @@ with detection_graph.as_default():
                         label = category_index[_class]['name']
                         print("label: {}\nscore: {}\nbox: {}".format(label, score, box))
       print ("elapsed time for actual detection: {} seconds".format((stop-start).total_seconds()))
-      if convert_rgb:
-          image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
       cv2.imshow('test_images',image_np)
       cv2.waitKey(2000)
 
