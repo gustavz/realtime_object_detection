@@ -1,13 +1,13 @@
 # realtime_object_detection
-My Version of [Tensorflows Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection).<br />
+My Version of [Tensorflows Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection)
 <br />
-
+<br />
 ## About the Project
 The Idea was to create a realtime capable object detection pipeline on various machines. <br />
 Plug and play, ready to use without deep previous knowledge.<br /> <br />
 The following work has been done based on the original API:
 - Capturing frames of a Camera-Input using OpenCV in seperate thread to increase performance
-- Calculate Fps, print the current value to console in a given intervall aswell as the overall mean value at the end
+- Calculate, print and optionally visualize current-local and total FPS
 - Allows Models to grow GPU memory allocation. *(ssd_mobilenet_v11_coco needs 350 MB)*
 - Added Option for detection without visualization to increase performance
 - Added optional automated model download from [model-zoo](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md) if necessary
@@ -20,7 +20,7 @@ Works only for `ssd_mobilenet` models but results in significant performance inc
 <br />
 
 ## Getting Started:  
-- Optional: Change Parameters in `config.yml` to laod another model or ot modify input params.
+- Optional: Change Parameters in `config.yml` to load other models or to modify input params.
 - For example: If you are not interested in visualization: set `visualize` to `False`. <br />
 - if you want to import the pre-trained frozen Model `.pb` file to Tensorboard to visualize the Graph, <br />
 run `stuff/frozenmodel_to_tensorboard.py` and follow the command line instructions <br />
@@ -38,5 +38,5 @@ run `stuff/frozenmodel_to_tensorboard.py` and follow the command line instructio
 
 ## Current max Performance on `ssd_mobilenet` (with|without visualization):
 - Dell XPS 15 with i7 @ 2.80GHZ x8 and GeForce GTX 1050 4GB:  **42fps | 76fps**
-- Nvidia Jetson Tx2 with Tegra 8GB:                           **8fps | 10 fps**
+- Nvidia Jetson Tx2 with Tegra 8GB:                           **5fps | 14 fps**
  <br />
