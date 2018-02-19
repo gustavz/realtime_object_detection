@@ -42,6 +42,7 @@ label_path          = cfg['label_path']
 num_classes         = cfg['num_classes']
 split_model         = cfg['split_model']
 log_device          = cfg['log_device']
+convert_rgb         = cfg['convert_rgb']
 
 
 def _node_name(n):
@@ -188,6 +189,8 @@ def detection(detection_graph, category_index, score, expand):
         while video_stream.isActive():
           # read video frame and expand dimensions
           image_np = video_stream.read()
+          if convert_rgb:
+              image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
           image_np_expanded = np.expand_dims(image_np, axis=0)
           # actual Detection
           if not split_model:
@@ -213,6 +216,8 @@ def detection(detection_graph, category_index, score, expand):
               if vis_text:
                   cv2.putText(image_np,"fps: {}".format(fps.fps_local()), (10,30),
                               cv2.FONT_HERSHEY_SIMPLEX, 0.75, (77, 255, 9), 2)
+              if convert_rgb:
+                  image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
               cv2.imshow('object_detection', image_np)
               # Exit Option
               if cv2.waitKey(1) & 0xFF == ord('q'):
