@@ -46,13 +46,6 @@ convert_rgb         = cfg['convert_rgb']
 ssd_shape           = cfg['ssd_shape']
 
 
-def _node_name(n):
-  if n.startswith("^"):
-    return n[1:]
-  else:
-    return n.split(":")[0]
-
-
 # Download Model form TF's Model Zoo
 def download_model():
     model_file = model_name + '.tar.gz'
@@ -70,6 +63,12 @@ def download_model():
     else:
         print('Model found. Proceed.')
      
+# helper function for split model
+def _node_name(n):
+  if n.startswith("^"):
+    return n[1:]
+  else:
+    return n.split(":")[0]
         
 # Load a (frozen) Tensorflow model into memory.
 def load_frozenmodel():
