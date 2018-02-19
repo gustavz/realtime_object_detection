@@ -3,8 +3,8 @@ video_input: 0              # Input Must be OpenCV readable
 visualize: True             # Disable for performance increase
 vis_text: True              # Display fps on visualization stream
 max_frames: 500             # only used if visualize==False
-width: 300                  # 300x300 is used by SSD_Mobilenet -> highest fps
-height: 300
+width: 600                  # 300x300 is used by SSD_Mobilenet -> highest fps
+height: 600
 fps_interval: 3             # Intervall [s] to print fps in console
 det_interval: 75            # intervall [frames] to print detections to console
 det_th: 0.5                 # detection threshold for det_intervall
@@ -15,12 +15,12 @@ image_path: 'test_images'   # used for image_detection.py
 convert_rgb: True           # Converts BGR to RGB color (can be necessary in some cases)
 
 # Change only if you use another model
-model_name: 'ssd_mobilenet_v11_coco'
-model_path: 'models/ssd_mobilenet_v11_coco/frozen_inference_graph.pb'
-label_path: 'object_detection/data/mscoco_label_map.pbtxt'
-num_classes: 90
+#model_name: 'ssd_mobilenet_v11_coco'
+#model_path: 'models/ssd_mobilenet_v11_coco/frozen_inference_graph.pb'
+#label_path: 'object_detection/data/mscoco_label_map.pbtxt'
+#num_classes: 90
 
-#model_name: 'ssd_handsnet600_46'
-#model_path: 'models/ssd_handsnet600_46/frozen_inference_graph.pb'
-#label_path: 'models/ssd_handsnet600_46/label_map.pbtxt'
-#num_classes: 1
+model_name: 'ssd_handsnet_200_s'
+model_path: 'models/ssd_handsnet_200_s/frozen_inference_graph.pb'
+label_path: 'models/ssd_handsnet_200_s/label_map.pbtxt'
+num_classes: 1

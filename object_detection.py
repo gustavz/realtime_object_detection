@@ -87,7 +87,7 @@ def load_frozenmodel():
         # load a frozen Model and split it into GPU and CPU graphs
         input_graph = tf.Graph()
         with tf.Session(graph=input_graph):
-            score = tf.placeholder(tf.float32, shape=(None, 1917, 90), name="Postprocessor/convert_scores")
+            score = tf.placeholder(tf.float32, shape=(None, 1917, num_classes), name="Postprocessor/convert_scores")
             expand = tf.placeholder(tf.float32, shape=(None, 1917, 1, 4), name="Postprocessor/ExpandDims_1")
             for node in input_graph.as_graph_def().node:
                 if node.name == "Postprocessor/convert_scores":
