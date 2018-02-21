@@ -22,7 +22,3 @@ model_path: 'models/ssd_mobilenet_v11_coco/frozen_inference_graph.pb'
 label_path: 'object_detection/data/mscoco_label_map.pbtxt'
 num_classes: 90
 
-#model_name: 'ssd_handsnet_200_s'
-#model_path: 'models/ssd_handsnet_200_s/frozen_inference_graph.pb'
-#label_path: 'object_detection/data/hand_label_map.pbtxt'
-#num_classes: 1

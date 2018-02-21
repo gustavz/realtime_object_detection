@@ -1,5 +1,6 @@
 # realtime_object_detection
-My Version of [Tensorflows Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection)
+Realtime object detection based on [Tensorflow's Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection) with an extreme Focus on Performance. <br />
+Specialized for `ssd_mobilenet` models.
 <br />
 <br />
 ## About the Project
@@ -20,11 +21,9 @@ Works only for `ssd_mobilenet` models but results in significant performance inc
 <br />
 
 ## Getting Started:  
+- create a copy of `config.sample.yml` called `config.yml`
 - Optional: Change Parameters in `config.yml` to load other models or to modify input params.
 - For example: If you are not interested in visualization: set `visualize` to `False`. <br />
-- if you want to import the pre-trained frozen Model `.pb` file to Tensorboard to visualize the Graph, <br />
-run `stuff/frozenmodel_to_tensorboard.py` and follow the command line instructions <br />
-(opt: change `MODEL_NAME`  inside if necessary)
 - run `image_detection.py` for single test image detection
 - run `object_detection.py` for realtime object detection
 - Enjoy!
@@ -41,3 +40,10 @@ run `stuff/frozenmodel_to_tensorboard.py` and follow the command line instructio
 - Dell XPS 15 with i7 @ 2.80GHZ x8 and GeForce GTX 1050 4GB:  **42fps | 76fps**
 - Nvidia Jetson Tx2 with Tegra 8GB:                           **5fps | 14 fps**
  <br />
+
+## Further Work:
+- [test_models](https://github.com/GustavZ/test_models): A repo for models i am currently working on for benchmark tests
+- [deeptraining_hands](https://github.com/GustavZ/deeptraining_hands): A repo for setting up the [ego](http://vision.soic.indiana.edu/projects/egohands/)- and [oxford](http://www.robots.ox.ac.uk/~vgg/data/hands/) hands-datasets.<br />
+It also contains several scripts to convert various annotation formats to be able to train Networks on different deep learning frameworks <br />
+currently supports `.xml`, `.mat`, `.csv`, `.record`, `.txt` annotations
+- [tf_for_od_api](https://github.com/GustavZ/yolo_for_tf_od_api): A repo to be able to include Yolo V2 in tf's object detection api

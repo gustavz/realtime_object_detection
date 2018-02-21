@@ -24,8 +24,13 @@ from stuff.helper import FPS2, WebcamVideoStream
 
 
 ## LOAD CONFIG PARAMS ##
-with open("config.yml", 'r') as ymlfile:
-    cfg = yaml.load(ymlfile)
+if (os.path.isfile('config.yml')):
+    with open("config.yml", 'r') as ymlfile:
+        cfg = yaml.load(ymlfile)
+else:
+    with open("config.sample.yml", 'r') as ymlfile:
+        cfg = yaml.load(ymlfile)
+        
 video_input         = cfg['video_input']
 visualize           = cfg['visualize']
 vis_text            = cfg['vis_text']
