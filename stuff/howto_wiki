@@ -10,8 +10,8 @@ protoc object_detection/protos/*.proto --python_out=.
 export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
 
 ## export new frozen model from a pre-trained checkpoint
-# from the object_detection directory
-python export_inference_graph.py \
+# From tensorflow/models/research
+python object_detection/export_inference_graph.py \
     --input_type image_tensor \
     --pipeline_config_path ../stuff/ssd_mobilenet_v11_coco.config \
     --trained_checkpoint_prefix ../stuff/ssd_mobilenet_checkpoints/model.ckpt \

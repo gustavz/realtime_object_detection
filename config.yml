@@ -3,17 +3,17 @@ video_input: 0              # Input Must be OpenCV readable
 visualize: True             # Disable for performance increase
 vis_text: True              # Display fps on visualization stream
 max_frames: 500             # only used if visualize==False
-width: 600                  # 300x300 is used by SSD_Mobilenet -> highest fps
-height: 600
-fps_interval: 3             # Intervall [s] to print fps in console
-det_interval: 75            # intervall [frames] to print detections to console
+width: 300                  # 300x300 is used by SSD_Mobilenet -> highest fps
+height: 300
+fps_interval: 3             # Interval [s] to print fps of the last interval in console
+det_interval: 100            # intervall [frames] to print detections to console
 det_th: 0.5                 # detection threshold for det_intervall
 split_model: True           # Splits Model into a GPU and CPU session (currently only works for ssd_mobilenets)
 log_device: False           # Logs GPU / CPU device placement
 allow_memory_growth: True   # limits memory allocation to the actual needs
-image_path: 'test_images'   # used for image_detection.py
+image_path: 'test_images'   # used for image_detection.pyq
 convert_rgb: True           # Converts BGR to RGB color (idk how it ever worked without this)
-ssd_shape: 300              # used for the split model algorithm 
+ssd_shape: 300              # used for the split model algorithm
                             # currently only supports ssd networks trained on 300x300 and 600x600 input 
 
 # Change only if you use another model
@@ -24,5 +24,5 @@ num_classes: 90
 
 #model_name: 'ssd_handsnet_200_s'
 #model_path: 'models/ssd_handsnet_200_s/frozen_inference_graph.pb'
-#label_path: 'models/ssd_handsnet_200_s/label_map.pbtxt'
+#label_path: 'object_detection/data/hand_label_map.pbtxt'
 #num_classes: 1

@@ -67,7 +67,7 @@ class FPS2:
         self._glob_numFrames += 1
         self._local_numFrames += 1
         if self.curr_local_elapsed > self._interval:
-          print("FPS: ", self.fps_local())
+          print("FPS: {}".format(self.fps_local()))
           self._local_numFrames = 0
           self._local_start = curr_time
 
@@ -76,7 +76,6 @@ class FPS2:
 
     def fps(self):
         return self._glob_numFrames / self.elapsed()
-
     
     def fps_local(self):
         if self.first:
