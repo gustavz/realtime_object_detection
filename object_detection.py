@@ -203,9 +203,10 @@ def detection(detection_graph, category_index, score, expand):
                 if convert_rgb:
                     try:
                         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                        cvt = True
                     except:
                         print("Error converting BGR2RGB")
-                        continue
+                        cvt = False
                 image_expanded = np.expand_dims(image, axis=0)
                 # actual Detection
                 if split_model:
@@ -222,7 +223,7 @@ def detection(detection_graph, category_index, score, expand):
 
                 # Visualization of the results of a detection.
                 if visualize:
-                    if convert_rgb:
+                    if convert_rgb and cvt:
                         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
                     vis_util.visualize_boxes_and_labels_on_image_array(
                         image,

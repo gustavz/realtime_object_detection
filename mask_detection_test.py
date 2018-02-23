@@ -191,10 +191,12 @@ def detection(detection_graph, category_index, score, expand):
     print('Starting detection')
     with detection_graph.as_default():
         with tf.Session(graph=detection_graph, config=config) as sess:
+            # Start Video Stream
+            video_stream = WebcamVideoStream(video_input,width,height).start()
+            print ("Press 'q' to Exit")
             # Get handles to input and output tensors
             tensor_dict = get_tensordict(detection_graph, outputs)            
             image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
-            
             if 'detection_masks' in tensor_dict:
                 #real_width, real_height = get_image_shape()
                 # Reframe is required to translate mask from box coordinates to image coordinates and fit the image size.
@@ -204,34 +206,35 @@ def detection(detection_graph, category_index, score, expand):
                 detection_boxes = tf.slice(detection_boxes, [0, 0], [real_num_detection, -1])
                 detection_masks = tf.slice(detection_masks, [0, 0, 0], [real_num_detection, -1, -1])
                 detection_masks_reframed = utils_ops.reframe_box_masks_to_image_masks(
-                        detection_masks, detection_boxes, 640, 480)
+                        detection_masks, detection_boxes, video_stream.real_height, video_stream.real_width)
                 detection_masks_reframed = tf.cast(tf.greater(detection_masks_reframed, 0.5), tf.uint8)
                 # Follow the convention by adding back the batch dimension
                 tensor_dict['detection_masks'] = tf.expand_dims(detection_masks_reframed, 0)
-
             if split_model:
                 score_out = detection_graph.get_tensor_by_name('Postprocessor/convert_scores:0')
                 expand_out = detection_graph.get_tensor_by_name('Postprocessor/ExpandDims_1:0')
                 score_in = detection_graph.get_tensor_by_name('Postprocessor/convert_scores_1:0')
                 expand_in = detection_graph.get_tensor_by_name('Postprocessor/ExpandDims_1_1:0')
-            # Start Video Stream
-            print ("Press 'q' to Exit")
             # fps calculation
-            video_stream = WebcamVideoStream(video_input,width,height).start()
             fps = FPS2(fps_interval).start()
             cur_frames = 0
             while video_stream.isActive():
                 image = video_stream.read()
+                fps.update()
                 # read video frame and expand dimensions
                 if convert_rgb:
-                    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                    try:
+                        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                        cvt = True
+                    except:
+                        print("Error converting BGR2RGB")
+                        cvt = False    
                 # detection
                 if split_model:
                     (score, expand) = sess.run([score_out, expand_out], feed_dict={image_tensor: np.expand_dims(image, 0)})
                     output_dict = sess.run(tensor_dict, feed_dict={score_in:score, expand_in: expand})
                 else:
                     output_dict = sess.run(tensor_dict, feed_dict={image_tensor: np.expand_dims(image, 0)})
-                    
                 #num = int(output_dict['num_detections'][0])
                 classes = output_dict['detection_classes'][0].astype(np.uint8)
                 boxes = output_dict['detection_boxes'][0]
@@ -240,19 +243,17 @@ def detection(detection_graph, category_index, score, expand):
                     output_dict['detection_masks'] = output_dict['detection_masks'][0]
                 # Visualization of the results of a detection.
                 if visualize:
-                    if convert_rgb:
+                    if convert_rgb and cvt:
                         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-                      
                     vis_util.visualize_boxes_and_labels_on_image_array(
-                    image,
-                    boxes,
-                    classes,
-                    scores,
-                    category_index,
-                    #instance_masks=output_dict.get('detection_masks'),
-                    use_normalized_coordinates=True,
-                    line_thickness=8)
-                
+                        image,
+                        boxes,
+                        classes,
+                        scores,
+                        category_index,
+                        instance_masks=output_dict.get('detection_masks'),
+                        use_normalized_coordinates=True,
+                        line_thickness=8)
                     if vis_text:
                         cv2.putText(image,"fps: {}".format(fps.fps_local()), (10,30),
                                   cv2.FONT_HERSHEY_SIMPLEX, 0.75, (77, 255, 9), 2)
@@ -267,9 +268,8 @@ def detection(detection_graph, category_index, score, expand):
                             if cur_frames%det_interval==0 and score > det_th:
                                 label = category_index[_class]['name']
                                 print("label: {}\nscore: {}\nbox: {}".format(label, score, box))
-                            if cur_frames >= max_frames:
-                                break
-                fps.update()
+                    if cur_frames >= max_frames:
+                        break
     # End everything
     fps.stop()
     video_stream.stop()     

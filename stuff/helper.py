@@ -97,9 +97,10 @@ class WebcamVideoStream:
         # initialize the variable used to indicate if the thread should
         # be stopped
         self.stopped = False
-        
         #Debug stream shape
-        print("Start video stream with shape: {},{}".format(int(self.stream.get(3)),int(self.stream.get(4))))
+        self.real_width = int(self.stream.get(3))
+        self.real_height = int(self.stream.get(4))
+        print("Start video stream with shape: {},{}".format(self.real_width,self.real_height))
     
     def start(self):
         # start the thread to read frames from the video stream
