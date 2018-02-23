@@ -3,10 +3,10 @@ video_input: 0              # Input Must be OpenCV readable
 visualize: True             # Disable for performance increase
 vis_text: True              # Display fps on visualization stream
 max_frames: 500             # only used if visualize==False
-width: 300                  # 300x300 is used by SSD_Mobilenet -> highest fps
-height: 300
-fps_interval: 3             # Interval [s] to print fps of the last interval in console
-det_interval: 100            # intervall [frames] to print detections to console
+width: 600                  # OpenCV only supports 4:3 formats others will be converted
+height: 600                 # 600x600 leads to 640x480
+fps_interval: 5             # Interval [s] to print fps of the last interval in console
+det_interval: 100           # intervall [frames] to print detections to console
 det_th: 0.5                 # detection threshold for det_intervall
 split_model: True           # Splits Model into a GPU and CPU session (currently only works for ssd_mobilenets)
 log_device: False           # Logs GPU / CPU device placement
