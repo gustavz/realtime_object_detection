@@ -17,7 +17,8 @@ The following work has been done based on the original API:
 - Added various scripts in `/stuff` to make use of tf's API
 - Added `split_model` Option to split frozen graph into a GPU and CPU session. <br />
 Works only for `ssd_mobilenet` models but results in significant performance increase. 
-- **Results: Overall Performance Increase of up to 300%** depending on the config and the running system
+- Added mutlithreading for the split sessions (Many thanks to [naisy](https://github.com/naisy))
+- **Results: Overall Performance Increase of up to 400%** depending on the config and the running system
 <br />
 
 ## Getting Started:  
@@ -37,7 +38,7 @@ Works only for `ssd_mobilenet` models but results in significant performance inc
  <br />
 
 ## Current max Performance on `ssd_mobilenet` (with|without visualization):
-- Dell XPS 15 with i7 @ 2.80GHZ x8 and GeForce GTX 1050 4GB:  **42fps | 76fps**
+- Dell XPS 15 with i7 @ 2.80GHZ x8 and GeForce GTX 1050 4GB:  **78fps | 105fps**
 - Nvidia Jetson Tx2 with Tegra 8GB:                           **5fps | 14 fps**
  <br />
 

@@ -20,8 +20,9 @@ from tensorflow.core.framework import graph_pb2
 
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
-from stuff.helper import FPS2, WebcamVideoStream
+from stuff.helper import FPS2, WebcamVideoStream, SessionWorker
 
+import time
 
 ## LOAD CONFIG PARAMS ##
 if (os.path.isfile('config.yml')):
@@ -30,7 +31,7 @@ if (os.path.isfile('config.yml')):
 else:
     with open("config.sample.yml", 'r') as ymlfile:
         cfg = yaml.load(ymlfile)
-        
+
 video_input         = cfg['video_input']
 visualize           = cfg['visualize']
 vis_text            = cfg['vis_text']
@@ -47,14 +48,13 @@ label_path          = cfg['label_path']
 num_classes         = cfg['num_classes']
 split_model         = cfg['split_model']
 log_device          = cfg['log_device']
-convert_rgb         = cfg['convert_rgb']
 ssd_shape           = cfg['ssd_shape']
 
 
 # Download Model form TF's Model Zoo
 def download_model():
     model_file = model_name + '.tar.gz'
-    download_base = 'http://download.tensorflow.org/models/object_detection/'   
+    download_base = 'http://download.tensorflow.org/models/object_detection/'
     if not os.path.isfile(model_path):
         print('Model not found. Downloading it now.')
         opener = urllib.request.URLopener()
@@ -62,19 +62,19 @@ def download_model():
         tar_file = tarfile.open(model_file)
         for file in tar_file.getmembers():
           file_name = os.path.basename(file.name)
-          if 'frozen_inference_graph.pb' in file_name:
+          if 'toy_frozen_inference_graph.pb' in file_name:
             tar_file.extract(file, os.getcwd() + '/models/')
         os.remove(os.getcwd() + '/' + model_file)
     else:
         print('Model found. Proceed.')
-     
+
 # helper function for split model
 def _node_name(n):
   if n.startswith("^"):
     return n[1:]
   else:
     return n.split(":")[0]
-        
+
 # Load a (frozen) Tensorflow model into memory.
 def load_frozenmodel():
     print('Loading frozen model into memory')
@@ -87,7 +87,7 @@ def load_frozenmodel():
             od_graph_def.ParseFromString(serialized_graph)
             tf.import_graph_def(od_graph_def, name='')
         return detection_graph, None, None
-    
+
     else:
         # load a frozen Model and split it into GPU and CPU graphs
         # Hardcoded for ssd_mobilenet
@@ -104,7 +104,7 @@ def load_frozenmodel():
                     score_def = node
                 if node.name == "Postprocessor/ExpandDims_1":
                     expand_def = node
-                    
+
         detection_graph = tf.Graph()
         with detection_graph.as_default():
           od_graph_def = tf.GraphDef()
@@ -112,7 +112,7 @@ def load_frozenmodel():
             serialized_graph = fid.read()
             od_graph_def.ParseFromString(serialized_graph)
             dest_nodes = ['Postprocessor/convert_scores','Postprocessor/ExpandDims_1']
-        
+
             edges = {}
             name_to_node_map = {}
             node_seq = {}
@@ -123,10 +123,10 @@ def load_frozenmodel():
               edges[n] = [_node_name(x) for x in node.input]
               node_seq[n] = seq
               seq += 1
-        
+
             for d in dest_nodes:
               assert d in name_to_node_map, "%s is not in graph" % d
-        
+
             nodes_to_keep = set()
             next_to_visit = dest_nodes[:]
             while next_to_visit:
@@ -136,30 +136,30 @@ def load_frozenmodel():
                 continue
               nodes_to_keep.add(n)
               next_to_visit += edges[n]
-        
+
             nodes_to_keep_list = sorted(list(nodes_to_keep), key=lambda n: node_seq[n])
-        
+
             nodes_to_remove = set()
             for n in node_seq:
               if n in nodes_to_keep_list: continue
               nodes_to_remove.add(n)
             nodes_to_remove_list = sorted(list(nodes_to_remove), key=lambda n: node_seq[n])
-        
+
             keep = graph_pb2.GraphDef()
             for n in nodes_to_keep_list:
               keep.node.extend([copy.deepcopy(name_to_node_map[n])])
-        
+
             remove = graph_pb2.GraphDef()
             remove.node.extend([score_def])
             remove.node.extend([expand_def])
             for n in nodes_to_remove_list:
               remove.node.extend([copy.deepcopy(name_to_node_map[n])])
-        
+
             with tf.device('/gpu:0'):
               tf.import_graph_def(keep, name='')
             with tf.device('/cpu:0'):
               tf.import_graph_def(remove, name='')
-              
+
         return detection_graph, score, expand
 
 
@@ -190,41 +190,70 @@ def detection(detection_graph, category_index, score, expand):
                 expand_out = detection_graph.get_tensor_by_name('Postprocessor/ExpandDims_1:0')
                 score_in = detection_graph.get_tensor_by_name('Postprocessor/convert_scores_1:0')
                 expand_in = detection_graph.get_tensor_by_name('Postprocessor/ExpandDims_1_1:0')
+                # Threading
+                gpu_worker = SessionWorker("GPU",detection_graph,config)
+                cpu_worker = SessionWorker("CPU",detection_graph,config)
+                gpu_opts = [score_out, expand_out]
+                cpu_opts = [detection_boxes, detection_scores, detection_classes, num_detections]
+                gpu_counter = 0
+                cpu_counter = 0
             # Start Video Stream and FPS calculation
             fps = FPS2(fps_interval).start()
             video_stream = WebcamVideoStream(video_input,width,height).start()
             cur_frames = 0
-            print ("Press 'q' to Exit")
+            print("Press 'q' to Exit")
             print('Starting Detection')
             while video_stream.isActive():
-                # read video frame and expand dimensions
-                image = video_stream.read()
-                fps.update()
-                if convert_rgb:
-                    try:
-                        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-                        cvt = True
-                    except:
-                        print("Error converting BGR2RGB")
-                        cvt = False
-                image_expanded = np.expand_dims(image, axis=0)
                 # actual Detection
                 if split_model:
-                    # Split Detection in two sessions.
-                    (score, expand) = sess.run([score_out, expand_out], feed_dict={image_tensor: image_expanded})
-                    (boxes, scores, classes, num) = sess.run(
-                            [detection_boxes, detection_scores, detection_classes, num_detections],
-                            feed_dict={score_in:score, expand_in: expand}) 
+                    # split model in seperate gpu and cpu session threads
+                    if gpu_worker.is_sess_empty():
+                        # read video frame, expand dimensions and convert to rgb
+                        image = video_stream.read()
+                        image_expanded = np.expand_dims(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), axis=0)
+                        # put new queue
+                        gpu_feeds = {image_tensor: image_expanded}
+                        if visualize:
+                            gpu_extras = image # for visualization frame
+                        else:
+                            gpu_extras = None
+                        gpu_worker.put_sess_queue(gpu_opts,gpu_feeds,gpu_extras)
+
+                    g = gpu_worker.get_result_queue()
+                    if g is None:
+                        # gpu thread has no output queue. ok skip, let's check cpu thread.
+                        gpu_counter += 1
+                    else:
+                        # gpu thread has output queue.
+                        gpu_counter = 0
+                        score,expand,image = g["results"][0],g["results"][1],g["extras"]
+
+                        if cpu_worker.is_sess_empty():
+                            # When cpu thread has no next queue, put new queue.
+                            # else, drop gpu queue.
+                            cpu_feeds = {score_in: score, expand_in: expand}
+                            cpu_extras = image
+                            cpu_worker.put_sess_queue(cpu_opts,cpu_feeds,cpu_extras)
+
+                    c = cpu_worker.get_result_queue()
+                    if c is None:
+                        # cpu thread has no output queue. ok, nothing to do. continue
+                        cpu_counter += 1
+                        time.sleep(0.005)
+                        continue
+                    else:
+                        cpu_counter = 0
+                        boxes, scores, classes, num, image = c["results"][0],c["results"][1],c["results"][2],c["results"][3],c["extras"]
                 else:
                     # default session
+                    image = video_stream.read()
+                    image_expanded = np.expand_dims(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), axis=0)
                     (boxes, scores, classes, num) = sess.run(
                             [detection_boxes, detection_scores, detection_classes, num_detections],
-                            feed_dict={image_tensor: image_expanded})              
+                            feed_dict={image_tensor: image_expanded})
 
                 # Visualization of the results of a detection.
                 if visualize:
-                    if convert_rgb and cvt:
-                        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
                     vis_util.visualize_boxes_and_labels_on_image_array(
                         image,
                         np.squeeze(boxes),
@@ -241,28 +270,32 @@ def detection(detection_graph, category_index, score, expand):
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
                 else:
-                    # Exit after max frames if no visualization
                     cur_frames += 1
+                    # Exit after max frames if no visualization
                     for box, score, _class in zip(np.squeeze(boxes), np.squeeze(scores), np.squeeze(classes)):
                         if cur_frames%det_interval==0 and score > det_th:
                             label = category_index[_class]['name']
                             print("label: {}\nscore: {}\nbox: {}".format(label, score, box))
                     if cur_frames >= max_frames:
                         break
+                fps.update()
+
     # End everything
+    gpu_worker.stop()
+    cpu_worker.stop()
     fps.stop()
-    video_stream.stop()     
+    video_stream.stop()
     cv2.destroyAllWindows()
     print('[INFO] elapsed time (total): {:.2f}'.format(fps.elapsed()))
     print('[INFO] approx. FPS: {:.2f}'.format(fps.fps()))
 
 
-def main():  
-    download_model()                 
+def main():
+    download_model()
     graph, score, expand = load_frozenmodel()
     category = load_labelmap()
     detection(graph, category, score, expand)
-    
-    
+
+
 if __name__ == '__main__':
     main()

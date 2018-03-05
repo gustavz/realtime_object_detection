@@ -12,7 +12,6 @@ split_model: True           # Splits Model into a GPU and CPU session (currently
 log_device: False           # Logs GPU / CPU device placement
 allow_memory_growth: True   # limits memory allocation to the actual needs
 image_path: 'test_images'   # used for image_detection.pyq
-convert_rgb: True           # Converts BGR to RGB color (idk how it ever worked without this)
 ssd_shape: 300              # used for the split model algorithm
                             # currently only supports ssd networks trained on 300x300 and 600x600 input 
 
