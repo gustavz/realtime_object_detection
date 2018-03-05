@@ -210,7 +210,7 @@ class SessionWorker():
             import traceback
             traceback.print_exc()
         self.stop()
-        print("end execution")
+        #print("end execution")
         return
 
     def is_sess_empty(self):
