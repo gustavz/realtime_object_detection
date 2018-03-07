@@ -18,7 +18,7 @@ The following work has been done based on the original API:
 - Added `split_model` Option to split frozen graph into a GPU and CPU session (Many thanks to [wkelongws](https://github.com/wkelongws)). <br />
 Works only for `ssd_mobilenet` models but results in significant performance increase. 
 - Added mutlithreading for the split sessions (Many thanks to [naisy](https://github.com/naisy))
-- **Results: Overall Performance Increase of up to 400%** depending on the config and the running system
+- **Results: Overall up to x10 Performance Increase** depending on the config and the running system
 <br />
 
 ## Getting Started:  
