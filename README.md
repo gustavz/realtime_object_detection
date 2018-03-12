@@ -15,9 +15,9 @@ The following work has been done based on the original API:
 - Added `config.yml` for quick&easy parameter parsing
 - Exported new frozen Model based on `ssd_mobilenet_v1_coco` with altered `batch_non_max_suppression.score_threshold` to increase perfomance
 - Added various scripts in `/stuff` to make use of tf's API
-- Added `split_model` Option to split frozen graph into a GPU and CPU session (Many thanks to [wkelongws](https://github.com/wkelongws)). <br />
+- Added `split_model` Option to split frozen graph into a GPU and CPU session (thanks to [wkelongws](https://github.com/wkelongws)). <br />
 Works only for `ssd_mobilenet` models but results in significant performance increase. 
-- Added mutlithreading for the split sessions (Many thanks to [naisy](https://github.com/naisy))
+- Added mutlithreading for the split sessions (thanks to [naisy](https://github.com/naisy))
 - **Results: Overall up to x10 Performance Increase** depending on the config and the running system
 <br />
 
@@ -42,9 +42,19 @@ Works only for `ssd_mobilenet` models but results in significant performance inc
 - Nvidia Jetson Tx2 with Tegra 8GB:                           **30fps | 33 fps**
  <br />
 
-## Further Work:
+## To Do:
+If you like the project, got improvement or constructive critisism, please feel free to open an Issue. <br />
+I am always happy to get feedback or help to be able to further improve the project. <br />
+Future implementation plans are: <br />
+[checkbox:unchecked] Mask-SSD: Modify SSD to be able to predict a segmentation mask in parallel to the bounding box
+[checkbox:unchecked] Split Model and Threading for R-CNN Models
+[checkbox:unchecked] Apply KCF Filtering to improve fps especially on the jetson
+ <br />
+ 
+## Related Work:
 - [test_models](https://github.com/GustavZ/test_models): A repo for models i am currently working on for benchmark tests
 - [deeptraining_hands](https://github.com/GustavZ/deeptraining_hands): A repo for setting up the [ego](http://vision.soic.indiana.edu/projects/egohands/)- and [oxford](http://www.robots.ox.ac.uk/~vgg/data/hands/) hands-datasets.<br />
 It also contains several scripts to convert various annotation formats to be able to train Networks on different deep learning frameworks <br />
 currently supports `.xml`, `.mat`, `.csv`, `.record`, `.txt` annotations
-- [tf_for_od_api](https://github.com/GustavZ/yolo_for_tf_od_api): A repo to be able to include Yolo V2 in tf's object detection api
+- [yolo_for_tf_od_api](https://github.com/GustavZ/yolo_for_tf_od_api): A repo to be able to include Yolo V2 in tf's object detection api
+
