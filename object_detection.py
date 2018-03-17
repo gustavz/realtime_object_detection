@@ -281,8 +281,9 @@ def detection(detection_graph, category_index, score, expand):
                 fps.update()
 
     # End everything
-    gpu_worker.stop()
-    cpu_worker.stop()
+    if split_model:
+      gpu_worker.stop()
+      cpu_worker.stop()
     fps.stop()
     video_stream.stop()
     cv2.destroyAllWindows()
