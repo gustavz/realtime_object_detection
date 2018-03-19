@@ -30,6 +30,10 @@ Works only for `ssd_mobilenet` models but results in significant performance inc
 - Enjoy!
 <br />
 
+## Under Development (help appreciated):
+- KCF Tracking: run `./build_kcf.sh` inside directory, set `use_tracker` to `True`, run `object_detection_kcf_test` (currently only works more or less stable without `split_model`)
+- Mask Detection: run `object_detection_mask_test` (currently only works for `mask r-cnn` models and TF 1.5, so also no `split_model`)
+
 ## My Setup:
 - Ubuntu 16.04
 - Python 2.7
@@ -39,7 +43,7 @@ Works only for `ssd_mobilenet` models but results in significant performance inc
 
 ## Current max Performance on `ssd_mobilenet` (with|without visualization):
 - Dell XPS 15 with i7 @ 2.80GHZ x8 and GeForce GTX 1050 4GB:  **78fps | 105fps**
-- Nvidia Jetson Tx2 with Tegra 8GB:                           **30fps | 31 fps**
+- Nvidia Jetson Tx2 with Tegra 8GB:                           **30fps | 33 fps**
  <br />
 
 ## Further Work:

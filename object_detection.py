@@ -240,7 +240,7 @@ def detection(detection_graph, category_index, score, expand):
                         # cpu thread has no output queue. ok, nothing to do. continue
                         cpu_counter += 1
                         time.sleep(0.005)
-                        continue
+                        continue # If CPU RESULT has not been set yet, no fps update
                     else:
                         cpu_counter = 0
                         boxes, scores, classes, num, image = c["results"][0],c["results"][1],c["results"][2],c["results"][3],c["extras"]
@@ -248,7 +248,7 @@ def detection(detection_graph, category_index, score, expand):
                     # default session
                     image = video_stream.read()
                     image_expanded = np.expand_dims(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), axis=0)
-                    (boxes, scores, classes, num) = sess.run(
+                    boxes, scores, classes, num = sess.run(
                             [detection_boxes, detection_scores, detection_classes, num_detections],
                             feed_dict={image_tensor: image_expanded})
 

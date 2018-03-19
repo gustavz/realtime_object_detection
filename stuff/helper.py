@@ -101,6 +101,7 @@ class WebcamVideoStream:
     def __init__(self, src, width, height):
         # initialize the video camera stream and read the first frame
         # from the stream
+        self.frame_counter = 1
         self.width = width
         self.height = height
         self.stream = cv2.VideoCapture(src)
@@ -130,6 +131,7 @@ class WebcamVideoStream:
 
             # otherwise, read the next frame from the stream
             (self.grabbed, self.frame) = self.stream.read()
+            self.frame_counter += 1
 
     def read(self):
         # return the frame most recently read
@@ -148,6 +150,7 @@ class WebcamVideoStream:
             self.frame = cv2.resize(self.frame, (self.width, self.height)) 
         except:
             print("Error resizing video stream")
+        
 
 
 class SessionWorker():
@@ -183,34 +186,24 @@ class SessionWorker():
     def execution(self,graph,config):
         self.is_thread_running = True
         try:
-            #start_time,start_clock = time.time(),time.clock()
             with tf.Session(graph=graph,config=config) as sess:
-                #end_time,end_clock=time.time()-start_time,time.clock()-start_clock
-                #print("{} - sess time:{:.8f},clock:{:.8f}".format(self.tag,end_time,end_clock))
                 while self.is_thread_running:
-                    #with self.lock:
                         while not self.sess_queue.empty():
-                            #start_time,start_clock=time.time(),time.clock()
                             q = self.sess_queue.get(block=False)
                             opts = q["opts"]
                             feeds= q["feeds"]
                             extras= q["extras"]
-
                             if feeds is None:
                                 results = sess.run(opts)
                             else:
                                 results = sess.run(opts,feed_dict=feeds)
                             self.result_queue.put({"results":results,"extras":extras})
                             self.sess_queue.task_done()
-                            #end_time,end_clock=time.time()-start_time,time.clock()-start_clock
-                            #print("{} - time:{:.8f},clock:{:.8f}".format(self.tag,end_time,end_clock))
                         time.sleep(0.005)
-
         except:
             import traceback
             traceback.print_exc()
         self.stop()
-        #print("end execution")
         return
 
     def is_sess_empty(self):
@@ -220,11 +213,7 @@ class SessionWorker():
             return False
 
     def put_sess_queue(self,opts,feeds=None,extras=None):
-        #start_time,start_clock=time.time(),time.clock()
-        #with self.lock:
         self.sess_queue.put({"opts":opts,"feeds":feeds,"extras":extras})
-        #end_time,end_clock=time.time()-start_time,time.clock()-start_clock
-        #print("{} put_sess_queue(), time:{:.8f} clock:{:.8f}".format(self.tag,end_time,end_clock))
         return
 
     def is_result_empty(self):
@@ -234,13 +223,10 @@ class SessionWorker():
             return False
 
     def get_result_queue(self):
-        #start_time,start_clock=time.time(),time.clock()
         result = None
         if not self.result_queue.empty():
             result = self.result_queue.get(block=False)
             self.result_queue.task_done()
-        #end_time,end_clock=time.time()-start_time,time.clock()-start_clock
-        #print("{} get_result_queue(), time:{:.8f} clock:{:.8f}".format(self.tag,end_time,end_clock))
         return result
 
     def stop(self):
