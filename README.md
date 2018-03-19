@@ -33,6 +33,7 @@ Works only for `ssd_mobilenet` models but results in significant performance inc
 ## Under Development (help appreciated):
 - **KCF Tracking**: run `./build_kcf.sh` inside directory, set `use_tracker` to `True` inside config, run `object_detection_kcf_test.py` (currently only works more or less stable without `split_model`)
 - **Mask Detection**: run `object_detection_mask_test.py` (currently only works for `mask r-cnn` models and `TF 1.5`, so also no `split_model`)
+<br />
 
 ## My Setup:
 - Ubuntu 16.04
@@ -61,4 +62,3 @@ Future implementation plans are: <br />
 It also contains several scripts to convert various annotation formats to be able to train Networks on different deep learning frameworks <br />
 currently supports `.xml`, `.mat`, `.csv`, `.record`, `.txt` annotations
 - [yolo_for_tf_od_api](https://github.com/GustavZ/yolo_for_tf_od_api): A repo to be able to include Yolo V2 in tf's object detection api
-
