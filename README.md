@@ -31,8 +31,8 @@ Works only for `ssd_mobilenet` models but results in significant performance inc
 <br />
 
 ## Under Development (help appreciated):
-- KCF Tracking: run `./build_kcf.sh` inside directory, set `use_tracker` to `True`, run `object_detection_kcf_test` (currently only works more or less stable without `split_model`)
-- Mask Detection: run `object_detection_mask_test` (currently only works for `mask r-cnn` models and TF 1.5, so also no `split_model`)
+- **KCF Tracking**: run `./build_kcf.sh` inside directory, set `use_tracker` to `True` inside config, run `object_detection_kcf_test.py` (currently only works more or less stable without `split_model`)
+- **Mask Detection**: run `object_detection_mask_test.py` (currently only works for `mask r-cnn` models and `TF 1.5`, so also no `split_model`)
 
 ## My Setup:
 - Ubuntu 16.04
@@ -50,9 +50,9 @@ Works only for `ssd_mobilenet` models but results in significant performance inc
 If you like the project, got improvement or constructive critisism, please feel free to open an Issue. <br />
 I am always happy to get feedback or help to be able to further improve the project. <br />
 Future implementation plans are: <br />
+- [ ] Apply KCF Filtering to improve fps especially on the jetson
 - [ ] Mask-SSD: Modify SSD to be able to predict a segmentation mask in parallel to the bounding box
 - [ ] Split Model and Threading for R-CNN Models
-- [ ] Apply KCF Filtering to improve fps especially on the jetson
  <br />
  
 ## Related Work:
