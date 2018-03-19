@@ -51,7 +51,7 @@ Works only for `ssd_mobilenet` models but results in significant performance inc
 If you like the project, got improvement or constructive critisism, please feel free to open an Issue. <br />
 I am always happy to get feedback or help to be able to further improve the project. <br />
 Future implementation plans are: <br />
-- [ ] Apply KCF Filtering to improve fps especially on the jetson
+- [ ] Add KCF Tracking to improve fps especially on the jetson
 - [ ] Mask-SSD: Modify SSD to be able to predict a segmentation mask in parallel to the bounding box
 - [ ] Split Model and Threading for R-CNN Models
  <br />
