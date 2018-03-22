@@ -48,7 +48,6 @@ label_path          = cfg['label_path']
 num_classes         = cfg['num_classes']
 split_model         = cfg['split_model']
 log_device          = cfg['log_device']
-convert_rgb         = cfg['convert_rgb']
 ssd_shape           = cfg['ssd_shape']
 
 
@@ -220,21 +219,13 @@ def detection(detection_graph, category_index, score, expand):
             cur_frames = 0
             while video_stream.isActive():
                 image = video_stream.read()
-                fps.update()
-                # read video frame and expand dimensions
-                if convert_rgb:
-                    try:
-                        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-                        cvt = True
-                    except:
-                        print("Error converting BGR2RGB")
-                        cvt = False    
+                image_expanded = np.expand_dims(cv2.cvtColor(image, cv2.COLOR_BGR2RGB),0)
                 # detection
                 if split_model:
-                    (score, expand) = sess.run([score_out, expand_out], feed_dict={image_tensor: np.expand_dims(image, 0)})
+                    (score, expand) = sess.run([score_out, expand_out], feed_dict={image_tensor:image_expanded})
                     output_dict = sess.run(tensor_dict, feed_dict={score_in:score, expand_in: expand})
                 else:
-                    output_dict = sess.run(tensor_dict, feed_dict={image_tensor: np.expand_dims(image, 0)})
+                    output_dict = sess.run(tensor_dict, feed_dict={image_tensor: image_expanded})
                 #num = int(output_dict['num_detections'][0])
                 classes = output_dict['detection_classes'][0].astype(np.uint8)
                 boxes = output_dict['detection_boxes'][0]
@@ -243,8 +234,6 @@ def detection(detection_graph, category_index, score, expand):
                     output_dict['detection_masks'] = output_dict['detection_masks'][0]
                 # Visualization of the results of a detection.
                 if visualize:
-                    if convert_rgb and cvt:
-                        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
                     vis_util.visualize_boxes_and_labels_on_image_array(
                         image,
                         boxes,
@@ -270,6 +259,7 @@ def detection(detection_graph, category_index, score, expand):
                                 print("label: {}\nscore: {}\nbox: {}".format(label, score, box))
                     if cur_frames >= max_frames:
                         break
+                fps.update()
     # End everything
     fps.stop()
     video_stream.stop()     
