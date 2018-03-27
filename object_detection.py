@@ -56,7 +56,7 @@ def download_model():
     model_file = model_name + '.tar.gz'
     download_base = 'http://download.tensorflow.org/models/object_detection/'
     if not os.path.isfile(model_path):
-        print('Model not found. Downloading it now.')
+        print('> Model not found. Downloading it now.')
         opener = urllib.request.URLopener()
         opener.retrieve(download_base + model_file, model_file)
         tar_file = tarfile.open(model_file)
@@ -66,18 +66,18 @@ def download_model():
             tar_file.extract(file, os.getcwd() + '/models/')
         os.remove(os.getcwd() + '/' + model_file)
     else:
-        print('Model found. Proceed.')
+        print('> Model found. Proceed.')
 
 # helper function for split model
 def _node_name(n):
-  if n.startswith("^"):
-    return n[1:]
-  else:
-    return n.split(":")[0]
+    if n.startswith("^"):
+        return n[1:]
+    else:
+        return n.split(":")[0]
 
 # Load a (frozen) Tensorflow model into memory.
 def load_frozenmodel():
-    print('Loading frozen model into memory')
+    print('> Loading frozen model into memory')
     if not split_model:
         detection_graph = tf.Graph()
         with detection_graph.as_default():
@@ -107,64 +107,63 @@ def load_frozenmodel():
 
         detection_graph = tf.Graph()
         with detection_graph.as_default():
-          od_graph_def = tf.GraphDef()
-          with tf.gfile.GFile(model_path, 'rb') as fid:
-            serialized_graph = fid.read()
-            od_graph_def.ParseFromString(serialized_graph)
-            dest_nodes = ['Postprocessor/convert_scores','Postprocessor/ExpandDims_1']
-
-            edges = {}
-            name_to_node_map = {}
-            node_seq = {}
-            seq = 0
-            for node in od_graph_def.node:
-              n = _node_name(node.name)
-              name_to_node_map[n] = node
-              edges[n] = [_node_name(x) for x in node.input]
-              node_seq[n] = seq
-              seq += 1
-
-            for d in dest_nodes:
-              assert d in name_to_node_map, "%s is not in graph" % d
-
-            nodes_to_keep = set()
-            next_to_visit = dest_nodes[:]
-            while next_to_visit:
-              n = next_to_visit[0]
-              del next_to_visit[0]
-              if n in nodes_to_keep:
-                continue
-              nodes_to_keep.add(n)
-              next_to_visit += edges[n]
-
-            nodes_to_keep_list = sorted(list(nodes_to_keep), key=lambda n: node_seq[n])
-
-            nodes_to_remove = set()
-            for n in node_seq:
-              if n in nodes_to_keep_list: continue
-              nodes_to_remove.add(n)
-            nodes_to_remove_list = sorted(list(nodes_to_remove), key=lambda n: node_seq[n])
-
-            keep = graph_pb2.GraphDef()
-            for n in nodes_to_keep_list:
-              keep.node.extend([copy.deepcopy(name_to_node_map[n])])
-
-            remove = graph_pb2.GraphDef()
-            remove.node.extend([score_def])
-            remove.node.extend([expand_def])
-            for n in nodes_to_remove_list:
-              remove.node.extend([copy.deepcopy(name_to_node_map[n])])
-
-            with tf.device('/gpu:0'):
-              tf.import_graph_def(keep, name='')
-            with tf.device('/cpu:0'):
-              tf.import_graph_def(remove, name='')
+            od_graph_def = tf.GraphDef()
+            with tf.gfile.GFile(model_path, 'rb') as fid:
+                serialized_graph = fid.read()
+                od_graph_def.ParseFromString(serialized_graph)
+                dest_nodes = ['Postprocessor/convert_scores','Postprocessor/ExpandDims_1']
+    
+                edges = {}
+                name_to_node_map = {}
+                node_seq = {}
+                seq = 0
+                for node in od_graph_def.node:
+                    n = _node_name(node.name)
+                    name_to_node_map[n] = node
+                    edges[n] = [_node_name(x) for x in node.input]
+                    node_seq[n] = seq
+                    seq += 1
+                for d in dest_nodes:
+                    assert d in name_to_node_map, "%s is not in graph" % d
+    
+                nodes_to_keep = set()
+                next_to_visit = dest_nodes[:]
+                
+                while next_to_visit:
+                    n = next_to_visit[0]
+                    del next_to_visit[0]
+                    if n in nodes_to_keep: continue
+                    nodes_to_keep.add(n)
+                    next_to_visit += edges[n]
+    
+                nodes_to_keep_list = sorted(list(nodes_to_keep), key=lambda n: node_seq[n])
+                nodes_to_remove = set()
+                
+                for n in node_seq:
+                    if n in nodes_to_keep_list: continue
+                    nodes_to_remove.add(n)
+                nodes_to_remove_list = sorted(list(nodes_to_remove), key=lambda n: node_seq[n])
+    
+                keep = graph_pb2.GraphDef()
+                for n in nodes_to_keep_list:
+                    keep.node.extend([copy.deepcopy(name_to_node_map[n])])
+    
+                remove = graph_pb2.GraphDef()
+                remove.node.extend([score_def])
+                remove.node.extend([expand_def])
+                for n in nodes_to_remove_list:
+                    remove.node.extend([copy.deepcopy(name_to_node_map[n])])
+    
+                with tf.device('/gpu:0'):
+                    tf.import_graph_def(keep, name='')
+                with tf.device('/cpu:0'):
+                    tf.import_graph_def(remove, name='')
 
         return detection_graph, score, expand
 
 
 def load_labelmap():
-    print('Loading label map')
+    print('> Loading label map')
     label_map = label_map_util.load_labelmap(label_path)
     categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=num_classes, use_display_name=True)
     category_index = label_map_util.create_category_index(categories)
@@ -172,7 +171,7 @@ def load_labelmap():
 
 
 def detection(detection_graph, category_index, score, expand):
-    print("Building Graph")
+    print("> Building Graph")
     # Session Config: allow seperate GPU/CPU adressing and limit memory allocation
     config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=log_device)
     config.gpu_options.allow_growth=allow_memory_growth
@@ -201,8 +200,8 @@ def detection(detection_graph, category_index, score, expand):
             fps = FPS2(fps_interval).start()
             video_stream = WebcamVideoStream(video_input,width,height).start()
             cur_frames = 0
-            print("Press 'q' to Exit")
-            print('Starting Detection')
+            print("> Press 'q' to Exit")
+            print('> Starting Detection')
             while video_stream.isActive():
                 # actual Detection
                 if split_model:
@@ -275,7 +274,7 @@ def detection(detection_graph, category_index, score, expand):
                     for box, score, _class in zip(np.squeeze(boxes), np.squeeze(scores), np.squeeze(classes)):
                         if cur_frames%det_interval==0 and score > det_th:
                             label = category_index[_class]['name']
-                            print("label: {}\nscore: {}\nbox: {}".format(label, score, box))
+                            print("> label: {}\nscore: {}\nbox: {}".format(label, score, box))
                     if cur_frames >= max_frames:
                         break
                 fps.update()
@@ -287,8 +286,8 @@ def detection(detection_graph, category_index, score, expand):
     fps.stop()
     video_stream.stop()
     cv2.destroyAllWindows()
-    print('[INFO] elapsed time (total): {:.2f}'.format(fps.elapsed()))
-    print('[INFO] approx. FPS: {:.2f}'.format(fps.fps()))
+    print('> [INFO] elapsed time (total): {:.2f}'.format(fps.elapsed()))
+    print('> [INFO] approx. FPS: {:.2f}'.format(fps.fps()))
 
 
 def main():

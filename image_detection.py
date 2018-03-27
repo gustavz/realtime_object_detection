@@ -23,7 +23,6 @@ label_path          = cfg['label_path']
 num_classes         = cfg['num_classes']
 det_th              = cfg['det_th']
 image_path          = cfg['image_path']
-convert_rgb         = cfg['convert_rgb']
 
 # load images
 images = []
@@ -61,10 +60,8 @@ with detection_graph.as_default():
     num_detections = detection_graph.get_tensor_by_name('num_detections:0')
     for image in images:
       image_np = cv2.imread(image)
-      if convert_rgb:
-          image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
       # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
-      image_np_expanded = np.expand_dims(image_np, axis=0)
+      image_np_expanded = np.expand_dims(cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB), axis=0)
       # Actual detection.
       start = datetime.datetime.now()
       (boxes, scores, classes, num) = sess.run(
@@ -72,8 +69,6 @@ with detection_graph.as_default():
           feed_dict={image_tensor: image_np_expanded})
       stop = datetime.datetime.now()
       # Visualization of the results of a detection.
-      if convert_rgb:
-          image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
       vis_util.visualize_boxes_and_labels_on_image_array(
           image_np,
           np.squeeze(boxes),
