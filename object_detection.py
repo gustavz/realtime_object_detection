@@ -144,7 +144,6 @@ def load_frozenmodel():
               if n in nodes_to_keep_list: continue
               nodes_to_remove.add(n)
             nodes_to_remove_list = sorted(list(nodes_to_remove), key=lambda n: node_seq[n])
-
             keep = graph_pb2.GraphDef()
             for n in nodes_to_keep_list:
               keep.node.extend([copy.deepcopy(name_to_node_map[n])])
@@ -154,7 +153,6 @@ def load_frozenmodel():
             remove.node.extend([expand_def])
             for n in nodes_to_remove_list:
               remove.node.extend([copy.deepcopy(name_to_node_map[n])])
-
             with tf.device('/gpu:0'):
               tf.import_graph_def(keep, name='')
             with tf.device('/cpu:0'):
