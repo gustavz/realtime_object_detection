@@ -62,7 +62,7 @@ def download_model():
         tar_file = tarfile.open(model_file)
         for file in tar_file.getmembers():
           file_name = os.path.basename(file.name)
-          if 'toy_frozen_inference_graph.pb' in file_name:
+          if 'frozen_inference_graph.pb' in file_name:
             tar_file.extract(file, os.getcwd() + '/models/')
         os.remove(os.getcwd() + '/' + model_file)
     else:
