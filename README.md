@@ -1,8 +1,7 @@
 # realtime_object_detection
 Realtime object detection based on [Tensorflow's Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection) with an extreme Focus on Performance. <br />
 Specialized for `ssd_mobilenet` models.
-<br />
-<br />
+
 ## About the Project
 The Idea was to create a realtime capable object detection pipeline on various machines. <br />
 Plug and play, ready to use without deep previous knowledge.<br /> <br />
@@ -19,7 +18,6 @@ The following work has been done based on the original API:
 Works only for `ssd_mobilenet` models but results in significant performance increase. 
 - Added mutlithreading for the split sessions (thanks to [naisy](https://github.com/naisy))
 - **Results: Overall up to x10 Performance Increase** depending on the config and the running system
-<br />
 
 ## Getting Started:  
 - create a copy of `config.sample.yml` called `config.yml`
@@ -28,7 +26,6 @@ Works only for `ssd_mobilenet` models but results in significant performance inc
 - run `image_detection.py` for single test image detection
 - run `object_detection.py` for realtime object detection
 - Enjoy!
-<br />
 
 ## Under Development (help appreciated):
 - **KCF Tracking**: run `./build_kcf.sh` inside directory, set `use_tracker` to `True` inside config, run `object_detection_kcf_test.py` (currently only works more or less stable without `split_model`)
@@ -38,14 +35,14 @@ Works only for `ssd_mobilenet` models but results in significant performance inc
 ## My Setup:
 - Ubuntu 16.04
 - Python 2.7
-- Tensorflow 1.4
+- Tensorflow 1.4 
+([this repo](https://github.com/peterlee0127/tensorflow-nvJetson) provides pre-build tf wheel files for jetson tx2)
 - OpenCV 3.3.1
- <br />
+> Note: This project currently does not run with tensorflow v1.7.0
 
 ## Current max Performance on `ssd_mobilenet` (with|without visualization):
 - Dell XPS 15 with i7 @ 2.80GHZ x8 and GeForce GTX 1050 4GB:  **78fps | 105fps**
 - Nvidia Jetson Tx2 with Tegra 8GB:                           **30fps | 33 fps**
- <br />
 
 ## To Do:
 If you like the project, got improvement or constructive critisism, please feel free to open an Issue. <br />
@@ -54,7 +51,6 @@ Future implementation plans are: <br />
 - [ ] Add KCF Tracking to improve fps especially on the jetson
 - [ ] Mask-SSD: Modify SSD to be able to predict a segmentation mask in parallel to the bounding box
 - [ ] Split Model and Threading for R-CNN Models
- <br />
  
 ## Related Work:
 - [test_models](https://github.com/GustavZ/test_models): A repo for models i am currently working on for benchmark tests
