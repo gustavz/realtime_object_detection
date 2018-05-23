@@ -30,7 +30,7 @@ MINAREA         = cfg['minArea']
 MODEL_NAME		= cfg['dl_model_name']
 MODEL_PATH		= cfg['dl_model_path']
 IMAGE_PATH		= cfg['image_path']
-NUM_IMAGES      = cfg['num_images']
+LIMIT_IMAGES    = cfg['limit_images']
 CPU_ONLY 		= cfg['cpu_only']
 WRITE_TIMELINE  = cfg['write_timeline']
 VISUALIZE       = cfg['visualize']
@@ -49,7 +49,7 @@ LABEL_NAMES = np.asarray([
     'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tv'])
 
 def segmentation(model):
-    images = load_images(IMAGE_PATH,NUM_IMAGES)
+    images = load_images(IMAGE_PATH,LIMIT_IMAGES)
     # Tf Session + Timeliner
     config = tf.ConfigProto(allow_soft_placement=True)
     config.gpu_options.allow_growth=True

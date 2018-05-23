@@ -32,7 +32,7 @@ HEIGHT          = cfg['height']
 DET_INTERVAL    = cfg['det_interval']
 DET_TH          = cfg['det_th']
 IMAGE_PATH      = cfg['image_path']
-NUM_IMAGES      = cfg['num_images']
+LIMIT_IMAGES    = cfg['limit_images']
 CPU_ONLY        = cfg['cpu_only']
 MODEL_NAME      = cfg['od_model_name']
 MODEL_PATH      = cfg['od_model_path']
@@ -90,7 +90,7 @@ def detection(model):
                 score = model.score
                 expand = model.expand
 
-            images = load_images(IMAGE_PATH,NUM_IMAGES)
+            images = load_images(IMAGE_PATH,LIMIT_IMAGES)
             timer = Timer().start()
             print('> Starting Detection')
             for image in images:

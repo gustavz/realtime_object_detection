@@ -209,9 +209,9 @@ class FPS:
         print('> [INFO] approx. FPS: {:.2f}'.format(self.fps()))
 
     def update(self):
-        self.first = True
+        self._first = True
         self._curr_time = datetime.datetime.now()
-        self.curr_local_elapsed = (self._curr_time - self._local_start).total_seconds()
+        self._curr_local_elapsed = (self._curr_time - self._local_start).total_seconds()
         self._glob_numFrames += 1
         self._local_numFrames += 1
         if self._curr_local_elapsed > self._interval:
