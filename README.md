@@ -1,9 +1,12 @@
 # realtime_object_detection
-Realtime Object Detection based on Tensorflow's[Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection) and [DeepLab Project](https://github.com/tensorflow/models/tree/master/research/deeplab) <br />
-- use Branch/Release v1.0 for the original repo that was focused on high performance inference of ssd_mobilenet (*x10 Performance Increase on Nvidia Jetson TX2*)
+Realtime Object Detection based on Tensorflow's [Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection) and [DeepLab Project](https://github.com/tensorflow/models/tree/master/research/deeplab) <br />
+> Release Note: use v1.0 for the original repo that was focused on high performance inference of `ssd_mobilenet` <br />
+(*x10 Performance Increase on Nvidia Jetson TX2*)
+
 <img src="test_images/od_demo.gif" width="33.3%">
 
-- use Master or Branch/Release v2.0 to be additionally able to run and test Mask Detection Models, KCF-Tracking and additionally DeepLab Models (*merge of this [project](https://github.com/GustavZ/realtime_segmenation)*)
+> Release Note: use Master or v2.0 to be additionally able to run and test Mask-Detection Models, KCF-Tracking and DeepLab Models (*merge of this [project](https://github.com/GustavZ/realtime_segmenation)*)
+
 <img src="test_images/dl_demo.gif" width="33.3%">
 
 ## About the Project
