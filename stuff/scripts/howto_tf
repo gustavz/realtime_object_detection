@@ -1,0 +1,77 @@
+## make sure to do protobuf compilation and add pyton path before anything else
+
+# From tensorflow/models/research
+protoc object_detection/protos/*.proto --python_out=.
+
+# From tensorflow/models/research (BETTER: ADD IT TO ~/.bashrc and source it)
+export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
+
+# AWS: Start tensorflow environment
+source activate tensorflow_p27
+
+## TRAINING TENSORFLOW
+# Always reboot before new training
+# From the tensorflow/models/research directory
+python object_detection/train.py \
+    --logtostderr \
+    --pipeline_config_path=/path/to/model.config \
+    --train_dir=/path/to/outputdirectory/train
+
+## EVALUATION TENSORFLOW
+# From the tensorflow/models/research directory
+python object_detection/eval.py \
+    --logtostderr \
+    --pipeline_config_path=/path/to/model.config \
+    --checkpoint_dir=/path/to/outputdirectory/train \
+    --eval_dir=/path/to/outputdirectory/eval
+
+## TENSORBOARD
+tensorboard --logdir=/path/to/outputdirectory
+
+## EXPORT MODEL TENSORFLOW
+# From the tensorflow/models/research directory
+python object_detection/export_inference_graph.py \
+--input_type=image_tensor \
+--pipeline_config_path=/path/to/model.config \
+--trained_checkpoint_prefix /path/to/outputdirectory/train/model.ckpt-123 \
+--output_directory=/path/to/outputdirectory/modelname
+
+## GPU CPU OPTIONS
+# For Evaluation Using only CPU: In object_detection/eval.py add:
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+# For Training using two GPUS: in object_detection/train.py add:
+os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
+
+## CONFIG FILE OPTIONS #### 
+# To check config options look at objectdetection/protos
+in train_config:
+batch_queue_capacity: 2 # default is 8
+prefetch_queue_capacity: 2 # default is 10
+keep_checkpoint_every_n_hours: 1
+visualization_export_dir: "model/eval/visualization"
+
+## TRAINING ON A LOCAL MACHINE WITH LIMITED RESOURCES ####
+# Train on a single GPU and eval on CPU, In object_detection/trainer.py 
+# add after "session_config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)" :
+session_config.gpu_options.allow_growth = True
+session_config.gpu_options.per_process_gpu_memory_fraction = 0.5 # last option
+session_config.gpu_options.allocator_type ='BFC'
+
+#### IF eval.py gets stuck ####
+#### with WARNING:root:image 0 does not have groundtruth difficult flag specified ####
+change eval_config.num_examples to the size of your val set
+or change eval_input_reader.shuffle to true.
+
+#### IF EXPORTTING A FROZEN MODEL FAILS ###
+on line 72 in exporter.py
+change "layout_optimizer=rewriter_config_pb2.RewriterConfig.ON" to "optimize_tensor_layout=True"
+
+#### COULD BE NECESSARY IF IMPORT ERRORS OCCUR ####
+#### DO THIS AS LAST OPTION, MAY CORRECT SOME ERRORS BUT LEAD TO NEW ####
+
+# from tensorflow/models/research
+python setup.py build
+python setup.py install
+
+# from tensorflow/models/research/slim
+sudo pip2 install -e .
