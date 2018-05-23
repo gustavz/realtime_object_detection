@@ -12,7 +12,7 @@ Plug and play, ready to use without deep previous knowledge.<br /> <br />
 The project includes following work:
 - optionally download tensorflow pretrained models
 - do Inference with OpenCV, either through video input or on selected test_images. <br />
-supported Models are all `research/object_detection` as well as `research/deeplab models`
+supported Models are all `research/object_detection` as well as `research/deeplab` models
 - enjoy this project's own `ssd_mobilenet` speed hack, which splits the model in a mutlithreaded cpu and gpu session. <br />
 Results in up to x10 performance increase depending on the running system <br />
 ⇒ which makes it (one of) the fastest inference piplines out there
