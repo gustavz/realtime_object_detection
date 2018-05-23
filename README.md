@@ -3,11 +3,8 @@ Realtime Object Detection based on Tensorflow's [Object Detection API](https://g
 > Release Note: use v1.0 for the original repo that was focused on high performance inference of `ssd_mobilenet` <br />
 (*x10 Performance Increase on Nvidia Jetson TX2*)
 
-<img src="test_images/od_demo.gif" width="33.3%">
-
 > Release Note: use Master or v2.0 to be additionally able to run and test Mask-Detection Models, KCF-Tracking and DeepLab Models (*merge of this [project](https://github.com/GustavZ/realtime_segmenation)*)
 
-<img src="test_images/dl_demo.gif" width="33.3%">
 
 ## About the Project
 The Idea was to create a scaleable realtime-capable object detection pipeline that runs on various systems. <br />
