@@ -1,10 +1,10 @@
 # realtime_object_detection
-Realtime Object Detection based on Tensorflow's[Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection) and [DeepLab Project](https://github.com/tensorflow/models/tree/master/research/deeplab) <br />
-- use Branch/Release v1.0 for the original repo that was focused on high performance inference of ssd_mobilenet (*x10 Performance Increase on Nvidia Jetson TX2*)
-<img src="test_images/od_demo.gif" width="33.3%">
+Realtime Object Detection based on Tensorflow's [Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection) and [DeepLab Project](https://github.com/tensorflow/models/tree/master/research/deeplab) <br />
+> Release Note: use v1.0 for the original repo that was focused on high performance inference of `ssd_mobilenet` <br />
+(*x10 Performance Increase on Nvidia Jetson TX2*)
 
-- use Master or Branch/Release v2.0 to be additionally able to run and test Mask Detection Models, KCF-Tracking and additionally DeepLab Models (*merge of this [project](https://github.com/GustavZ/realtime_segmenation)*)
-<img src="test_images/dl_demo.gif" width="33.3%">
+> Release Note: use Master or v2.0 to be additionally able to run and test Mask-Detection Models, KCF-Tracking and DeepLab Models (*merge of this [project](https://github.com/GustavZ/realtime_segmenation)*)
+
 
 ## About the Project
 The Idea was to create a scaleable realtime-capable object detection pipeline that runs on various systems. <br />
@@ -12,7 +12,7 @@ Plug and play, ready to use without deep previous knowledge.<br /> <br />
 The project includes following work:
 - optionally download tensorflow pretrained models
 - do Inference with OpenCV, either through video input or on selected test_images. <br />
-supported Models are all `research/object_detection` as well as `research/deeplab models`
+supported Models are all `research/object_detection` as well as `research/deeplab` models
 - enjoy this project's own `ssd_mobilenet` speed hack, which splits the model in a mutlithreaded cpu and gpu session. <br />
 Results in up to x10 performance increase depending on the running system <br />
 ⇒ which makes it (one of) the fastest inference piplines out there
@@ -23,7 +23,8 @@ Results in up to x10 performance increase depending on the running system <br />
 - optional: Change Parameters in `config.yml` to load other models or to modify configurations.<br />
 For example: If you are not interested in visualization: set `visualize` to `False`, <br />
 or if you want to switch off the speed hack set `split_model` to `False`, <br />
-or to use KCF-Tracking set `use_tracker` to `true` (currently only works for pure object detection models without `split_model`)
+- to be able to use KCF_Tracking run `build_kcf.sh` to build it and set `use_tracker` to `true` to use it <br />
+(currently only works for pure object detection models without `split_model`)
 - for realtime inference using video stream run: `run_objectdetection.py` or `run_deeplab.py`
 - for benchmark tests on sample images run: `test_objectdetection.py`or `test_deeplab.py` <br />
 (put them as `.jpg`  into `test_images/`)
