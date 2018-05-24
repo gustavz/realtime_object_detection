@@ -5,6 +5,7 @@ Realtime Object Detection based on Tensorflow's [Object Detection API](https://g
 
 > Release Note: use Master or v2.0 to be additionally able to run and test Mask-Detection Models, KCF-Tracking and DeepLab Models (*merge of this [project](https://github.com/GustavZ/realtime_segmenation)*)
 
+
 ## About the Project
 The Idea was to create a scaleable realtime-capable object detection pipeline that runs on various systems. <br />
 Plug and play, ready to use without deep previous knowledge.<br /> <br />
@@ -18,6 +19,7 @@ Results in up to x10 performance increase depending on the running system <br />
 - run statistic tests on sets of images and get statistical information like mean and median fps, std dev and much more
 - inspect, summarize, quantize, transform and benchmark models with the provided `scripts/`
 
+
 ## Inference:  
 - create a copy of `config.sample.yml` called `config.yml`
 - optional: Change Parameters in `config.yml` to load other models or to modify configurations.<br />
@@ -30,10 +32,13 @@ or if you want to switch off the speed hack set `split_model` to `False`, <br />
 (put them as `.jpg`  into `test_images/`)
 - Enjoy!
 
+
 ## Tools:
-To make use of the tools provided inside `scripts/` first change all paths and params inside `config_tools.sh` to your needs / according to your system  <br />
-When running **the first time** run `source config_tools.sh` and in the same terminal **run only once** `source build_tools.sh` to build the tools. this will take a while. <br />
-For all following uses  **always from the same terminal** `source build_tools.sh`(due to the exported variables) and after that you are able to run the wanted scripts with `source script.sh`.
+To make use of the tools provided inside `scripts/` follow this guide: <br />
+- first change all paths and variables inside `config_tools.sh` to your needs / according to your system
+- When using **the first time** run: `source config_tools.sh` and in the same terminal **run only once** `source build_tools.sh` to build the tools. this will take a while. <br />
+- For all following uses first run: `source build_tools.sh`(due to the exported variables) and after that you are able to run the wanted scripts **always from the same terminal** with `source script.sh`.
+
 
 ## Setup:
 Use the following setup for best and verified performance
@@ -48,6 +53,7 @@ Use the following setup for best and verified performance
 - Dell XPS 15 with i7 @ 2.80GHZ x8 and GeForce GTX 1050 4GB:  **78fps | 105fps**
 - Nvidia Jetson Tx2 with Tegra 8GB:                           **30fps | 33 fps**
 
+
 ## To Do:
 If you like the project, got improvement or constructive critisism, please feel free to open an Issue. <br />
 I am always happy to get feedback or help to be able to further improve the project. <br />
@@ -56,6 +62,7 @@ Future implementation plans are: <br />
 - [ ] ~~Mask-SSD: Modify SSD to be able to predict a segmentation mask in parallel to the bounding box~~
 - [ ] Train a `mask_rcnn Model` with Mobilenet V1/V2 as backbone and deploy it on the Jetson
 - [ ] Split Model and Threading for R-CNN Models
+
 
 ## Related Work:
 - [test_models](https://github.com/GustavZ/test_models): A repo for models i am currently working on for benchmark tests

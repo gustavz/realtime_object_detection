@@ -9,7 +9,7 @@
 
 ### MODEL AND SYSTEM CONFIG ###
 ### CHANGE THIS ACCORDING TO YOUR SYSTEM ###
-export MODEL_NAME="mask_rcnn_mobilenet_v1_400_coco_117k"
+export MODEL_NAME="ssd_mobilenet_v11_coco"
 export TF_PATH="/home/gustav/workspace/tensorflow/tensorflow"
 export ROOT_PATH="/home/gustav/workspace/realtime_object_detection"
 ### DO NOT CHANGE THIS ###
@@ -20,12 +20,12 @@ export TFLITE_GRAPH="${MODEL_PATH}/frozen_inference_graph.tflite"
 
 ### MODEL TRANSFORMATION CONFIG ###
 ### CHANGE THIS ACCORDING TO YOUR MODEL ###
-export SHAPE='1,400,400,3'
+export SHAPE='1,300,300,3'
 export STD_VALUE=127.5
 export MEAN_VALUE=127.5
 export INPUT_TYPE='uint8'
 export INPUTS='image_tensor'
-export OUTPUTS='num_detections,detection_boxes,detection_scores,detection_classes,detection_masks'
+export OUTPUTS='num_detections,detection_boxes,detection_scores,detection_classes'
 export TRANSFORMS='
 add_default_attributes
 strip_unused_nodes(type=float, shape=\"1,400,400,3\")
