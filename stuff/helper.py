@@ -18,9 +18,6 @@ import json
 import six.moves.urllib as urllib
 from tensorflow.core.framework import graph_pb2
 
-from object_detection.utils import label_map_util
-from object_detection.utils import visualization_utils as vis_util
-
 import sys
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
@@ -28,6 +25,11 @@ if PY2:
     import Queue
 elif PY3:
     import queue as Queue
+
+from object_detection.utils import label_map_util
+from object_detection.utils import visualization_utils as vis_util
+
+
 
 
 class Model:

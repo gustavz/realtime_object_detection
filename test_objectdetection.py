@@ -13,7 +13,7 @@ import cv2
 import yaml
 import datetime
 from stuff.helper import Model, Timer, WebcamVideoStream, SessionWorker, vis_detection, TimeLiner, load_images
-from object_detection.utils import ops as utils_ops
+from stuff.object_detection.utils import ops as utils_ops
 from tensorflow.python.client import timeline
 
 

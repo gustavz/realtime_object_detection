@@ -17,7 +17,7 @@
 
 import tensorflow as tf
 
-from object_detection.utils import static_shape
+from stuff.object_detection.utils import static_shape
 
 
 def _is_tensor(t):
@@ -306,4 +306,3 @@ def assert_shape_equal_along_first_dimension(shape_a, shape_b):
     else: return tf.no_op()
   else:
     return tf.assert_equal(shape_a[0], shape_b[0])
-

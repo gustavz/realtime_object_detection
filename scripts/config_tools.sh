@@ -11,9 +11,9 @@
 ### CHANGE THIS ACCORDING TO YOUR SYSTEM ###
 export MODEL_NAME="mask_rcnn_mobilenet_v1_400_coco_117k"
 export TF_PATH="/home/gustav/workspace/tensorflow/tensorflow"
-export REPO_PATH="/home/gustav/workspace/realtime_object_detection"
+export ROOT_PATH="/home/gustav/workspace/realtime_object_detection"
 ### DO NOT CHANGE THIS ###
-export MODEL_PATH="${REPO_PATH}/models/${MODEL_NAME}"
+export MODEL_PATH="${ROOT_PATH}/models/${MODEL_NAME}"
 export IN_GRAPH="${MODEL_PATH}/frozen_inference_graph.pb"
 export OUT_GRAPH="${MODEL_PATH}/optimized_inference_graph.pb"
 export TFLITE_GRAPH="${MODEL_PATH}/frozen_inference_graph.tflite"
@@ -42,7 +42,7 @@ sort_by_execution_order
 echo "> doublecheck all paths:"
 echo "MODEL_NAME: $MODEL_NAME"
 echo "TF_PATH: $TF_PATH"
-echo "REPO_PATH: $REPO_PATH"
+echo "ROOT_PATH: $ROOT_PATH"
 
 ########################
 # Possible Transforms are:
