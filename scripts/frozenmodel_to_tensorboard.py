@@ -3,17 +3,27 @@
 """
 Created on Wed Jan 10 09:45:23 2018
 
-@author: gustav
+@author: www.github.com/GustavZ
 """
+
 import tensorflow as tf
 from tensorflow.python.platform import gfile
+import yaml
 
-MODEL_NAME = 'ssd_mobilenet_v11_coco'
-MODEL_FILE ='../models/' + MODEL_NAME +'/frozen_inference_graph.pb'
-LOG_DIR='../models/ssd_mobilenet_v11_coco/log/'
+## LOAD CONFIG PARAMS ##
+if (os.path.isfile('config.yml')):
+    with open("config.yml", 'r') as ymlfile:
+        cfg = yaml.load(ymlfile)
+else:
+    with open("config.sample.yml", 'r') as ymlfile:
+        cfg = yaml.load(ymlfile)
+MODEL_NAME = cfg['od_model_name']
+
+## Actual Script ##
+MODEL_FILE ='../models/{}/frozen_inference_graph.pb'.format(MODEL_NAME)
+LOG_DIR='../models/{}/log/'.format(MODEL_NAME)
 
 with tf.Session() as sess:
-    
     with gfile.FastGFile(MODEL_FILE, 'rb') as f:
         graph_def = tf.GraphDef()
         graph_def.ParseFromString(f.read())

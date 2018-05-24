@@ -12,6 +12,8 @@ import os
 from stuff.helper import Model, FPS, WebcamVideoStream, SessionWorker, conv_detect2track, conv_track2detect, vis_detection
 from object_detection.utils import ops as utils_ops
 
+# protobuf compilation (only once necessary)
+os.system('protoc stuff/object_detection/protos/*.proto --python_out=.')
 
 ## LOAD CONFIG PARAMS ##
 if (os.path.isfile('config.yml')):

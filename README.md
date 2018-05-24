@@ -5,7 +5,6 @@ Realtime Object Detection based on Tensorflow's [Object Detection API](https://g
 
 > Release Note: use Master or v2.0 to be additionally able to run and test Mask-Detection Models, KCF-Tracking and DeepLab Models (*merge of this [project](https://github.com/GustavZ/realtime_segmenation)*)
 
-
 ## About the Project
 The Idea was to create a scaleable realtime-capable object detection pipeline that runs on various systems. <br />
 Plug and play, ready to use without deep previous knowledge.<br /> <br />
@@ -16,9 +15,10 @@ supported Models are all `research/object_detection` as well as `research/deepla
 - enjoy this project's own `ssd_mobilenet` speed hack, which splits the model in a mutlithreaded cpu and gpu session. <br />
 Results in up to x10 performance increase depending on the running system <br />
 ⇒ which makes it (one of) the fastest inference piplines out there
-- do benchmark tests on sets of images and get statistical information like mean and median fps, std dev and much more
+- run statistic tests on sets of images and get statistical information like mean and median fps, std dev and much more
+- inspect, summarize, quantize, transform and benchmark models with the provided `scripts/`
 
-## Getting Started:  
+## Inference:  
 - create a copy of `config.sample.yml` called `config.yml`
 - optional: Change Parameters in `config.yml` to load other models or to modify configurations.<br />
 For example: If you are not interested in visualization: set `visualize` to `False`, <br />
@@ -28,9 +28,14 @@ or if you want to switch off the speed hack set `split_model` to `False`, <br />
 - for realtime inference using video stream run: `run_objectdetection.py` or `run_deeplab.py`
 - for benchmark tests on sample images run: `test_objectdetection.py`or `test_deeplab.py` <br />
 (put them as `.jpg`  into `test_images/`)
-- Enjoy deeplearning!
+- Enjoy!
 
-## My Setup:
+## Tools:
+To make use of the tools provided inside `scripts/` first change all paths and params inside `config_tools.sh` to your needs / according to your system  <br />
+When running **the first time** run `source config_tools.sh` and in the same terminal **run only once** `source build_tools.sh` to build the tools. this will take a while. <br />
+For all following uses  **always from the same terminal** `source build_tools.sh`(due to the exported variables) and after that you are able to run the wanted scripts with `source script.sh`.
+
+## Setup:
 Use the following setup for best and verified performance
 - Ubuntu 16.04
 - Python 2.7
