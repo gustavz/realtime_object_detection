@@ -275,7 +275,7 @@ def vis_detection(image, boxes, classes, scores, masks, category_index, fps=None
         if cv2.waitKey(1) & 0xFF == ord('q'):
             return False
     elif not visualize and fps:
-        if fps._glob_numFrames >= max_frames:
+        if cur_frame >= max_frames:
             return False
     return True
 

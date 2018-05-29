@@ -12,7 +12,7 @@ class Config(object):
     """
     ### Inference Config
     VIDEO_INPUT = 0                 # Input Must be OpenCV readable
-    VISUALIZE = True                # Disable for performance increase
+    VISUALIZE = False                # Disable for performance increase
 
 
     ### Testing
