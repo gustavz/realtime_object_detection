@@ -8,23 +8,28 @@ Created on Wed Jan 10 09:45:23 2018
 
 import tensorflow as tf
 from tensorflow.python.platform import gfile
-import yaml
+import os
+import sys
+ROOT_DIR = os.path.abspath("../")
+sys.path.append(ROOT_DIR)
+from rod.config import Config
 
-## LOAD CONFIG PARAMS ##
-if (os.path.isfile('config.yml')):
-    with open("config.yml", 'r') as ymlfile:
-        cfg = yaml.load(ymlfile)
-else:
-    with open("config.sample.yml", 'r') as ymlfile:
-        cfg = yaml.load(ymlfile)
-MODEL_NAME = cfg['od_model_name']
+## Change to 'OD' or 'DL'
+MODEL = 'OD'
 
-## Actual Script ##
-MODEL_FILE ='../models/{}/frozen_inference_graph.pb'.format(MODEL_NAME)
+## Don't Change ##
+config = Config()
+if MODEL == 'OD':
+    MODEL_NAME = config.OD_MODEL_NAME
+    MODEL_PATH = '../'+config.OD_MODEL_PATH
+elif MODEL == 'DL':
+    MODEL_NAME = config.DL_MODEL_NAME
+    MODEL_PATH = '../'+config.DL_MODEL_PATH
+
 LOG_DIR='../models/{}/log/'.format(MODEL_NAME)
 
 with tf.Session() as sess:
-    with gfile.FastGFile(MODEL_FILE, 'rb') as f:
+    with gfile.FastGFile(MODEL_PATH, 'rb') as f:
         graph_def = tf.GraphDef()
         graph_def.ParseFromString(f.read())
         g_in = tf.import_graph_def(graph_def)

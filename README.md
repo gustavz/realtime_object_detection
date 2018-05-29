@@ -21,15 +21,14 @@ Results in up to x10 performance increase depending on the running system <br />
 
 
 ## Inference:  
-- create a copy of `config.sample.yml` called `config.yml`
-- optional: Change Parameters in `config.yml` to load other models or to modify configurations.<br />
-For example: If you are not interested in visualization: set `visualize` to `False`, <br />
-or if you want to switch off the speed hack set `split_model` to `False`, <br />
-- to be able to use KCF_Tracking run `build_kcf.sh` to build it and set `use_tracker` to `true` to use it <br />
-(currently only works for pure object detection models without `split_model`)
+- Change Inference Configurations inside `rod/config.py` according to your needs
+For example: If you are not interested in visualization: set `VISUALIZE` to `False`, <br />
+or if you want to switch off the speed hack set `SPLIT_MODEL` to `False`, <br />
+- to be able to use KCF_Tracking inside `scripts/` run `bash build_kcf.sh` to build it and set `USE_TRACKER` to `True` to use it <br />
+(currently only works for pure object detection models without `SPLIT_MODEL`)
 - for realtime inference using video stream run: `run_objectdetection.py` or `run_deeplab.py`
 - for benchmark tests on sample images run: `test_objectdetection.py`or `test_deeplab.py` <br />
-(put them as `.jpg`  into `test_images/`)
+(put them as `.jpg`  into `test_images/`. timeline results will appear in `test_results/`)
 - Enjoy!
 
 

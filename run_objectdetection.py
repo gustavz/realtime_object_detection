@@ -7,41 +7,16 @@ Created on Thu Dec 21 12:01:40 2017
 """
 import numpy as np
 import tensorflow as tf
-import yaml
 import os
-from stuff.helper import Model, FPS, WebcamVideoStream, SessionWorker, conv_detect2track, conv_track2detect, vis_detection
-from stuff.object_detection.utils import ops as utils_ops
+from rod.helper import FPS, WebcamVideoStream, SessionWorker, conv_detect2track, conv_track2detect, vis_detection
+from rod.model import Model
+from rod.config import Config
+from rod.utils import ops as utils_ops
 
 
-## LOAD CONFIG PARAMS ##
-if (os.path.isfile('config.yml')):
-    with open("config.yml", 'r') as ymlfile:
-        cfg = yaml.load(ymlfile)
-else:
-    with open("config.sample.yml", 'r') as ymlfile:
-        cfg = yaml.load(ymlfile)
-VIDEO_INPUT     = cfg['video_input']
-VISUALIZE       = cfg['visualize']
-MAX_FRAMES      = cfg['max_frames']
-WIDTH           = cfg['width']
-HEIGHT          = cfg['height']
-FPS_INTERVAL    = cfg['fps_interval']
-DET_INTERVAL    = cfg['det_interval']
-DET_TH          = cfg['det_th']
-MODEL_NAME      = cfg['od_model_name']
-MODEL_PATH      = cfg['od_model_path']
-LABEL_PATH      = cfg['label_path']
-NUM_CLASSES     = cfg['num_classes']
-SPLIT_MODEL     = cfg['split_model']
-SSD_SHAPE       = cfg['ssd_shape']
-USE_TRACKER     = cfg['use_tracker']
-TRACKER_FRAMES  = cfg['tracker_frames']
-NUM_TRACKERS    = cfg['num_trackers']
-
-
-def detection(model):
+def detection(model,config):
     # Tracker
-    if USE_TRACKER:
+    if config.USE_TRACKER:
         import sys
         sys.path.append(os.getcwd()+'/stuff/kcf')
         import KCF
@@ -51,14 +26,14 @@ def detection(model):
 
     print("> Building Graph")
     # tf Session Config
-    config = tf.ConfigProto(allow_soft_placement=True)
-    config.gpu_options.allow_growth=True
+    tf_config = tf.ConfigProto(allow_soft_placement=True)
+    tf_config.gpu_options.allow_growth=True
     detection_graph = model.detection_graph
     category_index = model.category_index
     with detection_graph.as_default():
-        with tf.Session(graph=detection_graph,config=config) as sess:
+        with tf.Session(graph=detection_graph,config=tf_config) as sess:
             # start Videostream
-            vs = WebcamVideoStream(VIDEO_INPUT,WIDTH,HEIGHT).start()
+            vs = WebcamVideoStream(config.VIDEO_INPUT,config.WIDTH,config.HEIGHT).start()
             # Define Input and Ouput tensors
             tensor_dict = model.get_tensordict(['num_detections', 'detection_boxes', 'detection_scores','detection_classes', 'detection_masks'])
             image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
@@ -75,7 +50,7 @@ def detection(model):
                 detection_masks_reframed = tf.cast(tf.greater(detection_masks_reframed, 0.5), tf.uint8)
                 # Follow the convention by adding back the batch dimension
                 tensor_dict['detection_masks'] = tf.expand_dims(detection_masks_reframed, 0)
-            if SPLIT_MODEL:
+            if config.SPLIT_MODEL:
                 score_out = detection_graph.get_tensor_by_name('Postprocessor/convert_scores:0')
                 expand_out = detection_graph.get_tensor_by_name('Postprocessor/ExpandDims_1:0')
                 score_in = detection_graph.get_tensor_by_name('Postprocessor/convert_scores_1:0')
@@ -83,19 +58,19 @@ def detection(model):
                 # Threading
                 score = model.score
                 expand = model.expand
-                gpu_worker = SessionWorker("GPU",detection_graph,config)
-                cpu_worker = SessionWorker("CPU",detection_graph,config)
+                gpu_worker = SessionWorker("GPU",detection_graph,tf_config)
+                cpu_worker = SessionWorker("CPU",detection_graph,tf_config)
                 gpu_opts = [score_out, expand_out]
                 cpu_opts = [tensor_dict['detection_boxes'], tensor_dict['detection_scores'], tensor_dict['detection_classes'], tensor_dict['num_detections']]
                 gpu_counter = 0
                 cpu_counter = 0
 
-            fps = FPS(FPS_INTERVAL).start()
+            fps = FPS(config.FPS_INTERVAL).start()
             print('> Starting Detection')
             while vs.isActive():
                 # Detection
-                if not (USE_TRACKER and track):
-                    if SPLIT_MODEL:
+                if not (config.USE_TRACKER and track):
+                    if config.SPLIT_MODEL:
                         # split model in seperate gpu and cpu session threads
                         masks = None # No Mask Detection possible yet
                         if gpu_worker.is_sess_empty():
@@ -103,7 +78,7 @@ def detection(model):
                             frame = vs.read()
                             # put new queue
                             gpu_feeds = {image_tensor: vs.expanded()}
-                            if VISUALIZE:
+                            if config.VISUALIZE:
                                 gpu_extras = frame # for visualization frame
                             else:
                                 gpu_extras = None
@@ -151,12 +126,13 @@ def detection(model):
                     scores = np.squeeze(scores)
 
                     # Visualization
-                    vis = vis_detection(frame, VISUALIZE, boxes, classes, scores, masks, category_index, DET_INTERVAL, DET_TH, MAX_FRAMES, fps)
+                    vis = vis_detection(frame, boxes, classes, scores, masks, category_index, fps,
+                                        config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES)
                     if not vis:
                         break
 
                     # Activate Tracker
-                    if USE_TRACKER and num <= NUM_TRACKERS:
+                    if config.USE_TRACKER and num <= config.NUM_TRACKERS:
                         tracker_frame = frame
                         track = True
                         first_track = True
@@ -175,13 +151,14 @@ def detection(model):
                     for idx,tracker in enumerate(trackers):
                         tracker_box = tracker.update(frame)
                         tracker_boxes[idx,:] = conv_track2detect(tracker_box, vs.real_width, vs.real_height)
-                    vis = vis_detection(frame, VISUALIZE, tracker_boxes, classes, scores, masks, category_index, DET_INTERVAL, DET_TH, MAX_FRAMES, fps)
+                    vis = vis_detection(frame, tracker_boxes, classes, scores, masks, category_index, fps,
+                                        config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES)
                     if not vis:
                         break
 
                     tracker_counter += 1
                     #tracker_frame = frame
-                    if tracker_counter >= TRACKER_FRAMES:
+                    if tracker_counter >= config.TRACKER_FRAMES:
                         track = False
                         tracker_counter = 0
 
@@ -190,12 +167,13 @@ def detection(model):
     # End everything
     vs.stop()
     fps.stop()
-    if SPLIT_MODEL:
+    if config.SPLIT_MODEL:
         gpu_worker.stop()
         cpu_worker.stop()
 
 
 if __name__ == '__main__':
-    model = Model('od', MODEL_NAME, MODEL_PATH, LABEL_PATH, NUM_CLASSES,
-            SPLIT_MODEL, SSD_SHAPE).prepare_od_model()
-    detection(model)
+    config = Config()
+    model = Model('od',config.OD_MODEL_NAME,config.OD_MODEL_PATH,config.LABEL_PATH,
+                config.NUM_CLASSES,config.SPLIT_MODEL, config.SSD_SHAPE).prepare_od_model()
+    detection(model, config)
