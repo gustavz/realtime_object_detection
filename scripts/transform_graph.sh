@@ -9,4 +9,5 @@ bazel-bin/tensorflow/tools/graph_transforms/transform_graph \
  --out_graph=${OUT_GRAPH} \
  --inputs=${INPUTS} \
  --outputs=${OUTPUTS} \
- --transforms=${TRANSFORMS[@]};bash"
+ --transforms=${TRANSFORMS[@]} \
+ 2>&1 | tee ${RESULTS_PATH}/transform_${MODEL_NAME}.txt;bash"

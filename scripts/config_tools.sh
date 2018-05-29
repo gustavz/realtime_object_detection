@@ -17,6 +17,7 @@ export MODEL_PATH="${ROOT_PATH}/models/${MODEL_NAME}"
 export IN_GRAPH="${MODEL_PATH}/frozen_inference_graph.pb"
 export OUT_GRAPH="${MODEL_PATH}/optimized_inference_graph.pb"
 export TFLITE_GRAPH="${MODEL_PATH}/frozen_inference_graph.tflite"
+export RESULTS_PATH="${ROOT_PATH}/test_results"
 
 ### MODEL TRANSFORMATION CONFIG ###
 ### CHANGE THIS ACCORDING TO YOUR MODEL ###

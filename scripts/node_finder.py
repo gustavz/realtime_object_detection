@@ -14,8 +14,8 @@ ROOT_DIR = os.path.abspath("../")
 sys.path.append(ROOT_DIR)
 from rod.config import Config
 
-## Change to 'OD' or 'DL'
-MODEL = 'OD'
+MODEL = 'OD' # Change to 'OD' or 'DL'
+NODE_OPS = ['Placeholder','Identity','CheckNumerics']
 
 ## Don't Change ##
 config = Config()
@@ -23,8 +23,6 @@ if MODEL == 'OD':
     MODEL_PATH = '../'+config.OD_MODEL_PATH
 elif MODEL == 'DL':
     MODEL_PATH = '../'+config.DL_MODEL_PATH
-
-NODE_OPS = ['Placeholder','Identity','CheckNumerics']
 
 gf = tf.GraphDef()
 gf.ParseFromString(open(MODEL_PATH,'rb').read())

@@ -10,18 +10,19 @@ Realtime Object Detection based on Tensorflow's [Object Detection API](https://g
 The Idea was to create a scaleable realtime-capable object detection pipeline that runs on various systems. <br />
 Plug and play, ready to use without deep previous knowledge.<br /> <br />
 The project includes following work:
-- optionally download tensorflow pretrained models
+- optional download of tensorflow pretrained models
 - do Inference with OpenCV, either through video input or on selected test_images. <br />
 supported Models are all `research/object_detection` as well as `research/deeplab` models
 - enjoy this project's own `ssd_mobilenet` speed hack, which splits the model in a mutlithreaded cpu and gpu session. <br />
 Results in up to x10 performance increase depending on the running system <br />
 ⇒ which makes it (one of) the fastest inference piplines out there
 - run statistic tests on sets of images and get statistical information like mean and median fps, std dev and much more
+- create `timeline` files measuring the exact time consumption of each operation in your model
 - inspect, summarize, quantize, transform and benchmark models with the provided `scripts/`
 
 
 ## Inference:  
-- Change Inference Configurations inside `rod/config.py` according to your needs
+- Change Inference Configurations inside `rod/config.py` according to your needs <br />
 For example: If you are not interested in visualization: set `VISUALIZE` to `False`, <br />
 or if you want to switch off the speed hack set `SPLIT_MODEL` to `False`, <br />
 - to be able to use KCF_Tracking inside `scripts/` run `bash build_kcf.sh` to build it and set `USE_TRACKER` to `True` to use it <br />
@@ -37,6 +38,7 @@ To make use of the tools provided inside `scripts/` follow this guide: <br />
 - first change all paths and variables inside `config_tools.sh` to your needs / according to your system
 - When using **the first time** run: `source config_tools.sh` and in the same terminal **run only once** `source build_tools.sh` to build the tools. this will take a while. <br />
 - For all following uses first run: `source build_tools.sh`(due to the exported variables) and after that you are able to run the wanted scripts **always from the same terminal** with `source script.sh`.
+- All scripts log the terminal output to `test_results/`
 
 
 ## Setup:

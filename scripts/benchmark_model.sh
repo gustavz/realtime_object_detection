@@ -14,4 +14,5 @@ bazel run tensorflow/tools/benchmark:benchmark_model -- \
  --show_time=true \
  --show_memory=true \
  --show_summary=true \
- --show_flops=true;bash"
+ --show_flops=true \
+ 2>&1 | tee ${RESULTS_PATH}/benchmark_${MODEL_NAME}.txt;bash"
