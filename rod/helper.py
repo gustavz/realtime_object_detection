@@ -5,6 +5,11 @@ Created on Fri Dec 22 11:53:52 2017
 
 @author: www.github.com/GustavZ
 """
+# python 2 compability
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import datetime
 import cv2
 import threading
@@ -18,8 +23,8 @@ if sys.version_info[0] == 2:
     import Queue
 elif sys.version_info[0] == 3:
     import queue as Queue
-
-from utils import visualization_utils as vis_util
+from tensorflow.python.client import timeline
+from rod.utils import visualization_utils as vis_util
 
 
 class FPS(object):
@@ -36,6 +41,7 @@ class FPS(object):
         self._curr_time = None
         self._curr_local_elapsed = None
         self._first = False
+        self._log =[]
 
     def start(self):
         self._glob_start = datetime.datetime.now()
@@ -44,8 +50,10 @@ class FPS(object):
 
     def stop(self):
         self._glob_end = datetime.datetime.now()
+        print('> [INFO] elapsed frames (total): {}'.format(self._glob_numFrames))
         print('> [INFO] elapsed time (total): {:.2f}'.format(self.elapsed()))
-        print('> [INFO] approx. FPS: {:.2f}'.format(self.fps()))
+        print('> [INFO] mean. FPS: {:.2f}'.format(self.fps()))
+        print('> [INFO] median. FPS: {:.2f}'.format(np.median(self._log)))
 
     def update(self):
         self._first = True
@@ -57,6 +65,11 @@ class FPS(object):
           print("> FPS: {}".format(self.fps_local()))
           self._local_numFrames = 0
           self._local_start = self._curr_time
+
+        self._log.append(self.fps_local())
+        if len(self._log) > 1000:
+            self._log = []
+
 
     def elapsed(self):
         return (self._glob_end - self._glob_start).total_seconds()
@@ -74,34 +87,58 @@ class FPS(object):
 class Timer(object):
     """
     Timer class for benchmark test purposes
+    Usage: start -> tic -> (tictic -> tic ->) toc -> stop
+    Alternative: start -> update -> stop
     """
     def __init__(self):
         self._tic = None
+        self._tictic = None
         self._toc = None
-        self._time = None
+        self._time = 1
+        self._cache = []
         self._log = []
-        self._totaltime = None
-        self._totalnumber = None
-        self._meantime = None
-        self._mediantime = None
-        self._mintime = None
-        self._maxtime = None
-        self._stdtime = None
-        self._meanfps = None
-        self._medianfps = None
 
     def start(self):
+        self._first = True
         return self
 
     def tic(self):
         self._tic = datetime.datetime.now()
 
+    def tictic(self):
+        self._tictic = datetime.datetime.now()
+        self._cache.append((self._tictic-self._tic).total_seconds())
+        self._tic = self._tictic
+
     def toc(self):
         self._toc = datetime.datetime.now()
-        self._time = (self._toc-self._tic).total_seconds()
+        self._time = (self._toc-self._tic).total_seconds() + np.sum(self._cache)
         self._log.append(self._time)
+        self._cache = []
 
     def update(self):
+        if self._first:
+            self._tic = datetime.datetime.now()
+            self._toc = self._tic
+            self._first = False
+            self._frame = 1
+        else:
+            self._frame += 1
+            self._tic = datetime.datetime.now()
+            self._time = (self._tic-self._toc).total_seconds()
+            self._log.append(self._time)
+            self._toc = self._tic
+            if len(self._log)>1000:
+                self.stop()
+                self._log = []
+
+    def get_frame(self):
+        return len(self._log)
+
+    def get_fps(self):
+        return round(1./self._time,1)
+
+    def _calc_stats(self):
         self._totaltime = np.sum(self._log)
         self._totalnumber = len(self._log)
         self._meantime = np.mean(self._log)
@@ -109,11 +146,11 @@ class Timer(object):
         self._mintime = np.min(self._log)
         self._maxtime = np.max(self._log)
         self._stdtime = np.std(self._log)
-        self._meanfps = 1/np.mean(self._log)
-        self._medianfps = 1/np.median(self._log)
+        self._meanfps = 1./np.mean(self._log)
+        self._medianfps = 1./np.median(self._log)
 
     def stop(self):
-        self.update()
+        self._calc_stats()
         print ("> [INFO] total detection time for {} images: {}".format(self._totalnumber,self._totaltime))
         print ("> [INFO] mean detection time: {}".format(self._meantime))
         print ("> [INFO] median detection time: {}".format(self._mediantime))
@@ -208,7 +245,7 @@ def vis_text(image, string, pos):
     cv2.putText(image,string,(pos),
         cv2.FONT_HERSHEY_SIMPLEX, 0.75, (77, 255, 9), 2)
 
-def vis_detection(image, boxes, classes, scores, masks, category_index, fps=None, visualize=False, det_interval=5, det_th=0.5, max_frames=500):
+def vis_detection(image, boxes, classes, scores, masks, category_index, fps=None, visualize=False, det_interval=5, det_th=0.5, max_frames=500, cur_frame = None):
     if visualize:
         vis_util.visualize_boxes_and_labels_on_image_array(
         image,
@@ -220,12 +257,12 @@ def vis_detection(image, boxes, classes, scores, masks, category_index, fps=None
         use_normalized_coordinates=True,
         line_thickness=8)
         if fps:
-            vis_text(image,"fps: {}".format(fps.fps_local()), (10,30))
-        cv2.imshow('object_detection', image)
-    elif not visualize and fps:
+            vis_text(image,"fps: {}".format(fps), (10,30))
+        cv2.imshow('raltime_object_detection', image)
+    elif not visualize and cur_frame:
         # Exit after max frames if no visualization
         for box, score, _class in zip(boxes, scores, classes):
-            if fps._glob_numFrames %det_interval==0 and score > det_th:
+            if cur_frame%det_interval==0 and score > det_th:
                 label = category_index[_class]['name']
                 print("label: {}\nscore: {}\nbox: {}".format(label, score, box))
     elif fps == "console":
@@ -372,11 +409,14 @@ class SessionWorker(object):
                 self.sess_queue.task_done()
         return
 
+
 class TimeLiner(object):
     """
     TimeLiner Class for creating multiple session json timing files
+    modified from: https://github.com/ikhlestov/tensorflow_profiling
     """
-    _timeline_dict = None
+    def __init__(self):
+        self._timeline_dict = None
 
     def update_timeline(self, chrome_trace):
         # convert crome trace to python dict
@@ -394,6 +434,12 @@ class TimeLiner(object):
     def save(self, f_name):
         with open(f_name, 'w') as f:
 			json.dump(self._timeline_dict, f)
+
+    def write_timeline(self,step_stats,file_name):
+        fetched_timeline = timeline.Timeline(step_stats)
+        chrome_trace = fetched_timeline.generate_chrome_trace_format()
+        with open(file_name, 'w') as f:
+        	f.write(chrome_trace)
 
 
 class RosDetectionPublisher(object):

@@ -19,7 +19,7 @@ class Config(object):
     IMAGE_PATH = 'test_images'      # path for test.py test_images
     LIMIT_IMAGES = None             # if set to None, all images are used
     CPU_ONLY = False                # CPU Placement for speed test
-    WRITE_TIMELINE = True           # write json timeline file (slows infrence)
+    WRITE_TIMELINE = False           # write json timeline file (slows infrence)
 
 
     ### Object_Detection
@@ -59,11 +59,8 @@ class Config(object):
     def __init__(self):
         ## TimeLine File naming
         if self.CPU_ONLY:
-        	os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-        	self.DEVICE = '_CPU'
+            import os
+            os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+            self.DEVICE = '_CPU'
         else:
-        	self.DEVICE = '_GPU'
-        if self.SPLIT_MODEL:
-            self.SM = '_SM'
-        else:
-            self.SM = ''
+            self.DEVICE = ''

@@ -25,7 +25,7 @@ def segmentation(model,config):
     if config.WRITE_TIMELINE:
         options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
         run_metadata = tf.RunMetadata()
-        many_runs_timeline = TimeLiner()
+        timeliner = TimeLiner()
     else:
         options = tf.RunOptions(trace_level=tf.RunOptions.NO_TRACE)
         run_metadata = False
@@ -46,17 +46,15 @@ def segmentation(model,config):
                 				options=options, run_metadata=run_metadata)
                 timer.toc()
                 if config.WRITE_TIMELINE:
-                    fetched_timeline = timeline.Timeline(run_metadata.step_stats)
-                    chrome_trace = fetched_timeline.generate_chrome_trace_format()
-                    many_runs_timeline.update_timeline(chrome_trace)
-                    with open('test_results/{}_timeline{}.json'.format(config.DL_MODEL_NAME,config.DEVICE), 'w') as f:
-                    	f.write(chrome_trace)
+                    timeliner.write_timeline(run_metadata.step_stats,
+                                            'test_results/timeline_{}{}{}.json'.format(
+                                            config.OD_MODEL_NAME,config.SM,config.DEVICE))
                 # visualization
                 if config.VISUALIZE:
                     seg_map = batch_seg_map[0]
                     seg_image = create_colormap(seg_map).astype(np.uint8)
                     cv2.addWeighted(seg_image,config.ALPHA,frame,1-config.ALPHA,0,frame)
-                    vis_text(frame,"time: {}".format(timer._time),(10,30))
+                    vis_text(frame,"fps: {}".format(timer.get_fps()),(10,30))
                     # boxes (ymin, xmin, ymax, xmax)
                     if config.BBOX:
                         map_labeled = measure.label(seg_map, connectivity=1)

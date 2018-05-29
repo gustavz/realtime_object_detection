@@ -15,22 +15,14 @@ from rod.helper import Timer, WebcamVideoStream, SessionWorker, vis_detection, T
 from rod.model import Model
 from rod.config import Config
 from rod.utils import ops as utils_ops
-from tensorflow.python.client import timeline
 
 
 def detection(model,config):
-    # Tf Session + Timeliner
+    # Tf Session
     tf_config = tf.ConfigProto(allow_soft_placement=True)
     tf_config.gpu_options.allow_growth=True
     detection_graph = model.detection_graph
     category_index = model.category_index
-    if config.WRITE_TIMELINE:
-        options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-        run_metadata = tf.RunMetadata()
-        many_runs_timeline = TimeLiner()
-    else:
-        options = tf.RunOptions(trace_level=tf.RunOptions.NO_TRACE)
-        run_metadata = False
     print("> Building Graph")
     with detection_graph.as_default():
         with tf.Session(graph=detection_graph,config=tf_config) as sess:
@@ -60,6 +52,15 @@ def detection(model,config):
                 score = model.score
                 expand = model.expand
 
+            # Timeliner
+            if config.WRITE_TIMELINE:
+                options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                run_metadata = tf.RunMetadata()
+                timeliner = TimeLiner()
+            else:
+                options = tf.RunOptions(trace_level=tf.RunOptions.NO_TRACE)
+                run_metadata = False
+
             images = load_images(config.IMAGE_PATH,config.LIMIT_IMAGES)
             timer = Timer().start()
             print('> Starting Detection')
@@ -70,14 +71,26 @@ def detection(model,config):
                     frame = cv2.resize(cv2.imread(image),(config.WIDTH,config.HEIGHT))
                     frame_expanded = np.expand_dims(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), axis=0)
                     timer.tic()
+                    # GPU Session
                     score, expand = sess.run([score_out, expand_out],
                             feed_dict={image_tensor: frame_expanded},
                             options=options, run_metadata=run_metadata)
+                    timer.tictic()
+                    if config.WRITE_TIMELINE:
+                        timeliner.write_timeline(run_metadata.step_stats,
+                                                'test_results/timeline_{}{}{}.json'.format(
+                                                config.OD_MODEL_NAME,'_SM1',config.DEVICE))
+                    timer.tic()
+                    # CPU Session
                     boxes, scores, classes, num = sess.run(
                             [tensor_dict['detection_boxes'], tensor_dict['detection_scores'], tensor_dict['detection_classes'], tensor_dict['num_detections']],
                             feed_dict={score_in:score, expand_in: expand},
                             options=options, run_metadata=run_metadata)
                     timer.toc()
+                    if config.WRITE_TIMELINE:
+                        timeliner.write_timeline(run_metadata.step_stats,
+                                                'test_results/timeline_{}{}{}.json'.format(
+                                                config.OD_MODEL_NAME,'_SM2',config.DEVICE))
                 else:
                     # default session
                     frame = cv2.resize(cv2.imread(image),(config.WIDTH,config.HEIGHT))
@@ -87,6 +100,10 @@ def detection(model,config):
                             feed_dict={image_tensor: frame_expanded},
                             options=options, run_metadata=run_metadata)
                     timer.toc()
+                    if config.WRITE_TIMELINE:
+                        timeliner.write_timeline(run_metadata.step_stats,
+                                                'test_results/timeline_{}{}.json'.format(
+                                                config.OD_MODEL_NAME,config.DEVICE))
                     num = output_dict['num_detections'][0]
                     classes = output_dict['detection_classes'][0]
                     boxes = output_dict['detection_boxes'][0]
@@ -95,13 +112,7 @@ def detection(model,config):
                         masks = output_dict['detection_masks'][0]
                     else:
                         masks = None
-                # Timeliner
-                if config.WRITE_TIMELINE:
-    		        fetched_timeline = timeline.Timeline(run_metadata.step_stats)
-    		        chrome_trace = fetched_timeline.generate_chrome_trace_format()
-    		        many_runs_timeline.update_timeline(chrome_trace)
-    		        with open('test_results/{}_timeline{}{}.json'.format(config.MODEL_NAME,config.SM,config.DEVICE), 'w') as f:
-    		        	f.write(chrome_trace)
+
                 # reformat detection
                 num = int(num)
                 boxes = np.squeeze(boxes)
@@ -109,8 +120,8 @@ def detection(model,config):
                 scores = np.squeeze(scores)
 
                 # Visualization
-                vis = vis_detection(frame, boxes, classes, scores, masks, category_index, None,
-                                    config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES)
+                vis = vis_detection(frame, boxes, classes, scores, masks, category_index, timer.get_fps(),
+                                    config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES, None)
                 if not vis:
                     break
 

@@ -8,7 +8,7 @@ Created on Thu Dec 21 12:01:40 2017
 import numpy as np
 import tensorflow as tf
 import os
-from rod.helper import FPS, WebcamVideoStream, SessionWorker, conv_detect2track, conv_track2detect, vis_detection
+from rod.helper import FPS, WebcamVideoStream, SessionWorker, conv_detect2track, conv_track2detect, vis_detection, Timer
 from rod.model import Model
 from rod.config import Config
 from rod.utils import ops as utils_ops
@@ -126,8 +126,8 @@ def detection(model,config):
                     scores = np.squeeze(scores)
 
                     # Visualization
-                    vis = vis_detection(frame, boxes, classes, scores, masks, category_index, fps,
-                                        config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES)
+                    vis = vis_detection(frame, boxes, classes, scores, masks, category_index, fps.fps_local(),
+                                        config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES, fps._glob_numFrames)
                     if not vis:
                         break
 
@@ -151,8 +151,8 @@ def detection(model,config):
                     for idx,tracker in enumerate(trackers):
                         tracker_box = tracker.update(frame)
                         tracker_boxes[idx,:] = conv_track2detect(tracker_box, vs.real_width, vs.real_height)
-                    vis = vis_detection(frame, tracker_boxes, classes, scores, masks, category_index, fps,
-                                        config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES)
+                    vis = vis_detection(frame, tracker_boxes, classes, scores, masks, category_index, fps.fps_local(),
+                                        config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES, fps._glob_numFrames)
                     if not vis:
                         break
 
