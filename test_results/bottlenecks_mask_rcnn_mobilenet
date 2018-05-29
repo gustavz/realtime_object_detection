@@ -1,4 +1,0 @@
-
-11ms: "_ZN10tensorflow84_GLOBAL__N__60_tmpxft_000007bb_00000000_6_crop_and_resize_op_gpu_cu_cpp1_ii_63d5ce4819CropAndResizeKernelIfEEviPKT_PKfPKiiiiiiiifPf"
-46ms: "SecondStageBoxPredictor_1/Conv/Conv2D"
-15s: "SecondStageBoxPredictor_1/ResizeBilinear"
