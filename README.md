@@ -26,8 +26,8 @@ For example: If you are not interested in visualization: set `VISUALIZE` to `Fal
 or if you want to switch off the speed hack set `SPLIT_MODEL` to `False`, <br />
 - to be able to use KCF_Tracking inside `scripts/` run `bash build_kcf.sh` to build it and set `USE_TRACKER` to `True` to use it <br />
 (currently only works for pure object detection models without `SPLIT_MODEL`)
-- for realtime inference using video stream run: `run_objectdetection.py` or `run_deeplab.py`
-- for benchmark tests on sample images run: `test_objectdetection.py`or `test_deeplab.py` <br />
+- for realtime inference using video stream run: `python run_objectdetection.py` or `python run_deeplab.py`
+- for benchmark tests on sample images run: `python test_objectdetection.py`or `python test_deeplab.py` <br />
 (put them as `.jpg`  into `test_images/`. timeline results will appear in `test_results/`)
 - Enjoy!
 
