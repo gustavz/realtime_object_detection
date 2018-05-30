@@ -13,13 +13,14 @@ class Config(object):
     ### Inference Config
     VIDEO_INPUT = 0                 # Input Must be OpenCV readable
     VISUALIZE = True                # Disable for performance increase
+    CPU_ONLY = False                # CPU Placement for speed test
+    USE_OPTIMIZED = False           # whether to use the optimized model (only possible if transform with script)
 
 
     ### Testing
     IMAGE_PATH = 'test_images'      # path for test.py test_images
     LIMIT_IMAGES = None             # if set to None, all images are used
-    CPU_ONLY = False                # CPU Placement for speed test
-    WRITE_TIMELINE = False           # write json timeline file (slows infrence)
+    WRITE_TIMELINE = False          # write json timeline file (slows infrence)
 
 
     ### Object_Detection
@@ -37,8 +38,8 @@ class Config(object):
     TRACKER_FRAMES = 20             # Number of tracked frames between detections
     NUM_TRACKERS = 5                # Max number of objects to track
     ## Model
-    OD_MODEL_NAME = 'ssd_mobilenet_v11_coco'
-    OD_MODEL_PATH = 'models/ssd_mobilenet_v11_coco/frozen_inference_graph.pb'
+    OD_MODEL_NAME = 'ssd_mobilenet_v11_coco' # Only used for downloading the correct Model Version
+    OD_MODEL_PATH = 'models/ssd_mobilenet_v11_coco/{}'
     LABEL_PATH = 'rod/data/mscoco_label_map.pbtxt'
     NUM_CLASSES = 90
 
@@ -48,8 +49,8 @@ class Config(object):
     BBOX = True                     # compute boundingbox in postprocessing
     MINAREA = 500                   # min Pixel Area to apply bounding boxes (avoid noise)
     ## Model
-    DL_MODEL_NAME = 'deeplabv3_mnv2_pascal_train_aug_2018_01_29'
-    DL_MODEL_PATH = 'models/deeplabv3_mnv2_pascal_train_aug/frozen_inference_graph.pb'
+    DL_MODEL_NAME = 'deeplabv3_mnv2_pascal_train_aug_2018_01_29' # Only used for downloading the correct Model Version
+    DL_MODEL_PATH = 'models/deeplabv3_mnv2_pascal_train_aug/{}'
     LABEL_NAMES = np.asarray([
         'background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus',
         'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike',
@@ -57,10 +58,17 @@ class Config(object):
 
 
     def __init__(self):
-        ## TimeLine File naming
+        ## CPU Placement and Timeline naming
         if self.CPU_ONLY:
             import os
             os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
             self.DEVICE = '_CPU'
         else:
             self.DEVICE = ''
+        ## Loading Standard or Optimized Model
+        if self.USE_OPTIMIZED:
+            self.OD_MODEL_PATH = self.OD_MODEL_PATH.format("optimized_inference_graph.pb")
+            self.DL_MODEL_PATH = self.DL_MODEL_PATH.format("optimized_inference_graph.pb")
+        else:
+            self.OD_MODEL_PATH = self.OD_MODEL_PATH.format("frozen_inference_graph.pb")
+            self.DL_MODEL_PATH = self.DL_MODEL_PATH.format("frozen_inference_graph.pb")

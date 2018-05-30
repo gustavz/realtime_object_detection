@@ -9,41 +9,65 @@
 
 ### MODEL AND SYSTEM CONFIG ###
 ### CHANGE THIS ACCORDING TO YOUR SYSTEM ###
-export MODEL_NAME="mask_rcnn_mobilenet_v1_400_coco_117k"
-export TF_PATH="/home/gustav/workspace/tensorflow/tensorflow"
-export ROOT_PATH="/home/gustav/workspace/realtime_object_detection"
+export MODEL_NAME="deeplabv3_mnv2_pascal_train_aug"
+export TF_PATH="${HOME}/workspace/tensorflow/tensorflow"
+export ROOT_PATH="${HOME}/workspace/realtime_object_detection"
+export USE_OPTIMIZED=false
+export KEEP_TERMINALS_OPEN=false
+
+##########################
 ### DO NOT CHANGE THIS ###
+##########################
 export MODEL_PATH="${ROOT_PATH}/models/${MODEL_NAME}"
 export IN_GRAPH="${MODEL_PATH}/frozen_inference_graph.pb"
 export OUT_GRAPH="${MODEL_PATH}/optimized_inference_graph.pb"
 export TFLITE_GRAPH="${MODEL_PATH}/frozen_inference_graph.tflite"
 export RESULTS_PATH="${ROOT_PATH}/test_results"
+# conditionals
+if [ ${USE_OPTIMIZED} = true ] ; then
+export MODEL_NAME="${MODEL_NAME}_optimized"
+export IN_GRAPH=${OUT_GRAPH}
+fi
+if [ ${KEEP_TERMINALS_OPEN} = true ] ; then
+export KTO=bash
+else
+export KTO=""
+fi
 
 ### MODEL TRANSFORMATION CONFIG ###
 ### CHANGE THIS ACCORDING TO YOUR MODEL ###
-export SHAPE="\"1,400,400,3\""
+export SHAPE='\"1,513,384,3\"'
 export STD_VALUE=127.5
 export MEAN_VALUE=127.5
 export INPUT_TYPE='uint8'
-export INPUTS='image_tensor'
-export OUTPUTS='num_detections,detection_boxes,detection_scores,detection_classes,detection_masks'
+export LOGGING='\"__requant_min_max:\"'
+export INPUTS='ImageTensor'
+#'image_tensor'
+export OUTPUTS='SemanticPredictions'
+#'num_detections,detection_boxes,detection_scores,detection_classes,detection_masks'
 export TRANSFORMS=("'
-add_default_attributes
+strip_unused_nodes(type=quint8, shape='${SHAPE}')
 remove_nodes(op=Identity, op=CheckNumerics)
 fold_constants
 fold_batch_norms
+fuse_pad_and_conv
+fuse_resize_and_conv
 fuse_resize_pad_and_conv
 quantize_weights
-quantize_nodes
 strip_unused_nodes
 sort_by_execution_order
 '")
+#freeze_requantization_ranges(min_max_log_file=${RESULTS_PATH}/min_max_log_${MODEL_NAME}.txt)
+#insert_logging(op=RequantizationRange, show_name=true, message='${LOGGING}')
 
 ########################
-echo "> doublecheck all paths:"
+echo "> doublecheck set variables:"
 echo "MODEL_NAME: $MODEL_NAME"
 echo "TF_PATH: $TF_PATH"
 echo "ROOT_PATH: $ROOT_PATH"
+echo "IN_GRAPH: ${IN_GRAPH}"
+echo "Use Optimized Model: ${USE_OPTIMIZED}"
+echo "Keep Terminals Open: ${KEEP_TERMINALS_OPEN}"
 
 ########################
 # Possible Transforms are:

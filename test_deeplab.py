@@ -47,8 +47,8 @@ def segmentation(model,config):
                 timer.toc()
                 if config.WRITE_TIMELINE:
                     timeliner.write_timeline(run_metadata.step_stats,
-                                            'test_results/timeline_{}{}{}.json'.format(
-                                            config.OD_MODEL_NAME,config.SM,config.DEVICE))
+                                            'test_results/timeline_{}{}.json'.format(
+                                            config.OD_MODEL_NAME,config.DEVICE))
                 # visualization
                 if config.VISUALIZE:
                     seg_map = batch_seg_map[0]

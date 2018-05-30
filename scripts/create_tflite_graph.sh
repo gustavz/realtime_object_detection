@@ -13,4 +13,4 @@ bazel-bin/tensorflow/contrib/lite/toco/toco \
   --input_array=${INPUTS} \
   --output_array=${OUTPUTS} \
   --std_value=${STD_VALUE} --mean_value=${MEAN_VALUE} \
-  2>&1 | tee ${RESULTS_PATH}/create_tflite_${MODEL_NAME}.txt;bash"
+  2>&1 | tee ${RESULTS_PATH}/create_tflite_${MODEL_NAME}.txt;${KTO}"

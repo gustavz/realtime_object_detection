@@ -30,6 +30,7 @@ class Model(object):
         self.category_index = None
         self.score = None
         self.expand = None
+        print ('> Model: {}'.format(self.model_path))
 
     def download_model(self):
         if self.type == 'dl':

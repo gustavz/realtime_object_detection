@@ -10,4 +10,4 @@ bazel-bin/tensorflow/tools/graph_transforms/transform_graph \
  --inputs=${INPUTS} \
  --outputs=${OUTPUTS} \
  --transforms=${TRANSFORMS[@]} \
- 2>&1 | tee ${RESULTS_PATH}/transform_${MODEL_NAME}.txt;bash"
+ 2>&1 | tee ${RESULTS_PATH}/transform_${MODEL_NAME}.txt;${KTO}"
