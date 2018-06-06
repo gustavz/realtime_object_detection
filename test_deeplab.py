@@ -47,8 +47,8 @@ def segmentation(model,config):
                 timer.toc()
                 if config.WRITE_TIMELINE:
                     timeliner.write_timeline(run_metadata.step_stats,
-                                            'test_results/timeline_{}{}.json'.format(
-                                            config.OD_MODEL_NAME,config.DEVICE))
+                                            'test_results/timeline_{}{}{}.json'.format(
+                                            config.OD_MODEL_NAME,config._DEV,config._OPT))
                 # visualization
                 if config.VISUALIZE:
                     seg_map = batch_seg_map[0]
@@ -65,7 +65,7 @@ def segmentation(model,config):
                                 p2 = (box[3], box[2])
                                 cv2.rectangle(frame, p1, p2, (77,255,9), 2)
                                 vis_text(frame,config.LABEL_NAMES[seg_map[tuple(region.coords[0])]],(p1[0],p1[1]-10))
-                    cv2.imshow('segmentation',frame)
+                    cv2.imshow(config.DL_MODEL_NAME+config._OPT,frame)
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
 	cv2.destroyAllWindows()

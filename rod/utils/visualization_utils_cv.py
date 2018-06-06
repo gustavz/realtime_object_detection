@@ -631,6 +631,8 @@ def draw_mask_on_image_array_cv(image, mask, color='red', alpha=0.3):
   mask[np.where((mask == [1,1,1]).all(axis = 2))] = color
   cv2.addWeighted(mask,alpha,image,1-alpha,0,image)
 
+
+
 def visualize_boxes_and_labels_on_image_array(
     image,
     boxes,

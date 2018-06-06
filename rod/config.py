@@ -3,13 +3,13 @@
 """
 @author: www.github.com/GustavZ
 """
+
 import numpy as np
 import yaml
 import os
 import sys
 
 ## LOAD CONFIG PARAMS ##
-sys.path.append(os.path.abspath('../'))
 if (os.path.isfile('config.yml')):
     with open("config.yml", 'r') as ymlfile:
         cfg = yaml.load(ymlfile)
@@ -33,6 +33,7 @@ class Config(object):
     IMAGE_PATH = cfg['IMAGE_PATH']          # path for test.py test_images
     LIMIT_IMAGES = cfg['LIMIT_IMAGES']      # if set to None, all images are used
     WRITE_TIMELINE = cfg['WRITE_TIMELINE']  # write json timeline file (slows infrence)
+    SEQ_MODELS = cfg['SEQ_MODELS']        # List of Models to sequentially test (Default all Models)
 
 
     ### Object_Detection
@@ -73,13 +74,24 @@ class Config(object):
         if self.CPU_ONLY:
             import os
             os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-            self.DEVICE = '_CPU'
+            self._DEV = '_CPU'
         else:
-            self.DEVICE = ''
+            self._DEV = ''
         ## Loading Standard or Optimized Model
         if self.USE_OPTIMIZED:
             self.OD_MODEL_PATH = self.OD_MODEL_PATH.format("optimized_inference_graph.pb")
             self.DL_MODEL_PATH = self.DL_MODEL_PATH.format("optimized_inference_graph.pb")
+            self._OPT = '_opt'
         else:
             self.OD_MODEL_PATH = self.OD_MODEL_PATH.format("frozen_inference_graph.pb")
             self.DL_MODEL_PATH = self.DL_MODEL_PATH.format("frozen_inference_graph.pb")
+            self._OPT = ''
+
+
+    def display(self):
+        """Display Configuration values."""
+        print("\nConfigurations:")
+        for a in dir(self):
+            if not a.startswith("__") and not callable(getattr(self, a)):
+                print("{:30} {}".format(a, getattr(self, a)))
+        print("\n")

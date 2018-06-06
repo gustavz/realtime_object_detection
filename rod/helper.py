@@ -245,7 +245,9 @@ def vis_text(image, string, pos):
     cv2.putText(image,string,(pos),
         cv2.FONT_HERSHEY_SIMPLEX, 0.75, (77, 255, 9), 2)
 
-def vis_detection(image, boxes, classes, scores, masks, category_index, fps=None, visualize=False, det_interval=5, det_th=0.5, max_frames=500, cur_frame = None):
+def vis_detection(image, boxes, classes, scores, masks, category_index,
+                fps=None, visualize=False, det_interval=5, det_th=0.5,
+                max_frames=500, cur_frame = None, model='realtime_object_detection'):
     if visualize:
         vis_util.visualize_boxes_and_labels_on_image_array(
         image,
@@ -258,7 +260,7 @@ def vis_detection(image, boxes, classes, scores, masks, category_index, fps=None
         line_thickness=8)
         if fps:
             vis_text(image,"fps: {}".format(fps), (10,30))
-        cv2.imshow('raltime_object_detection', image)
+        cv2.imshow(model, image)
     elif not visualize and cur_frame:
         # Exit after max frames if no visualization
         for box, score, _class in zip(boxes, scores, classes):

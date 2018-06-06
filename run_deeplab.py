@@ -47,7 +47,7 @@ def segmentation(model,config):
                                 p2 = (box[3], box[2])
                                 cv2.rectangle(frame, p1, p2, (77,255,9), 2)
                                 vis_text(frame,config.LABEL_NAMES[seg_map[tuple(region.coords[0])]],(p1[0],p1[1]-10))
-                    cv2.imshow('realtime_object_detection',frame)
+                    cv2.imshow(config.DL_MODEL_NAME,frame)
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
                 fps.update()

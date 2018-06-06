@@ -78,8 +78,8 @@ def detection(model,config):
                     timer.tictic()
                     if config.WRITE_TIMELINE:
                         timeliner.write_timeline(run_metadata.step_stats,
-                                                'test_results/timeline_{}{}{}.json'.format(
-                                                config.OD_MODEL_NAME,'_SM1',config.DEVICE))
+                                                'test_results/timeline_{}{}{}{}.json'.format(
+                                                config.OD_MODEL_NAME,'_SM1',config._DEV,config._OPT))
                     timer.tic()
                     # CPU Session
                     boxes, scores, classes, num = sess.run(
@@ -89,8 +89,8 @@ def detection(model,config):
                     timer.toc()
                     if config.WRITE_TIMELINE:
                         timeliner.write_timeline(run_metadata.step_stats,
-                                                'test_results/timeline_{}{}{}.json'.format(
-                                                config.OD_MODEL_NAME,'_SM2',config.DEVICE))
+                                                'test_results/timeline_{}{}{}{}.json'.format(
+                                                config.OD_MODEL_NAME,'_SM2',config._DEV,config._OPT))
                 else:
                     # default session
                     frame = cv2.resize(cv2.imread(image),(config.WIDTH,config.HEIGHT))
@@ -102,8 +102,8 @@ def detection(model,config):
                     timer.toc()
                     if config.WRITE_TIMELINE:
                         timeliner.write_timeline(run_metadata.step_stats,
-                                                'test_results/timeline_{}{}.json'.format(
-                                                config.OD_MODEL_NAME,config.DEVICE))
+                                                'test_results/timeline_{}{}{}.json'.format(
+                                                config.OD_MODEL_NAME,config._DEV,config._OPT))
                     num = output_dict['num_detections'][0]
                     classes = output_dict['detection_classes'][0]
                     boxes = output_dict['detection_boxes'][0]
@@ -121,7 +121,7 @@ def detection(model,config):
 
                 # Visualization
                 vis = vis_detection(frame, boxes, classes, scores, masks, category_index, timer.get_fps(),
-                                    config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES, None)
+                                    config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES, None, config.OD_MODEL_NAME+config._OPT)
                 if not vis:
                     break
 
@@ -131,6 +131,7 @@ def detection(model,config):
 
 if __name__ == '__main__':
     config = Config()
+    config.display()
     model = Model('od', config.OD_MODEL_NAME, config.OD_MODEL_PATH, config.LABEL_PATH,
                 config.NUM_CLASSES, config.SPLIT_MODEL, config.SSD_SHAPE).prepare_od_model()
     detection(model,config)
