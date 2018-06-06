@@ -18,7 +18,7 @@ from rod.config import Config
 def segmentation(model,config):
     detection_graph = model.detection_graph
     # fixed input sizes as model needs resize either way
-    vs = WebcamVideoStream(config.VIDEO_INPUT,640,480).start()
+    vs = WebcamVideoStream(config.VIDEO_INPUT,100,1000).start()
     resize_ratio = 1.0 * 513 / max(vs.real_width,vs.real_height)
     target_size = (int(resize_ratio * vs.real_width), int(resize_ratio * vs.real_height)) #(513, 384)
     tf_config = tf.ConfigProto(allow_soft_placement=True)
