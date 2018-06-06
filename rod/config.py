@@ -4,6 +4,8 @@
 @author: www.github.com/GustavZ
 """
 import numpy as np
+import yaml
+
 
 class Config(object):
     """
@@ -19,13 +21,13 @@ class Config(object):
 
     ### Testing
     IMAGE_PATH = 'test_images'      # path for test.py test_images
-    LIMIT_IMAGES = None             # if set to None, all images are used
-    WRITE_TIMELINE = False          # write json timeline file (slows infrence)
+    LIMIT_IMAGES = 10             # if set to None, all images are used
+    WRITE_TIMELINE = True          # write json timeline file (slows infrence)
 
 
     ### Object_Detection
-    WIDTH = 600                     # OpenCV only supports 4:3 formats others will be converted
-    HEIGHT = 600                    # 600x600 leads to 640x480
+    WIDTH = 600                   # OpenCV only supports 4:3 formats others will be converted
+    HEIGHT = 600                   # 600x600 leads to 640x480
     MAX_FRAMES = 5000               # only used if visualize==False
     FPS_INTERVAL = 5                # Interval [s] to print fps of the last interval in console
     DET_INTERVAL = 500              # intervall [frames] to print detections to console

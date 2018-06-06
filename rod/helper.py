@@ -24,7 +24,7 @@ if sys.version_info[0] == 2:
 elif sys.version_info[0] == 3:
     import queue as Queue
 from tensorflow.python.client import timeline
-from rod.utils import visualization_utils as vis_util
+from rod.utils import visualization_utils_cv as vis_util
 
 
 class FPS(object):
