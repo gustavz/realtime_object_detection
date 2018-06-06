@@ -33,7 +33,7 @@ import six
 import tensorflow as tf
 import cv2
 
-from object_detection.core import standard_fields as fields
+from rod.core import standard_fields as fields
 
 
 _TITLE_LEFT_MARGIN = 10
