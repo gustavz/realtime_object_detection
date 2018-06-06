@@ -22,7 +22,7 @@ Results in up to x10 performance increase depending on the running system <br />
 
 
 ## Inference:  
-- Change Inference Configurations inside `rod/config.py` according to your needs <br />
+- create a copy of `config.sample.yml` named `config.yml` and only change configurations inside this file <br />
 For example: If you are not interested in visualization: set `VISUALIZE` to `False`, <br />
 or if you want to switch off the speed hack set `SPLIT_MODEL` to `False`, <br />
 - to be able to use KCF_Tracking inside `scripts/` run `bash build_kcf.sh` to build it and set `USE_TRACKER` to `True` to use it <br />
