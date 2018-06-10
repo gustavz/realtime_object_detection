@@ -28,8 +28,8 @@ USE_TRACKER: False             # Use a Tracker (currently only works properly WI
 TRACKER_FRAMES: 20             # Number of tracked frames between detections
 NUM_TRACKERS: 5                # Max number of objects to track
 ## Model
-OD_MODEL_NAME: 'ssd_mobilenet_v11_coco' # Only used for downloading the correct Model Version
-OD_MODEL_PATH: 'models/ssd_mobilenet_v11_coco/{}'
+OD_MODEL_NAME: 'ssd_mobilenet_v1_coco_2017_11_17' # Only used for downloading the correct Model Version
+OD_MODEL_PATH: 'models/ssd_mobilenet_v1_coco_2017_11_17/{}'
 LABEL_PATH: 'rod/data/mscoco_label_map.pbtxt'
 NUM_CLASSES: 90
 
