@@ -121,7 +121,8 @@ def detection(model,config):
 
                 # Visualization
                 vis = vis_detection(frame, boxes, classes, scores, masks, category_index, timer.get_fps(),
-                                    config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES, None, config.OD_MODEL_NAME+config._OPT)
+                                    config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES, None, 
+                                    config.OD_MODEL_NAME+config._OPT)
                 if not vis:
                     break
 

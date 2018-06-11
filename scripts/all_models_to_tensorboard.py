@@ -16,31 +16,48 @@ from tensorflow.python.summary import summary
 import os
 import sys
 import numpy as np
-ROOT_DIR = os.path.abspath('../')
-sys.path.append(ROOT_DIR)
-MODEL_DIR = os.path.join(ROOT_DIR,'models')
+
+ROOT_DIR = os.getcwd()
+
+def create_tfevent_from_pb(model,optimized=False):
+    print("> creating tfevent of model: {}".format(model))
+
+    if optimized:
+        model_path=ROOT_DIR+'/models/{}/optimized_inference_graph.pb'.format(model)
+        log_dir=ROOT_DIR+'/models/{}/log_opt/'.format(model)
+    else:
+        model_path=ROOT_DIR+'/models/{}/frozen_inference_graph.pb'.format(model)
+        log_dir=ROOT_DIR+'/models/{}/log/'.format(model)
+
+    with session.Session(graph=ops.Graph()) as sess:
+        with gfile.FastGFile(model_path, "rb") as f:
+          graph_def = graph_pb2.GraphDef()
+          graph_def.ParseFromString(f.read())
+          importer.import_graph_def(graph_def)
+        pb_visual_writer = summary.FileWriter(log_dir)
+        pb_visual_writer.add_graph(sess.graph)
+    print("> Model {} Imported. \nVisualize by running: \
+    tensorboard --logdir={}".format(model_path, log_dir))
 
 # Gather all Model Names in models/
-for root, dirs, files in os.walk(MODEL_DIR):
-    if root.count(os.sep) - MODEL_DIR.count(os.sep) == 0:
+MODELS_DIR = os.path.join(ROOT_DIR,'models')
+for root, dirs, files in os.walk(MODELS_DIR):
+    if root.count(os.sep) - MODELS_DIR.count(os.sep) == 0:
         for idx,model in enumerate(dirs):
             models=[]
             models.append(dirs)
             models = np.squeeze(models)
+            models.sort()
 
 # Create Tensorboard readable tfevent files in models/{}/log
 for model in models:
-    print("> creating tfevent of model: {}".format(model))
-    MODEL_NAME=model
-    MODEL_PATH=ROOT_DIR+'/models/{}/frozen_inference_graph.pb'.format(MODEL_NAME)
-    LOG_DIR=ROOT_DIR+'/models/{}/log/'.format(MODEL_NAME)
-
-    with session.Session(graph=ops.Graph()) as sess:
-        with gfile.FastGFile(MODEL_PATH, "rb") as f:
-          graph_def = graph_pb2.GraphDef()
-          graph_def.ParseFromString(f.read())
-          importer.import_graph_def(graph_def)
-        pb_visual_writer = summary.FileWriter(LOG_DIR)
-        pb_visual_writer.add_graph(sess.graph)
-    print("> Model Imported. Visualize by running: "
-    "tensorboard --logdir={}".format(LOG_DIR))
+    optimized=False
+    create_tfevent_from_pb(model,optimized)
+    # Check if there is an optimized graph
+    model_dir =  os.path.join(MODELS_DIR,model)
+    for root, dirs, files in os.walk(model_dir):
+        for file in files:
+            if 'optimized' in file:
+                optimized=True
+                print '> found: optimized graph'
+    create_tfevent_from_pb(model,optimized)

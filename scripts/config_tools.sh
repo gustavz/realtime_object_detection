@@ -9,11 +9,11 @@
 
 ### MODEL AND SYSTEM CONFIG ###
 ### CHANGE THIS ACCORDING TO YOUR SYSTEM ###
-export MODEL_NAME="mask_rcnn_inception_v2_coco_1k"
+export MODEL_NAME="mask_rcnn_mobilenet_v1_224_coco_person_16M"
 export TF_PATH="${HOME}/workspace/tensorflow/tensorflow"
 export ROOT_PATH="${HOME}/workspace/realtime_object_detection"
 export USE_OPTIMIZED=false
-export KEEP_TERMINALS_OPEN=true
+export KEEP_TERMINALS_OPEN=false
 
 ##########################
 ### DO NOT CHANGE THIS ###
@@ -37,7 +37,8 @@ fi
 ### MODEL TRANSFORMATION CONFIG ###
 ### CHANGE THIS ACCORDING TO YOUR MODEL ###
 #export SHAPE='\"1,513,384,3\"' # DeepLab
-export SHAPE='\"1,512,512,3\"'
+export TSHAPE='\"1,224,224,3\"' # used in transform_graph.sh
+export SHAPE="1,224,224,3" # used in benchmark_model.sh
 export STD_VALUE=127.5
 export MEAN_VALUE=127.5
 export INPUT_TYPE='uint8'
@@ -47,7 +48,9 @@ export INPUTS='image_tensor' #Object_detection
 #export OUTPUTS='SemanticPredictions' #DeepLab
 export OUTPUTS='num_detections,detection_boxes,detection_scores,detection_classes,detection_masks' #Object_detection
 export TRANSFORMS=("'
-strip_unused_nodes(type=quint8, shape='${SHAPE}')
+add_default_attributes
+strip_unused_nodes(type=float, shape='${TSHAPE}')
+remove_nodes(op=Identity, op=CheckNumerics, op=BatchNorm)
 fold_constants
 fold_batch_norms
 sort_by_execution_order

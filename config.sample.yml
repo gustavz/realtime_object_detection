@@ -28,7 +28,7 @@ USE_TRACKER: False             # Use a Tracker (currently only works properly WI
 TRACKER_FRAMES: 20             # Number of tracked frames between detections
 NUM_TRACKERS: 5                # Max number of objects to track
 ## Model
-OD_MODEL_NAME: 'ssd_mobilenet_v11_coco' # Only used for downloading the correct Model Version
+OD_MODEL_NAME: 'ssd_mobilenet_v11_coco'
 OD_MODEL_PATH: 'models/ssd_mobilenet_v11_coco/{}'
 LABEL_PATH: 'rod/data/mscoco_label_map.pbtxt'
 NUM_CLASSES: 90
@@ -39,5 +39,5 @@ ALPHA: 0.3                     # mask overlay factor
 BBOX: True                     # compute boundingbox in postprocessing
 MINAREA: 500                   # min Pixel Area to apply bounding boxes (avoid noise)
 ## Model
-DL_MODEL_NAME: 'deeplabv3_mnv2_pascal_train_aug_2018_01_29' # Only used for downloading the correct Model Version
+DL_MODEL_NAME: 'deeplabv3_mnv2_pascal_train_aug_2018_01_29'
 DL_MODEL_PATH: 'models/deeplabv3_mnv2_pascal_train_aug/{}'

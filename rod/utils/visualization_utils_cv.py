@@ -198,6 +198,7 @@ STANDARD_COLORS = [
   (0, 255, 255), # Yellow
   (50, 205, 154), # YellowGreen
 ]
+np.asarray(STANDARD_COLORS, dtype=np.uint8)
 
 def save_image_array_as_png(image, output_path):
   """Saves an image (represented as a numpy array) to PNG.
@@ -603,7 +604,7 @@ def draw_keypoints_on_image(image,
                  outline=color, fill=color)
 
 
-def draw_mask_on_image_array_cv(image, mask, color='red', alpha=0.3):
+def draw_mask_on_image_array_cv(image, mask, color=(238, 245, 255), alpha=0.3):
   """
   Draws mask on an image.
 
@@ -628,7 +629,21 @@ def draw_mask_on_image_array_cv(image, mask, color='red', alpha=0.3):
                      'dimensions %s' % (image.shape[:2], mask.shape))
 
   mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2RGB)
+  #mask = np.expand_dims(mask, axis=2)
+  #mask = np.repeat(mask, 3, axis=2)
+  #fg = cv2.bitwise_or(image,image, mask=mask)
+  #mask = cv2.bitwise_not(mask)
+  #bg = np.full(image.shape, 255, dtype=np.uint8)
+  #bk = cv2.bitwise_or(bg,bg,mask=mask)
+  #image = cv2.bitwise_or(fg,bk)
+  #alpha3 = np.stack([mask]*3, axis=2)
+  #blended = alpha3 * image + (1. - alpha3) * image
   mask[np.where((mask == [1,1,1]).all(axis = 2))] = color
+  #image[np.where((mask == [1,1,1]).all(axis = 2))] = color
+  #image = cv2.bitwise_and(image,image, mask=mask)
+  #image = np.multiply(image,mask)
+  #image = mask
+  #image = alpha * image + (1. - alpha) * image
   cv2.addWeighted(mask,alpha,image,1-alpha,0,image)
 
 
@@ -730,23 +745,34 @@ def visualize_boxes_and_labels_on_image_array(
         else:
           box_to_color_map[box] = STANDARD_COLORS[
               classes[i] % len(STANDARD_COLORS)]
-
+  first = True
+  mask = None
   # Draw all boxes onto image.
   for box, color in box_to_color_map.items():
     ymin, xmin, ymax, xmax = box
     if instance_masks is not None:
-      draw_mask_on_image_array_cv(
-          image,
-          box_to_instance_masks_map[box],
-          color=color
-      )
+        """
+        draw_mask_on_image_array_cv(
+            image,
+            box_to_instance_masks_map[box],
+            color=color
+        )
+        """
+        # create one mask containing all single masks
+        if first:
+            first = False
+            mask = box_to_instance_masks_map[box]
+        else:
+            mask = np.bitwise_or(mask, box_to_instance_masks_map[box])
+
     if instance_boundaries is not None:
       draw_mask_on_image_array_cv(
           image,
           box_to_instance_boundaries_map[box],
-          color='red',
+          color=(0, 0, 255), #red
           alpha=1.0
       )
+
     draw_bounding_box_on_image_array_cv(
         image,
         ymin,
@@ -765,6 +791,9 @@ def visualize_boxes_and_labels_on_image_array(
           color=color,
           radius=line_thickness / 2,
           use_normalized_coordinates=use_normalized_coordinates)
+  # Draw Masks on Image (only one color for all masks)
+  if mask is not None:
+      draw_mask_on_image_array_cv(image,mask)
 
   return image
 
