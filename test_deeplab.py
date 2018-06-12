@@ -10,11 +10,14 @@ import numpy as np
 import tensorflow as tf
 import cv2
 from skimage import measure
+
 from tensorflow.python.client import timeline
-from rod.helper import TimeLiner, Timer, create_colormap, vis_text, load_images
+from rod.utils.visualization_utils_cv import STANDARD_COLORS
+from rod.helper import TimeLiner, Timer, vis_text, load_images
 from rod.model import Model
 from rod.config import Config
 
+STANDARD_COLORS = np.asarray(STANDARD_COLORS).astype(np.uint8)
 
 def segmentation(model,config):
     images = load_images(config.IMAGE_PATH,config.LIMIT_IMAGES)
@@ -52,7 +55,7 @@ def segmentation(model,config):
                 # visualization
                 if config.VISUALIZE:
                     seg_map = batch_seg_map[0]
-                    seg_image = create_colormap(seg_map).astype(np.uint8)
+                    seg_image = STANDARD_COLORS[seg_map]
                     cv2.addWeighted(seg_image,config.ALPHA,frame,1-config.ALPHA,0,frame)
                     vis_text(frame,"fps: {}".format(timer.get_fps()),(10,30))
                     # boxes (ymin, xmin, ymax, xmax)

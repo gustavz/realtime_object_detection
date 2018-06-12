@@ -9,7 +9,7 @@
 
 ### MODEL AND SYSTEM CONFIG ###
 ### CHANGE THIS ACCORDING TO YOUR SYSTEM ###
-export MODEL_NAME="mask_rcnn_mobilenet_v1_224_coco_person_16M"
+export MODEL_NAME="mask_rcnn_mobilenet_v1_224_coco_person"
 export TF_PATH="${HOME}/workspace/tensorflow/tensorflow"
 export ROOT_PATH="${HOME}/workspace/realtime_object_detection"
 export USE_OPTIMIZED=false
@@ -49,6 +49,7 @@ export INPUTS='image_tensor' #Object_detection
 export OUTPUTS='num_detections,detection_boxes,detection_scores,detection_classes,detection_masks' #Object_detection
 export TRANSFORMS=("'
 add_default_attributes
+remove_device
 strip_unused_nodes(type=float, shape='${TSHAPE}')
 remove_nodes(op=Identity, op=CheckNumerics, op=BatchNorm)
 fold_constants

@@ -27,6 +27,8 @@ class Model(object):
         self.num_classes = num_classes
         self.ssd_shape = ssd_shape
         self.detection_graph = tf.Graph()
+        self.tf_config = tf.ConfigProto(allow_soft_placement=True)
+        self.tf_config.gpu_options.allow_growth=True
         self.category_index = None
         self.score = None
         self.expand = None
@@ -64,7 +66,7 @@ class Model(object):
             # Hardcoded split points for ssd_mobilenet
             split_nodes = ['Postprocessor/convert_scores','Postprocessor/ExpandDims_1']
             input_graph = tf.Graph()
-            with tf.Session(graph=input_graph):
+            with tf.Session(graph=input_graph,config=self.config):
                 if self.ssd_shape == 600:
                     shape = 7326
                 else:

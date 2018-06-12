@@ -52,8 +52,8 @@ class FPS(object):
         self._glob_end = datetime.datetime.now()
         print('> [INFO] elapsed frames (total): {}'.format(self._glob_numFrames))
         print('> [INFO] elapsed time (total): {:.2f}'.format(self.elapsed()))
-        print('> [INFO] mean. FPS: {:.2f}'.format(self.fps()))
-        print('> [INFO] median. FPS: {:.2f}'.format(np.median(self._log)))
+        print('> [INFO] approx. FPS: {:.2f}'.format(self.fps()))
+        #print('> [INFO] median. FPS: {:.2f}'.format(np.median(self._log)))
 
     def update(self):
         self._first = True
@@ -66,9 +66,9 @@ class FPS(object):
           self._local_numFrames = 0
           self._local_start = self._curr_time
 
-        self._log.append(self.fps_local())
-        if len(self._log) > 1000:
-            self._log = []
+        #self._log.append(self.fps_local())
+        #if len(self._log) > 1000:
+        #    self._log = []
 
 
     def elapsed(self):

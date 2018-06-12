@@ -10,10 +10,13 @@ import numpy as np
 import tensorflow as tf
 import cv2
 from skimage import measure
-from rod.helper import FPS, WebcamVideoStream, create_colormap, vis_text
+
+from rod.utils.visualization_utils_cv import STANDARD_COLORS
+from rod.helper import FPS, WebcamVideoStream, vis_text
 from rod.model import Model
 from rod.config import Config
 
+STANDARD_COLORS = np.asarray(STANDARD_COLORS).astype(np.uint8)
 
 def segmentation(model,config):
     detection_graph = model.detection_graph
@@ -34,8 +37,8 @@ def segmentation(model,config):
                 # visualization
                 if config.VISUALIZE:
                     seg_map = batch_seg_map[0]
-                    seg_image = create_colormap(seg_map).astype(np.uint8)
-                    cv2.addWeighted(seg_image,config.ALPHA,frame,1-config.ALPHA,0,frame)
+                    seg_image = STANDARD_COLORS[seg_map]
+                    cv2.addWeighted(seg_image,config.ALPHA,frame,1.0,0,frame)
                     vis_text(frame,"fps: {}".format(fps.fps_local()),(10,30))
                     # boxes (ymin, xmin, ymax, xmax)
                     if config.BBOX:

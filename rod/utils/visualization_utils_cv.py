@@ -71,6 +71,7 @@ for color in STANDARD_COLORS:
     print("  {}, # {}".format(bgr,color))
 '''
 STANDARD_COLORS = [
+  (0, 0, 0), # Blank color for background
   (255, 248, 240), # AliceBlue
   (0, 255, 127), # Chartreuse
   (255, 255, 0), # Aqua
@@ -196,9 +197,8 @@ STANDARD_COLORS = [
   (255, 255, 255), # White
   (245, 245, 245), # WhiteSmoke
   (0, 255, 255), # Yellow
-  (50, 205, 154), # YellowGreen
+  (50, 205, 154) # YellowGreen
 ]
-np.asarray(STANDARD_COLORS, dtype=np.uint8)
 
 def save_image_array_as_png(image, output_path):
   """Saves an image (represented as a numpy array) to PNG.
@@ -629,22 +629,8 @@ def draw_mask_on_image_array_cv(image, mask, color=(238, 245, 255), alpha=0.3):
                      'dimensions %s' % (image.shape[:2], mask.shape))
 
   mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2RGB)
-  #mask = np.expand_dims(mask, axis=2)
-  #mask = np.repeat(mask, 3, axis=2)
-  #fg = cv2.bitwise_or(image,image, mask=mask)
-  #mask = cv2.bitwise_not(mask)
-  #bg = np.full(image.shape, 255, dtype=np.uint8)
-  #bk = cv2.bitwise_or(bg,bg,mask=mask)
-  #image = cv2.bitwise_or(fg,bk)
-  #alpha3 = np.stack([mask]*3, axis=2)
-  #blended = alpha3 * image + (1. - alpha3) * image
   mask[np.where((mask == [1,1,1]).all(axis = 2))] = color
-  #image[np.where((mask == [1,1,1]).all(axis = 2))] = color
-  #image = cv2.bitwise_and(image,image, mask=mask)
-  #image = np.multiply(image,mask)
-  #image = mask
-  #image = alpha * image + (1. - alpha) * image
-  cv2.addWeighted(mask,alpha,image,1-alpha,0,image)
+  cv2.addWeighted(mask,alpha,image,1.0,0,image)
 
 
 
@@ -791,6 +777,7 @@ def visualize_boxes_and_labels_on_image_array(
           color=color,
           radius=line_thickness / 2,
           use_normalized_coordinates=use_normalized_coordinates)
+          
   # Draw Masks on Image (only one color for all masks)
   if mask is not None:
       draw_mask_on_image_array_cv(image,mask)
