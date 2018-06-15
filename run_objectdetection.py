@@ -26,8 +26,7 @@ def detection(model,config):
 
     print("> Building Graph")
     # tf Session Config
-    tf_config = tf.ConfigProto(allow_soft_placement=True)
-    tf_config.gpu_options.allow_growth=True
+    tf_config = model.tf_config
     detection_graph = model.detection_graph
     category_index = model.category_index
     with detection_graph.as_default():

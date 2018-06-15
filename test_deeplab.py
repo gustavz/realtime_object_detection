@@ -22,8 +22,7 @@ STANDARD_COLORS = np.asarray(STANDARD_COLORS).astype(np.uint8)
 def segmentation(model,config):
     images = load_images(config.IMAGE_PATH,config.LIMIT_IMAGES)
     # Tf Session + Timeliner
-    tf_config = tf.ConfigProto(allow_soft_placement=True)
-    tf_config.gpu_options.allow_growth=True
+    tf_config = model.tf_config
     detection_graph = model.detection_graph
     if config.WRITE_TIMELINE:
         options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)

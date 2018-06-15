@@ -19,8 +19,7 @@ from rod.utils import ops as utils_ops
 
 def detection(model,config):
     # Tf Session
-    tf_config = tf.ConfigProto(allow_soft_placement=True)
-    tf_config.gpu_options.allow_growth=True
+    tf_config = model.tf_config
     detection_graph = model.detection_graph
     category_index = model.category_index
     print("> Building Graph")
@@ -121,7 +120,7 @@ def detection(model,config):
 
                 # Visualization
                 vis = vis_detection(frame, boxes, classes, scores, masks, category_index, timer.get_fps(),
-                                    config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES, None, 
+                                    config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES, None,
                                     config.OD_MODEL_NAME+config._OPT)
                 if not vis:
                     break
