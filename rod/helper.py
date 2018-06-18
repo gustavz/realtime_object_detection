@@ -328,10 +328,9 @@ def conv_track2detect(box, width, height):
 
 class SessionWorker(object):
     """
-    TensorFlow Session Thread for split_model spead Hack
-    from https://github.com/naisy/realtime_object_detection/blob/master/lib/session_worker.py
-
-     usage:
+    TensorFlow Session Thread for split_model speed Hack
+    
+    usage:
      before:
          results = sess.run([opt1,opt2],feed_dict={input_x:x,input_y:y})
      after:
@@ -345,7 +344,9 @@ class SessionWorker(object):
          results = q['results']
          extras = q['extras']
 
-    extras: None or frame image data for draw. GPU detection thread doesn't wait result. Therefore, keep frame image data if you want to draw detection result boxes on image.
+    extras: None or input image frame. 
+    	(reason: GPU detection thread does not wait for result. 
+    		Therefore, keep frame if VISUALIZE=TRUE.)
     """
     def __init__(self,tag,graph,config):
         self.lock = threading.Lock()
