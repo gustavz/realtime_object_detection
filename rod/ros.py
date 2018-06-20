@@ -1,7 +1,7 @@
 import rospy
 import time
 from cv_bridge import CvBridge, CvBridgeError
-from ros_detection.msg import Detection, Object
+from objdetection.msg import Detection, Object
 from sensor_msgs.msg import RegionOfInterest, Image
 
 class DetectionPublisher(object):
