@@ -46,8 +46,8 @@ def segmentation(model,config):
                         if config.VISUALIZE:
                             draw_single_box_on_image(frame,box,label)
 
-                vis = visualize_deeplab(frame,seg_map,config.OD_MODEL_NAME+config._DEV+config._OPT,
-                                        fps.fps_local(),config.VISUALIZE)
+                vis = visualize_deeplab(frame,seg_map,fps._glob_numFrames,config.MAX_FRAMES,fps.fps_local(),
+                                        config.PRINT_INTERVAL,config.PRINT_TH,config.OD_MODEL_NAME+config._DEV+config._OPT,config.VISUALIZE)
                 if not vis:
                     break
                 fps.update()

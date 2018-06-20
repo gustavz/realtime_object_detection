@@ -41,8 +41,8 @@ class Config(object):
     HEIGHT = cfg['HEIGHT']                  # 600x600 leads to 640x480
     MAX_FRAMES = cfg['MAX_FRAMES']          # only used if visualize==False
     FPS_INTERVAL = cfg['FPS_INTERVAL']      # Interval [s] to print fps of the last interval in console
-    DET_INTERVAL = cfg['DET_INTERVAL']      # intervall [frames] to print detections to console
-    DET_TH = cfg['DET_TH']                  # detection threshold for det_intervall
+    PRINT_INTERVAL = cfg['PRINT_INTERVAL']  # intervall [frames] to print detections to console
+    PRINT_TH = cfg['PRINT_TH']              # detection threshold for det_intervall
     ## speed hack
     SPLIT_MODEL = cfg['SPLIT_MODEL']        # Splits Model into a GPU and CPU session (currently only works for ssd_mobilenets)
     SSD_SHAPE = cfg['SSD_SHAPE']            # used for the split model algorithm (currently only supports ssd networks trained on 300x300 and 600x600 input)

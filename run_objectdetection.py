@@ -120,9 +120,9 @@ def detection(model,config):
                     scores = np.squeeze(scores)
 
                     # Visualization
-                    vis = visualize_objectdetection(frame, boxes, classes, scores, masks, category_index, fps.fps_local(),
-                                        config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES,
-                                        fps._glob_numFrames, config.OD_MODEL_NAME)
+                    vis = visualize_objectdetection(frame,boxes,classes,scores,masks,category_index,fps._glob_numFrames,
+                                                    config.MAX_FRAMES,fps.fps_local(),config.PRINT_INTERVAL,config.PRINT_TH,
+                                                    config.OD_MODEL_NAME+config._DEV+config._OPT,config.VISUALIZE)
                     if not vis:
                         break
 
@@ -146,9 +146,9 @@ def detection(model,config):
                     for idx,tracker in enumerate(trackers):
                         tracker_box = tracker.update(frame)
                         tracker_boxes[idx,:] = conv_track2detect(tracker_box, vs.real_width, vs.real_height)
-                    vis = visualize_objectdetection(frame, tracker_boxes, classes, scores, masks, category_index, fps.fps_local(),
-                                        config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES,
-                                        fps._glob_numFrames, config.OD_MODEL_NAME+config._DEV+config._OPT)
+                    vis = visualize_objectdetection(frame,tracker_boxes,classes,scores,masks,category_index,fps._glob_numFrames,
+                                                    config.MAX_FRAMES,fps.fps_local(),config.PRINT_INTERVAL,config.PRINT_TH,
+                                                    config.OD_MODEL_NAME+config._DEV+config._OPT,config.VISUALIZE)
                     if not vis:
                         break
 
@@ -168,8 +168,11 @@ def detection(model,config):
         cpu_worker.stop()
 
 
-if __name__ == '__main__':
+def main():
     config = Config()
     model = Model('od',config.OD_MODEL_NAME,config.OD_MODEL_PATH,config.LABEL_PATH,
                 config.NUM_CLASSES,config.SPLIT_MODEL, config.SSD_SHAPE).prepare_od_model()
     detection(model, config)
+
+if __name__ == '__main__':
+    main()

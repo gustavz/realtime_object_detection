@@ -63,8 +63,8 @@ def segmentation(model,config):
                         if config.VISUALIZE:
                             draw_single_box_on_image(frame,box,label)
 
-                vis = visualize_deeplab(frame,seg_map,config.OD_MODEL_NAME+config._DEV+config._OPT,
-                                        timer.get_fps(),config.VISUALIZE)
+                vis = visualize_deeplab(frame,seg_map,timer.get_frame(),config.MAX_FRAMES,timer.get_fps(),
+                                        config.PRINT_INTERVAL,config.PRINT_TH,config.OD_MODEL_NAME+config._DEV+config._OPT,config.VISUALIZE)
                 if not vis:
                     break
 	cv2.destroyAllWindows()

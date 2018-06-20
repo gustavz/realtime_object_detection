@@ -315,12 +315,56 @@ def draw_text_on_image(image, string, position, color = (77, 255, 9)):
         cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2)
 
 
-def visualize_objectdetection(image, boxes, classes, scores, masks, category_index,
-                fps=None, visualize=False, det_interval=5, det_th=0.5,
-                max_frames=500, cur_frame = None, model='realtime_object_detection'):
+def exit_visualization(millis):
     """
-    complicated visualization function for object detections
-    TODO: CLEAN UP
+    returns false if openCV exit is requested
+    """
+    if cv2.waitKey(millis) & 0xFF == ord('q'):
+        return False
+    return True
+
+def exit_print(cur_frame,max_frames):
+    """
+    returns false if max frames are reached
+    """
+    if cur_frame >= max_frames:
+        return False
+    return True
+
+def print_detection(boxes,scores,classes,category_index,cur_frame,max_frames=500,print_interval=100,print_th=0.5):
+    """
+    prints detection result above threshold to console
+    """
+    for box, score, _class in zip(boxes, scores, classes):
+        if cur_frame%print_interval==0 and score > print_th:
+            label = category_index[_class]['name']
+            print("label: {}\nscore: {}\nbox: {}".format(label, score, box))
+
+def draw_single_box_on_image(image,box,label):
+    """
+    draws single box and label on image
+    """
+    p1 = (box[1], box[0])
+    p2 = (box[3], box[2])
+    cv2.rectangle(image, p1, p2, (77,255,9), 2)
+    draw_text_on_image(image,label,(p1[0],p1[1]-10))
+
+
+def visualize_objectdetection(image,
+                            boxes,
+                            classes,
+                            scores,
+                            masks,
+                            category_index,
+                            cur_frame,
+                            max_frames=500,
+                            fps='N/A',
+                            print_interval=100,
+                            print_th=0.5,
+                            model_name='realtime_object_detection',
+                            visualize=True):
+    """
+    visualization function for object_detection
     """
     if visualize:
         visualize_boxes_and_labels_on_image(
@@ -332,44 +376,31 @@ def visualize_objectdetection(image, boxes, classes, scores, masks, category_ind
         instance_masks=masks,
         use_normalized_coordinates=True,
         line_thickness=2)
-        if fps:
-            draw_text_on_image(image,"fps: {}".format(fps), (10,30))
-        cv2.imshow(model, image)
-    elif not visualize and cur_frame:
-        # Exit after max frames if no visualization
-        for box, score, _class in zip(boxes, scores, classes):
-            if cur_frame%det_interval==0 and score > det_th:
-                label = category_index[_class]['name']
-                print("label: {}\nscore: {}\nbox: {}".format(label, score, box))
-    elif fps == "console":
-        for box, score, _class in zip(boxes, scores, classes):
-            if score > det_th:
-                label = category_index[_class]['name']
-                print("label: {}\nscore: {}\nbox: {}".format(label, score, box))
-    # Exit Option
-    if visualize:
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            return False
-    elif not visualize and fps:
-        if cur_frame >= max_frames:
-            return False
-    return True
+        draw_text_on_image(image,"fps: {}".format(fps), (10,30))
+        cv2.imshow(model_name, image)
+        vis = exit_visualization(1)
+    else:
+        print_detection(boxes,scores,classes,category_index,cur_frame,max_frames,print_interval,print_th)
+        vis = exit_print(cur_frame,max_frames)
+    return vis
 
-def draw_single_box_on_image(image,box,label):
-    p1 = (box[1], box[0])
-    p2 = (box[3], box[2])
-    cv2.rectangle(image, p1, p2, (77,255,9), 2)
-    draw_text_on_image(image,label,(p1[0],p1[1]-10))
-
-
-def visualize_deeplab(image,seg_map,model_name,fps,visualize=True):
+def visualize_deeplab(image,
+                    seg_map,
+                    cur_frame,
+                    max_frames=500,
+                    fps='N/A',
+                    print_interval=100,
+                    print_th=0.5,
+                    model_name='DeepLab',
+                    visualize=True):
+    """
+    visualization function for deeplab
+    """
     if visualize:
         draw_mask_on_image(image, seg_map)
         draw_text_on_image(image,"fps: {}".format(fps),(10,30))
         cv2.imshow(model_name,image)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            return False
-        else:
-            return True
+        vis = exit_visualization(1)
     else:
-        return True
+        vis = exit_print(cur_frame,max_frames)
+    return vis

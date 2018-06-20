@@ -18,8 +18,8 @@ WIDTH: 600                     # OpenCV only supports 4:3 formats others will be
 HEIGHT: 600                    # 600x600 leads to 640x480
 MAX_FRAMES: 5000               # only used if visualize==False
 FPS_INTERVAL: 5                # Interval [s] to print fps of the last interval in console
-DET_INTERVAL: 500              # intervall [frames] to print detections to console
-DET_TH: 0.5                    # detection threshold for det_intervall
+PRINT_INTERVAL: 500            # intervall [frames] to print detections to console
+PRINT_TH: 0.5                  # detection threshold for det_intervall
 ## speed hack
 SPLIT_MODEL: True              # Splits Model into a GPU and CPU session (currently only works for ssd_mobilenets)
 SSD_SHAPE: 300                 # used for the split model algorithm (currently only supports ssd networks trained on 300x300 and 600x600 input)

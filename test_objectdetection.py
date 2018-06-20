@@ -14,8 +14,8 @@ import datetime
 from rod.helper import Timer, WebcamVideoStream, SessionWorker, TimeLiner, load_images
 from rod.model import Model
 from rod.config import Config
-from rod.utils import ops as utils_ops
 from rod.vis_utils import visualize_objectdetection
+from rod.tf_utils import reframe_box_masks_to_image_masks
 
 
 def detection(model,config):
@@ -38,7 +38,7 @@ def detection(model,config):
                 real_num_detection = tf.cast(tensor_dict['num_detections'][0], tf.int32)
                 detection_boxes = tf.slice(detection_boxes, [0, 0], [real_num_detection, -1])
                 detection_masks = tf.slice(detection_masks, [0, 0, 0], [real_num_detection, -1, -1])
-                detection_masks_reframed = utils_ops.reframe_box_masks_to_image_masks(
+                detection_masks_reframed = reframe_box_masks_to_image_masks(
                         detection_masks, detection_boxes, config.HEIGHT, config.WIDTH)
                 detection_masks_reframed = tf.cast(tf.greater(detection_masks_reframed, 0.5), tf.uint8)
                 # Follow the convention by adding back the batch dimension
@@ -120,9 +120,9 @@ def detection(model,config):
                 scores = np.squeeze(scores)
 
                 # Visualization
-                vis = visualize_objectdetection(frame, boxes, classes, scores, masks, category_index, timer.get_fps(),
-                                    config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES, None,
-                                    config.OD_MODEL_NAME+config._DEV+config._OPT)
+                vis = visualize_objectdetection(frame,boxes,classes,scores,masks,category_index,timer.get_frame(),
+                                                config.MAX_FRAMES,timer.get_fps(),config.PRINT_INTERVAL,config.PRINT_TH,
+                                                config.OD_MODEL_NAME+config._DEV+config._OPT,config.VISUALIZE)
                 if not vis:
                     break
 
