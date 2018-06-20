@@ -10,7 +10,7 @@ import copy
 import os
 import six.moves.urllib as urllib
 from tensorflow.core.framework import graph_pb2
-import tf_utils
+import realtime_object_detection.tf_utils
 
 class Model(object):
     """
