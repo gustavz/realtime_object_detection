@@ -1,0 +1,225 @@
+item {
+  name: "/m/01g317"
+  id: 1
+  display_name: "person"
+}
+item {
+  name: "/m/0199g"
+  id: 2
+  display_name: "bicycle"
+}
+item {
+  name: "/m/0k4j"
+  id: 3
+  display_name: "car"
+}
+item {
+  name: "/m/04_sv"
+  id: 4
+  display_name: "motorcycle"
+}
+item {
+  name: "/m/05czz6l"
+  id: 5
+  display_name: "airplane"
+}
+item {
+  name: "/m/01bjv"
+  id: 6
+  display_name: "bus"
+}
+item {
+  name: "/m/07jdr"
+  id: 7
+  display_name: "train"
+}
+item {
+  name: "/m/07r04"
+  id: 8
+  display_name: "truck"
+}
+item {
+  name: "/m/01pns0"
+  id: 9
+  display_name: "fire hydrant"
+}
+item {
+  name: "/m/02pv19"
+  id: 10
+  display_name: "stop sign"
+}
+item {
+  name: "/m/015qbp"
+  id: 11
+  display_name: "parking meter"
+}
+item {
+  name: "/m/01yrx"
+  id: 12
+  display_name: "cat"
+}
+item {
+  name: "/m/0bt9lr"
+  id: 13
+  display_name: "dog"
+}
+item {
+  name: "/m/03k3r"
+  id: 14
+  display_name: "horse"
+}
+item {
+  name: "/m/07bgp"
+  id: 15
+  display_name: "sheep"
+}
+item {
+  name: "/m/01xq0k1"
+  id: 16
+  display_name: "cow"
+}
+item {
+  name: "/m/0bwd_0j"
+  id: 17
+  display_name: "elephant"
+}
+item {
+  name: "/m/01dws"
+  id: 18
+  display_name: "bear"
+}
+item {
+  name: "/m/0898b"
+  id: 19
+  display_name: "zebra"
+}
+item {
+  name: "/m/03bk1"
+  id: 20
+  display_name: "giraffe"
+}
+item {
+  name: "/m/0hnnb"
+  id: 21
+  display_name: "umbrella"
+}
+item {
+  name: "/m/01rkbr"
+  id: 22
+  display_name: "tie"
+}
+item {
+  name: "/m/02wmf"
+  id: 23
+  display_name: "frisbee"
+}
+item {
+  name: "/m/071p9"
+  id: 24
+  display_name: "skis"
+}
+item {
+  name: "/m/018xm"
+  id: 25
+  display_name: "sports ball"
+}
+item {
+  name: "/m/02zt3"
+  id: 26
+  display_name: "kite"
+}
+item {
+  name: "/m/06_fw"
+  id: 27
+  display_name: "skateboard"
+}
+item {
+  name: "/m/019w40"
+  id: 28
+  display_name: "surfboard"
+}
+item {
+  name: "/m/0dv9c"
+  id: 29
+  display_name: "tennis racket"
+}
+item {
+  name: "/m/04kkgm"
+  id: 30
+  display_name: "bowl"
+}
+item {
+  name: "/m/0l515"
+  id: 31
+  display_name: "sandwich"
+}
+item {
+  name: "/m/0hkxq"
+  id: 32
+  display_name: "broccoli"
+}
+item {
+  name: "/m/01b9xk"
+  id: 33
+  display_name: "hot dog"
+}
+item {
+  name: "/m/0663v"
+  id: 34
+  display_name: "pizza"
+}
+item {
+  name: "/m/02crq1"
+  id: 35
+  display_name: "couch"
+}
+item {
+  name: "/m/03ssj5"
+  id: 36
+  display_name: "bed"
+}
+item {
+  name: "/m/09g1w"
+  id: 37
+  display_name: "toilet"
+}
+item {
+  name: "/m/07c52"
+  id: 38
+  display_name: "tv"
+}
+item {
+  name: "/m/01c648"
+  id: 39
+  display_name: "laptop"
+}
+item {
+  name: "/m/01m2v"
+  id: 40
+  display_name: "keyboard"
+}
+item {
+  name: "/m/0fx9l"
+  id: 41
+  display_name: "microwave"
+}
+item {
+  name: "/m/029bxz"
+  id: 42
+  display_name: "oven"
+}
+item {
+  name: "/m/040b_t"
+  id: 43
+  display_name: "refrigerator"
+}
+item {
+  name: "/m/01x3z"
+  id: 44
+  display_name: "clock"
+}
+item {
+  name: "/m/0kmg4"
+  id: 45
+  display_name: "teddy bear"
+}

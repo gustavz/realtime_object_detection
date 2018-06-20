@@ -30,7 +30,7 @@ NUM_TRACKERS: 5                # Max number of objects to track
 ## Model
 OD_MODEL_NAME: 'ssd_mobilenet_v11_coco'
 OD_MODEL_PATH: 'models/ssd_mobilenet_v11_coco/{}'
-LABEL_PATH: 'rod/data/mscoco_label_map.pbtxt'
+LABEL_PATH: 'rod/data/tf_coco_label_map.pbtxt'
 NUM_CLASSES: 90
 
 
