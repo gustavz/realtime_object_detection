@@ -199,8 +199,7 @@ def draw_mask_on_image(image, mask, color=(238, 245, 255), alpha=0.3):
 
   Args:
     image: uint8 numpy array with shape (img_height, img_height, 3)
-    mask: a uint8 numpy array of shape (img_height, img_height) with
-      values between either 0 or 1.
+    mask: binary numpy array with shape (img_height, img_height)
     color: standard color 3 channel tuple
     alpha: transparency value between 0 and 1. (default: 0.3)
   """
@@ -219,7 +218,7 @@ def visualize_boxes_and_labels_on_image(
     keypoints=None,
     use_normalized_coordinates=False,
     max_boxes_to_draw=20,
-    min_score_thresh=.5,
+    min_score_thresh=0.5,
     agnostic_mode=False,
     line_thickness=4):
     """visualizes binary classes, scores, masks and bounding boxes on an numpy array image
@@ -266,9 +265,15 @@ def visualize_boxes_and_labels_on_image(
                 class_name = 'N/A'
             display_str = str(class_name)
             if not display_str:
-                display_str = '{}%'.format(int(100*scores[i]))
+                if scores is None:
+                    display_str = '?%'
+                else:
+                    display_str = '{}%'.format(int(100*scores[i]))
             else:
-                display_str = '{}: {}%'.format(display_str, int(100*scores[i]))
+                if scores is None:
+                    display_str = '{}: ?%'.format(display_str)
+                else:
+                    display_str = '{}: {}%'.format(display_str, int(100*scores[i]))
             box_to_display_str_map[box].append(display_str)
             box_to_color_map[box] = STANDARD_COLORS[classes[i] % len(STANDARD_COLORS)]
     first = True
