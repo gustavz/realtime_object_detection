@@ -1,9 +1,9 @@
 # realtime_object_detection
 Realtime Object Detection based on Tensorflow's [Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection) and [DeepLab Project](https://github.com/tensorflow/models/tree/master/research/deeplab) <br />
-> Release Note: use v1.0 for the original repo that was focused on high performance inference of `ssd_mobilenet` <br />
+> Release Note: use r1.0 for the original repo that was focused on high performance inference of `ssd_mobilenet` <br />
 (*x10 Performance Increase on Nvidia Jetson TX2*)
 
-> Release Note: use Master or v2.0 to be additionally able to run and test Mask-Detection Models, KCF-Tracking and DeepLab Models (*merge of this [project](https://github.com/GustavZ/realtime_segmenation)*)
+> Release Note: use Master or r2.1 to be additionally able to run and test Mask-Detection Models, KCF-Tracking and DeepLab Models (*merge of this [project](https://github.com/GustavZ/realtime_segmenation)*)
 
 
 ## About the Project
@@ -33,7 +33,7 @@ or if you want to switch off the speed hack set `SPLIT_MODEL` to `False`, <br />
 - Enjoy!
 
 
-## Tools:
+## Scripts:
 To make use of the tools provided inside `scripts/` follow this guide: <br />
 - first change all paths and variables inside `config_tools.sh` to your needs / according to your system
 - When using **the first time** run: `source config_tools.sh` and in the same terminal **run only once** `source build_tools.sh` to build the tools. this will take a while. <br />

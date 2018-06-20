@@ -12,12 +12,11 @@ import cv2
 from skimage import measure
 
 from tensorflow.python.client import timeline
-from rod.utils.visualization_utils_cv import STANDARD_COLORS
-from rod.helper import TimeLiner, Timer, vis_text, load_images
+from rod.helper import TimeLiner, Timer, load_images
+from rod.vis_utils import draw_single_box_on_image, visualize_deeplab
 from rod.model import Model
 from rod.config import Config
 
-STANDARD_COLORS = np.asarray(STANDARD_COLORS).astype(np.uint8)
 
 def segmentation(model,config):
     images = load_images(config.IMAGE_PATH,config.LIMIT_IMAGES)
@@ -51,25 +50,23 @@ def segmentation(model,config):
                     timeliner.write_timeline(run_metadata.step_stats,
                                             'test_results/timeline_{}{}{}.json'.format(
                                             config.OD_MODEL_NAME,config._DEV,config._OPT))
-                # visualization
-                if config.VISUALIZE:
-                    seg_map = batch_seg_map[0]
-                    seg_image = STANDARD_COLORS[seg_map]
-                    cv2.addWeighted(seg_image,config.ALPHA,frame,1-config.ALPHA,0,frame)
-                    vis_text(frame,"fps: {}".format(timer.get_fps()),(10,30))
-                    # boxes (ymin, xmin, ymax, xmax)
-                    if config.BBOX:
-                        map_labeled = measure.label(seg_map, connectivity=1)
-                        for region in measure.regionprops(map_labeled):
-                            if region.area > config.MINAREA:
-                                box = region.bbox
-                                p1 = (box[1], box[0])
-                                p2 = (box[3], box[2])
-                                cv2.rectangle(frame, p1, p2, (77,255,9), 2)
-                                vis_text(frame,config.LABEL_NAMES[seg_map[tuple(region.coords[0])]],(p1[0],p1[1]-10))
-                    cv2.imshow(config.DL_MODEL_NAME+config._OPT,frame)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
+                seg_map = batch_seg_map[0]
+                #boxes = []
+                #labels = []
+                map_labeled = measure.label(seg_map, connectivity=1)
+                for region in measure.regionprops(map_labeled):
+                    if region.area > config.MINAREA:
+                        box = region.bbox
+                        label = config.LABEL_NAMES[seg_map[tuple(region.coords[0])]]
+                        #boxes.append(box)
+                        #labels.append(label)
+                        if config.VISUALIZE:
+                            draw_single_box_on_image(frame,box,label)
+
+                vis = visualize_deeplab(frame,seg_map,config.OD_MODEL_NAME+config._DEV+config._OPT,
+                                        timer.get_fps(),config.VISUALIZE)
+                if not vis:
+                    break
 	cv2.destroyAllWindows()
     timer.stop()
 

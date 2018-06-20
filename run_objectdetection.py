@@ -8,10 +8,12 @@ Created on Thu Dec 21 12:01:40 2017
 import numpy as np
 import tensorflow as tf
 import os
-from rod.helper import FPS, WebcamVideoStream, SessionWorker, conv_detect2track, conv_track2detect, vis_detection, Timer
+
+from rod.helper import FPS, WebcamVideoStream, SessionWorker, conv_detect2track, conv_track2detect
 from rod.model import Model
 from rod.config import Config
-from rod.utils import ops as utils_ops
+from rod.vis_utils import visualize_objectdetection
+from rod.tf_utils import reframe_box_masks_to_image_masks
 
 
 def detection(model,config):
@@ -44,8 +46,8 @@ def detection(model,config):
                 real_num_detection = tf.cast(tensor_dict['num_detections'][0], tf.int32)
                 detection_boxes = tf.slice(detection_boxes, [0, 0], [real_num_detection, -1])
                 detection_masks = tf.slice(detection_masks, [0, 0, 0], [real_num_detection, -1, -1])
-                detection_masks_reframed = utils_ops.reframe_box_masks_to_image_masks(
-                        detection_masks, detection_boxes, vs.real_height, vs.real_width)
+                detection_masks_reframed = reframe_box_masks_to_image_masks(
+                                            detection_masks, detection_boxes, vs.real_height, vs.real_width)
                 detection_masks_reframed = tf.cast(tf.greater(detection_masks_reframed, 0.5), tf.uint8)
                 # Follow the convention by adding back the batch dimension
                 tensor_dict['detection_masks'] = tf.expand_dims(detection_masks_reframed, 0)
@@ -61,17 +63,15 @@ def detection(model,config):
                 cpu_worker = SessionWorker("CPU",detection_graph,tf_config)
                 gpu_opts = [score_out, expand_out]
                 cpu_opts = [tensor_dict['detection_boxes'], tensor_dict['detection_scores'], tensor_dict['detection_classes'], tensor_dict['num_detections']]
-                gpu_counter = 0
-                cpu_counter = 0
 
             fps = FPS(config.FPS_INTERVAL).start()
+            masks = None
             print('> Starting Detection')
             while vs.isActive():
                 # Detection
                 if not (config.USE_TRACKER and track):
                     if config.SPLIT_MODEL:
                         # split model in seperate gpu and cpu session threads
-                        masks = None # No Mask Detection possible yet
                         if gpu_worker.is_sess_empty():
                             # read video frame, expand dimensions and convert to rgb
                             frame = vs.read()
@@ -85,10 +85,9 @@ def detection(model,config):
                         g = gpu_worker.get_result_queue()
                         if g is None:
                             # gpu thread has no output queue. ok skip, let's check cpu thread.
-                            gpu_counter += 1
+                            pass
                         else:
                             # gpu thread has output queue.
-                            gpu_counter = 0
                             score,expand,frame = g["results"][0],g["results"][1],g["extras"]
 
                             if cpu_worker.is_sess_empty():
@@ -100,10 +99,8 @@ def detection(model,config):
                         c = cpu_worker.get_result_queue()
                         if c is None:
                             # cpu thread has no output queue. ok, nothing to do. continue
-                            cpu_counter += 1
                             continue # If CPU RESULT has not been set yet, no fps update
                         else:
-                            cpu_counter = 0
                             boxes, scores, classes, num, frame = c["results"][0],c["results"][1],c["results"][2],c["results"][3],c["extras"]
                     else:
                         # default session
@@ -115,8 +112,6 @@ def detection(model,config):
                         scores = output_dict['detection_scores'][0]
                         if 'detection_masks' in output_dict:
                             masks = output_dict['detection_masks'][0]
-                        else:
-                            masks = None
 
                     # reformat detection
                     num = int(num)
@@ -125,7 +120,7 @@ def detection(model,config):
                     scores = np.squeeze(scores)
 
                     # Visualization
-                    vis = vis_detection(frame, boxes, classes, scores, masks, category_index, fps.fps_local(),
+                    vis = visualize_objectdetection(frame, boxes, classes, scores, masks, category_index, fps.fps_local(),
                                         config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES,
                                         fps._glob_numFrames, config.OD_MODEL_NAME)
                     if not vis:
@@ -151,9 +146,9 @@ def detection(model,config):
                     for idx,tracker in enumerate(trackers):
                         tracker_box = tracker.update(frame)
                         tracker_boxes[idx,:] = conv_track2detect(tracker_box, vs.real_width, vs.real_height)
-                    vis = vis_detection(frame, tracker_boxes, classes, scores, masks, category_index, fps.fps_local(),
+                    vis = visualize_objectdetection(frame, tracker_boxes, classes, scores, masks, category_index, fps.fps_local(),
                                         config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES,
-                                        fps._glob_numFrames, config.OD_MODEL_NAME)
+                                        fps._glob_numFrames, config.OD_MODEL_NAME+config._DEV+config._OPT)
                     if not vis:
                         break
 

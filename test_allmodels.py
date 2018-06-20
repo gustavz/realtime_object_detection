@@ -20,7 +20,6 @@ MODELS_DIR = os.path.join(ROOT_DIR,'models')
 
 def create_test_config(model, type='OD', optimized=False, single_class=False):
         class TestConfig(Config):
-            LIMIT_IMAGES = 10
             SPLIT_MODEL = False
             WRITE_TIMELINE = True
             if type is 'DL':

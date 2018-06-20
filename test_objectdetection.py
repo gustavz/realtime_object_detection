@@ -11,10 +11,11 @@ import os
 import tensorflow as tf
 import cv2
 import datetime
-from rod.helper import Timer, WebcamVideoStream, SessionWorker, vis_detection, TimeLiner, load_images
+from rod.helper import Timer, WebcamVideoStream, SessionWorker, TimeLiner, load_images
 from rod.model import Model
 from rod.config import Config
 from rod.utils import ops as utils_ops
+from rod.vis_utils import visualize_objectdetection
 
 
 def detection(model,config):
@@ -119,9 +120,9 @@ def detection(model,config):
                 scores = np.squeeze(scores)
 
                 # Visualization
-                vis = vis_detection(frame, boxes, classes, scores, masks, category_index, timer.get_fps(),
+                vis = visualize_objectdetection(frame, boxes, classes, scores, masks, category_index, timer.get_fps(),
                                     config.VISUALIZE, config.DET_INTERVAL, config.DET_TH, config.MAX_FRAMES, None,
-                                    config.OD_MODEL_NAME+config._OPT)
+                                    config.OD_MODEL_NAME+config._DEV+config._OPT)
                 if not vis:
                     break
 

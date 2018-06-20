@@ -24,7 +24,6 @@ if sys.version_info[0] == 2:
 elif sys.version_info[0] == 3:
     import queue as Queue
 from tensorflow.python.client import timeline
-from rod.utils import visualization_utils_cv as vis_util
 
 
 class FPS(object):
@@ -238,65 +237,9 @@ def load_images(image_path,limit=None):
                 images.append(os.path.join(root, file))
     images.sort()
     return images
-"""
-Visualization functions
-"""
-def vis_text(image, string, pos):
-    cv2.putText(image,string,(pos),
-        cv2.FONT_HERSHEY_SIMPLEX, 0.75, (77, 255, 9), 2)
-
-def vis_detection(image, boxes, classes, scores, masks, category_index,
-                fps=None, visualize=False, det_interval=5, det_th=0.5,
-                max_frames=500, cur_frame = None, model='realtime_object_detection'):
-    if visualize:
-        vis_util.visualize_boxes_and_labels_on_image_array(
-        image,
-        boxes,
-        classes,
-        scores,
-        category_index,
-        instance_masks=masks,
-        use_normalized_coordinates=True,
-        line_thickness=8)
-        if fps:
-            vis_text(image,"fps: {}".format(fps), (10,30))
-        cv2.imshow(model, image)
-    elif not visualize and cur_frame:
-        # Exit after max frames if no visualization
-        for box, score, _class in zip(boxes, scores, classes):
-            if cur_frame%det_interval==0 and score > det_th:
-                label = category_index[_class]['name']
-                print("label: {}\nscore: {}\nbox: {}".format(label, score, box))
-    elif fps == "console":
-        for box, score, _class in zip(boxes, scores, classes):
-            if score > det_th:
-                label = category_index[_class]['name']
-                print("label: {}\nscore: {}\nbox: {}".format(label, score, box))
-    # Exit Option
-    if visualize:
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            return False
-    elif not visualize and fps:
-        if cur_frame >= max_frames:
-            return False
-    return True
-
-def create_colormap(seg_map):
-    """
-    Takes A 2D array storing the segmentation labels.
-    Returns A 2D array where each element is the color indexed
-    by the corresponding element in the input label to the PASCAL color map.
-    """
-    colormap = np.zeros((256, 3), dtype=int)
-    ind = np.arange(256, dtype=int)
-    for shift in reversed(range(8)):
-        for channel in range(3):
-            colormap[:, channel] |= ((ind >> channel) & 1) << shift
-        ind >>= 3
-    return colormap[seg_map]
 
 """
-Tracker functions
+Tracker converter functions
 """
 def conv_detect2track(box, width, height):
     # transforms normalized to absolut coords

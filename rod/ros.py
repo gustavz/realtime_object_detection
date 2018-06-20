@@ -4,14 +4,14 @@ from cv_bridge import CvBridge, CvBridgeError
 from ros_detection.msg import Detection, Object
 from sensor_msgs.msg import RegionOfInterest, Image
 
-class ROSPublisher(object):
+class DetectionPublisher(object):
     """
     Publish ROS detection messages
     """
     def __init__(self):
         self.DetPub = rospy.Publisher('Detection', Detection, queue_size=10)
 
-    def publish(self, boxes, scores, classes, num, image_shape, category_index, masks=None):
+    def publish(self, boxes, scores, classes, num, image_shape, category_index, masks=None, fps=0):
         # init detection message
         msg = Detection()
         for i in range(boxes.shape[0]):
@@ -30,8 +30,9 @@ class ROSPublisher(object):
                 obj = Object()
                 obj.box = box
                 obj.class_name = class_name
-                obj.score = int(scores[i])
+                obj.score = int(100*scores[i])
                 obj.mask = masks[i]
+                obj.fps = fps
                 msg.objects.append(obj)
 
         # publish detection message
