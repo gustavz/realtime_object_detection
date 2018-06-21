@@ -1,11 +1,11 @@
 # realtime_object_detection
 Realtime Object Detection based on Tensorflow's [Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection) and [DeepLab Project](https://github.com/tensorflow/models/tree/master/research/deeplab) <br />
-> Version 1: use branch r1.0 for the original repo that was focused on high performance inference of `ssd_mobilenet` <br />
+> Version 1: use branch [r1.0](https://github.com/GustavZ/realtime_object_detection/tree/r1.0) for the original repo that was focused on high performance inference of `ssd_mobilenet` <br />
 (*x10 Performance Increase on Nvidia Jetson TX2*)
 
-> Version 2: use branch Master or r2.1 to be additionally able to run and test Mask-Detection Models, KCF-Tracking and DeepLab Models (*merge of the repo [realtime_segmenation](https://github.com/GustavZ/realtime_segmenation)*)
+> Version 2: use branch [Master](https://github.com/GustavZ/realtime_object_detection/tree/master) or [r2.1](https://github.com/GustavZ/realtime_object_detection/tree/r2.1) to be additionally able to run and test Mask-Detection Models, KCF-Tracking and DeepLab Models (*merge of the repo [realtime_segmenation](https://github.com/GustavZ/realtime_segmenation)*)
 
-> ROS Support: To use this Repo as ROS-Package including detection and segmentation ROS-Nodes use branch ros.
+> ROS Support: To use this Repo as ROS-Package including detection and segmentation ROS-Nodes use branch [ros](https://github.com/GustavZ/realtime_object_detection/tree/ros).
 Alternativley use the repo [objectdetection_ros](https://github.com/GustavZ/objectdetection_ros)
 
 
@@ -22,6 +22,7 @@ Results in up to x10 performance increase depending on the running system <br />
 - run statistic tests on sets of images and get statistical information like mean and median fps, std dev and much more
 - create `timeline` files measuring the exact time consumption of each operation in your model
 - inspect, summarize, quantize, transform and benchmark models with the provided `scripts/`
+- Use this Repo as ROS Package. the detection subscirbes a ROS Image topic and publishes the detection as ROS Node.
 
 
 ## Inference:  
