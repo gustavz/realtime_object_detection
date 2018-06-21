@@ -1,11 +1,11 @@
 # realtime_object_detection
 Realtime Object Detection based on Tensorflow's [Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection) and [DeepLab Project](https://github.com/tensorflow/models/tree/master/research/deeplab) <br />
-> Release Note: use r1.0 for the original repo that was focused on high performance inference of `ssd_mobilenet` <br />
+> Version 1: use branch r1.0 for the original repo that was focused on high performance inference of `ssd_mobilenet` <br />
 (*x10 Performance Increase on Nvidia Jetson TX2*)
 
-> Release Note: use Master or r2.1 to be additionally able to run and test Mask-Detection Models, KCF-Tracking and DeepLab Models (*merge of this [project](https://github.com/GustavZ/realtime_segmenation)*)
+> Version 2: use branch Master or r2.1 to be additionally able to run and test Mask-Detection Models, KCF-Tracking and DeepLab Models (*merge of the repo [realtime_segmenation](https://github.com/GustavZ/realtime_segmenation)*)
 
-> ROS SUPPORT: To use this Repo as ROS-Package including detection and segmentation ROS-Nodes use brach ros.
+> ROS Support: To use this Repo as ROS-Package including detection and segmentation ROS-Nodes use branch ros.
 Alternativley use the repo [objectdetection_ros](https://github.com/GustavZ/objectdetection_ros)
 
 
