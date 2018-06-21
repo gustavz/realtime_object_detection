@@ -3,5 +3,5 @@
 # written and copyright by
 # www.github.com/GustavZ
 
-cd ../stuff/kcf/
+cd ../rod/kcf/
 python setup.py build_ext --inplace

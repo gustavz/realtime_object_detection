@@ -18,7 +18,7 @@
 import logging
 import tensorflow as tf
 from google.protobuf import text_format
-from rod.protos import string_int_label_map_pb2
+from realtime_object_detection.rod.protos import string_int_label_map_pb2
 
 def reframe_box_masks_to_image_masks(box_masks, boxes, image_height,
                                      image_width):

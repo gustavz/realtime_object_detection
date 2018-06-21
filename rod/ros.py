@@ -1,7 +1,6 @@
 import rospy
-import time
 from cv_bridge import CvBridge, CvBridgeError
-from objdetection.msg import Detection, Object
+from objdetection.msg import Detection, Object, Segmentation
 from sensor_msgs.msg import RegionOfInterest, Image
 
 class DetectionPublisher(object):
@@ -10,33 +9,63 @@ class DetectionPublisher(object):
     """
     def __init__(self):
         self.DetPub = rospy.Publisher('Detection', Detection, queue_size=10)
+        self._bridge = CvBridge()
 
-    def publish(self, boxes, scores, classes, num, image_shape, category_index, masks=None, fps=0):
+    def publish(self, boxes, scores, classes, num, category_index, masks=None, fps=0):
         # init detection message
         msg = Detection()
         for i in range(boxes.shape[0]):
             if scores[i] > 0.5:
+                if classes[i] in category_index.keys():
+                    class_name = category_index[classes[i]]['name']
+                else:
+                    class_name = 'N/A'
                 ymin, xmin, ymax, xmax = tuple(boxes[i].tolist())
                 box = RegionOfInterest()
-                box.x_offset = np.asscalar(xmin)
-                box.y_offset = np.asscalar(ymin)
-                box.height = np.asscalar(ymax - ymin)
-                box.width = np.asscalar(xmax - xmin)
-
-                display_str = '##\nnumber {} {}: {}% at image coordinates (({}, {}) to ({}, {}))\n##'.format(i, class_name, int(100*scores[i]), left, top, right, bottom)
-                print(display_str)
-
+                box.x_offset = xmin + (xmax-xmin)/2.0
+                box.y_offset = ymin + (ymax-ymin)/2.0
+                box.height = ymax - ymin
+                box.width = xmax - xmin
                 # fill detection message with objects
                 obj = Object()
                 obj.box = box
                 obj.class_name = class_name
                 obj.score = int(100*scores[i])
-                obj.mask = masks[i]
-                obj.fps = fps
+                if masks is not None:
+                    obj.mask = self._bridge.cv2_to_imgmsg(masks[i], encoding="passthrough")
                 msg.objects.append(obj)
-
+        msg.fps = fps
         # publish detection message
         self.DetPub.publish(msg)
+
+class SegmentationPublisher(object):
+    """
+    Publish ROS detection messages
+    """
+    def __init__(self):
+        self.SegPub = rospy.Publisher('Segmentation', Segmentation, queue_size=10)
+        self._bridge = CvBridge()
+
+    def publish(self, boxes, classes, labels, seg_map, fps=0):
+        # init detection message
+        msg = Segmentation()
+        boxes = []
+        for i in range(boxes.shape[0]):
+            class_name = label[i]
+            ymin, xmin, ymax, xmax = tuple(boxes[i].tolist())
+            box = RegionOfInterest()
+            box.x_offset = xmin + (xmax-xmin)/2.0
+            box.y_offset = ymin + (ymax-ymin)/2.0
+            box.height = ymax - ymin
+            box.width = xmax - xmin
+            # fill segmentation message
+            msg.boxes.append(box)
+            msg.class_names.append(class_name)
+
+        msg.seg_map = self._bridge.cv2_to_imgmsg(seg_map, encoding="passthrough")
+        msg.fps = fps
+        # publish detection message
+        self.SegPub.publish(msg)
 
 class ROSInput(object):
     """

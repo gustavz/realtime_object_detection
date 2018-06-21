@@ -20,7 +20,7 @@ def detection(model,config):
     # Tracker
     if config.USE_TRACKER:
         import sys
-        sys.path.append(os.getcwd()+'/stuff/kcf')
+        sys.path.append(os.getcwd()+'/rod/kcf')
         import KCF
         tracker = KCF.kcftracker(False, True, False, False)
         tracker_counter = 0
