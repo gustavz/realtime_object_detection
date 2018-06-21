@@ -1,0 +1,77 @@
+#!/usr/bin/env python
+import os
+import numpy as np
+import rospy
+import tensorflow as tf
+import time
+import cv2
+
+from realtime_object_detection.helper import FPS
+from realtime_object_detection.ros import ROSInput, SegmentationPublisher
+from realtime_object_detection.config import Config
+from realtime_object_detection.model import Model
+from realtime_object_detection.vis_utils import visualize_deeplab
+
+
+class SegmentationNode(object):
+    def __init__(self):
+        self._config = Config()
+        self._config.display()
+        self._model = Model('od',self._config.OD_MODEL_NAME,self._config.OD_MODEL_PATH,self._config.LABEL_PATH,
+                        self._config.NUM_CLASSES,self._config.SPLIT_MODEL,self._config.SSD_SHAPE).prepare_od_model()
+
+    def run(self):
+        input_image = ROSInput(self._config.ROS_INPUT)
+        output_detection = SegmentationPublisher()
+
+        # check for frame
+        while True:
+            frame = input_image.image
+            time.sleep(1)
+            print("...waiting for image")
+            if frame is not None:
+                height,width = frame.shape[0:2]
+                break
+
+        detection_graph = self._model.detection_graph
+        # fixed input sizes as model needs resize either way
+        resize_ratio = 1.0 * 513 / max(width,height)
+        target_size = (int(resize_ratio *width), int(resize_ratio * height)) #(513, 384)
+        tf_config = self._model.tf_config
+        fps = FPS(self._config.FPS_INTERVAL).start()
+        print("> Starting Segmentaion")
+        with detection_graph.as_default():
+            with tf.Session(graph=detection_graph,config=tf_config) as sess:
+                while not rospy.is_shutdown() or input_image.isActive():
+                    frame = input_image.image
+                    batch_seg_map = sess.run('SemanticPredictions:0',
+                                            feed_dict={'ImageTensor:0':
+                                            [np.expand_dims(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB),axis=0)]})
+                    seg_map = batch_seg_map[0]
+                    boxes = []
+                    labels = []
+                    map_labeled = measure.label(seg_map, connectivity=1)
+                    for region in measure.regionprops(map_labeled):
+                        if region.area > config.MINAREA:
+                            box = region.bbox
+                            label = config.LABEL_NAMES[seg_map[tuple(region.coords[0])]]
+                            boxes.append(box)
+                            labels.append(label)
+                            if config.VISUALIZE:
+                                draw_single_box_on_image(frame,box,label)
+                    output_detection.publish(self, boxes, classes, labels, seg_map, fps.fps_local())
+                    vis = visualize_deeplab(frame,seg_map,fps._glob_numFrames,self._config.MAX_FRAMES,fps.fps_local(),
+                                            self._config.PRINT_INTERVAL,config.PRINT_TH,
+                                            self._config.OD_MODEL_NAME+self._config._DEV+config._OPT,self._config.VISUALIZE)
+                    if not vis:
+                        break
+                    fps.update()
+        fps.stop()
+
+def main():
+    rospy.init_node('segmentation_node')
+    node = SegmentationNode()
+    node.run()
+
+if __name__ == '__main__':
+    main()

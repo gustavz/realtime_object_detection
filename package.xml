@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>objdetection</name>
+  <version>0.1.0</version>
+  <description>The object detection package</description>
+
+  <maintainer email="gustav.vonzitzewitz@bshg.com">Gustav von Zitzewitz</maintainer>
+  <license>None</license>
+  <url type="website">www.github.com/gustavz</url>
+  <author email="gustav.vonzitzewitz@bshg.com">Gustav von Zitzewitz</author>
+  <author>Gustav von Zitzewitz</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>message_generation</depend>
+  <depend>message_runtime</depend>
+  <depend>cv_bridge</depend>
+  <depend>vision_opencv</depend>
+
+</package>
