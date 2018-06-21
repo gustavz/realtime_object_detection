@@ -5,6 +5,9 @@ Realtime Object Detection based on Tensorflow's [Object Detection API](https://g
 
 > Release Note: use Master or r2.1 to be additionally able to run and test Mask-Detection Models, KCF-Tracking and DeepLab Models (*merge of this [project](https://github.com/GustavZ/realtime_segmenation)*)
 
+> ROS SUPPORT: To use this Repo as ROS-Package including detection and segmentation ROS-Nodes use brach ros.
+Alternativley use the repo [objectdetection_ros](https://github.com/GustavZ/objectdetection_ros)
+
 
 ## About the Project
 The Idea was to create a scaleable realtime-capable object detection pipeline that runs on various systems. <br />
@@ -50,22 +53,14 @@ Use the following setup for best and verified performance
 - OpenCV 3.3.1
 > Note: tensorflow v1.7.0 seems to have massive performance issues (try to use other versions)
 
-## Current max Performance on `ssd_mobilenet` (with|without visualization):
-- Dell XPS 15 with i7 @ 2.80GHZ x8 and GeForce GTX 1050 4GB:  **78fps | 105fps**
-- Nvidia Jetson Tx2 with Tegra 8GB:                           **30fps | 33 fps**
+## Current max Performance on `ssd_mobilenet`:
+- Dell XPS 15 with i7 @ 2.80GHZ x8 and GeForce GTX 1050 4GB:  **100 FPS**
+- Nvidia Jetson Tx2 with Tegra 8GB:                           **30 FPS**
 
-
-## To Do:
-If you like the project, got improvement or constructive critisism, please feel free to open an Issue. <br />
-I am always happy to get feedback or help to be able to further improve the project. <br />
-Future implementation plans are: <br />
-- [X] Add KCF Tracking to improve fps especially on the jetson
-- [ ] ~~Mask-SSD: Modify SSD to be able to predict a segmentation mask in parallel to the bounding box~~
-- [ ] Train a `mask_rcnn Model` with Mobilenet V1/V2 as backbone and deploy it on the Jetson
-- [ ] Split Model and Threading for R-CNN Models
 
 
 ## Related Work:
+- [objectdetection_ros](https://github.com/GustavZ/objectdetection_ros): This Repository as ROS Package ready to use
 - [test_models](https://github.com/GustavZ/test_models): A repo for models i am currently working on for benchmark tests
 - [deeptraining_hands](https://github.com/GustavZ/deeptraining_hands): A repo for setting up the [ego](http://vision.soic.indiana.edu/projects/egohands/)- and [oxford](http://www.robots.ox.ac.uk/~vgg/data/hands/) hands-datasets.<br />
 It also contains several scripts to convert various annotation formats to be able to train Networks on different deep learning frameworks <br />
