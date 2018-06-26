@@ -11,13 +11,14 @@ import os
 
 from rod.helper import FPS, WebcamVideoStream, SessionWorker, conv_detect2track, conv_track2detect
 from rod.model import Model
+from rod.config import Config
 from rod.visualizer import Visualizer
 from rod.tf_utils import reframe_box_masks_to_image_masks
 
 
 def detection(model):
     # Tracker
-    if model.USE_TRACKER:
+    if model.config.USE_TRACKER:
         import sys
         sys.path.append(os.getcwd()+'/rod/kcf')
         import KCF
@@ -32,7 +33,7 @@ def detection(model):
     with detection_graph.as_default():
         with tf.Session(graph=detection_graph,config=tf_config) as sess:
             # start Videostream
-            video_stream = WebcamVideoStream(model.VIDEO_INPUT,model.WIDTH,model.HEIGHT).start()
+            video_stream = WebcamVideoStream(model.config.VIDEO_INPUT,model.config.WIDTH,model.config.HEIGHT).start()
             # Define Input and Ouput tensors
             tensor_dict = model.get_tensordict(['num_detections', 'detection_boxes', 'detection_scores','detection_classes', 'detection_masks'])
             image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
@@ -49,7 +50,7 @@ def detection(model):
                 detection_masks_reframed = tf.cast(tf.greater(detection_masks_reframed, 0.5), tf.uint8)
                 # Follow the convention by adding back the batch dimension
                 tensor_dict['detection_masks'] = tf.expand_dims(detection_masks_reframed, 0)
-            if model.SPLIT_MODEL:
+            if model.config.SPLIT_MODEL:
                 score_out = detection_graph.get_tensor_by_name('Postprocessor/convert_scores:0')
                 expand_out = detection_graph.get_tensor_by_name('Postprocessor/ExpandDims_1:0')
                 score_in = detection_graph.get_tensor_by_name('Postprocessor/convert_scores_1:0')
@@ -62,21 +63,21 @@ def detection(model):
                 gpu_opts = [score_out, expand_out]
                 cpu_opts = [tensor_dict['detection_boxes'], tensor_dict['detection_scores'], tensor_dict['detection_classes'], tensor_dict['num_detections']]
 
-            fps = FPS(model.FPS_INTERVAL).start()
+            fps = FPS(model.config.FPS_INTERVAL).start()
             masks = None
-            visualizer = Visualizer('od')
+            visualizer = Visualizer(model.config)
             print('> Starting Detection')
             while video_stream.isActive() and visualizer.isActive():
                 # Detection
-                if not (model.USE_TRACKER and track):
-                    if model.SPLIT_MODEL:
+                if not (model.config.USE_TRACKER and track):
+                    if model.config.SPLIT_MODEL:
                         # split model in seperate gpu and cpu session threads
                         if gpu_worker.is_sess_empty():
                             # read video frame, expand dimensions and convert to rgb
                             frame = video_stream.read()
                             # put new queue
                             gpu_feeds = {image_tensor: video_stream.expanded()}
-                            if model.VISUALIZE:
+                            if model.config.VISUALIZE:
                                 gpu_extras = frame # for visualization frame
                             else:
                                 gpu_extras = None
@@ -123,7 +124,7 @@ def detection(model):
                                                         fps._glob_numFrames,fps.fps_local())
 
                     # Activate Tracker
-                    if model.USE_TRACKER and num <= model.NUM_TRACKERS:
+                    if model.config.USE_TRACKER and num <= model.config.NUM_TRACKERS:
                         tracker_frame = frame
                         track = True
                         first_track = True
@@ -146,7 +147,7 @@ def detection(model):
                                                         fps._glob_numFrames,fps.fps_local())
                     tracker_counter += 1
                     #tracker_frame = frame
-                    if tracker_counter >= model.TRACKER_FRAMES:
+                    if tracker_counter >= model.config.TRACKER_FRAMES:
                         track = False
                         tracker_counter = 0
                 fps.update()
@@ -162,7 +163,8 @@ def detection(model):
 
 def main():
     model_type = 'od'
-    model = Model(model_type).prepare_model()
+    config = Config(model_type)
+    model = Model(config).prepare_model()
     detection(model)
 
 if __name__ == '__main__':

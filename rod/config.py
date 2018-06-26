@@ -29,6 +29,7 @@ class Config(object):
     CPU_ONLY = cfg['CPU_ONLY']              # CPU Placement for speed test
     USE_OPTIMIZED = cfg['USE_OPTIMIZED']    # whether to use the optimized model (only possible if transform with script)
     DISCO_MODE = cfg['DISCO_MODE']          # Secret Disco Visualization Mode
+    DOWNLOAD_MODEL = cfg['DOWNLOAD_MODEL']  # Only for Models available at the TF model_zoo
 
 
     ### Testing

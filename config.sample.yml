@@ -6,6 +6,7 @@ VIS_FPS: True                  # Draw current FPS in the top left Image corner
 CPU_ONLY: False                # CPU Placement for speed test
 USE_OPTIMIZED: False           # whether to use the optimized model (only possible if transform with script)
 DISCO_MODE: False              # Secret Disco Visualization Mode
+DOWNLOAD_MODEL: False          # Only for Models available at the TF model_zoo
 
 
 ### Testing

@@ -10,7 +10,7 @@ import cv2
 import random
 from rod.config import Config
 
-class Visualizer(Config):
+class Visualizer(object):
     """
     Visualizer Class to handle all kind of detection visualizations on an image
     """
@@ -147,9 +147,8 @@ class Visualizer(Config):
 
     STANDARD_COLORS_ARRAY = np.asarray(STANDARD_COLORS).astype(np.uint8)
 
-    def __init__(self,type):
-        super(Visualizer, self).__init__(type)
-
+    def __init__(self,config):
+        self.config = config
         # private params
         self._line_thickness = 2
         self._font_thickness = 1
@@ -229,7 +228,7 @@ class Visualizer(Config):
       Draws mask on image.
       """
       mask = self.STANDARD_COLORS_ARRAY[mask]
-      cv2.addWeighted(mask,self.ALPHA,self.image,1.0,0,self.image)
+      cv2.addWeighted(mask,self.config.ALPHA,self.image,1.0,0,self.image)
 
 
 
@@ -324,7 +323,7 @@ class Visualizer(Config):
             print("> user exit request")
             self.exit_vis = True
         elif k == ord('s'): # wait for 's' key to save screenshot
-            save_path = '{}/detection{}_{}.jpg'.format(self.RESULT_PATH,cur_frame,self.DISPLAY_NAME)
+            save_path = '{}/detection{}_{}.jpg'.format(self.config.RESULT_PATH,cur_frame,self.config.DISPLAY_NAME)
             cv2.imwrite(save_path,self.image)
             print("> saving screenshot to: {}".format(save_path))
 
@@ -333,7 +332,7 @@ class Visualizer(Config):
         """
         sets exit variable if max frames are reached
         """
-        if cur_frame >= self.MAX_FRAMES:
+        if cur_frame >= self.config.MAX_FRAMES:
             self.exit_vis = True
 
 
@@ -342,7 +341,7 @@ class Visualizer(Config):
         prints detection result above threshold to console
         """
         for box, score, _class in zip(boxes, scores, classes):
-            if cur_frame%self.PRINT_INTERVAL==0 and score > self.PRINT_TH:
+            if cur_frame%self.config.PRINT_INTERVAL==0 and score > self.config.PRINT_TH:
                 label = category_index[_class]['name']
                 print("label: {}\nscore: {}\nbox: {}".format(label, score, box))
 
@@ -353,7 +352,7 @@ class Visualizer(Config):
         """
         p1 = (box[1], box[0])
         p2 = (box[3], box[2])
-        if self.DISCO_MODE:
+        if self.config.DISCO_MODE:
             color = random.choice(self.STANDARD_COLORS)
         else:
             color = self.STANDARD_COLORS[id]
@@ -381,9 +380,9 @@ class Visualizer(Config):
         visualization function for object_detection
         """
         self.set_image(image)
-        if self.DISCO_MODE:
+        if self.config.DISCO_MODE:
             self._shuffle_colors()
-        if self.VISUALIZE:
+        if self.config.VISUALIZE:
             self._visualize_boxes_and_labels_on_image(
             boxes,
             classes,
@@ -391,7 +390,7 @@ class Visualizer(Config):
             category_index,
             instance_masks=masks,
             use_normalized_coordinates=True)
-            if self.VIS_FPS:
+            if self.config.VIS_FPS:
                 self._draw_text_on_image("fps: {}".format(fps), (5,20))
             self.show_image()
             self._exit_visualization(1,cur_frame)
@@ -414,11 +413,11 @@ class Visualizer(Config):
         self.set_image(image)
         for box,id,label in zip(boxes,ids,labels):
             self._draw_single_box_on_image(box,label,id)
-        if self.DISCO_MODE:
+        if self.config.DISCO_MODE:
             self._shuffle_colors()
-        if self.VISUALIZE:
+        if self.config.VISUALIZE:
             self._draw_mask_on_image(seg_map)
-            if self.VIS_FPS:
+            if self.config.VIS_FPS:
                 self._draw_text_on_image("fps: {}".format(fps),(5,20))
             self.show_image()
             self._exit_visualization(1,cur_frame)
@@ -430,7 +429,7 @@ class Visualizer(Config):
         """
         shows image in OpenCV Window
         """
-        cv2.imshow(self.DISPLAY_NAME, self.image)
+        cv2.imshow(self.config.DISPLAY_NAME, self.image)
 
 
     def isActive(self):

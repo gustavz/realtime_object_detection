@@ -18,62 +18,58 @@ from time import sleep
 ROOT_DIR = os.getcwd()
 MODELS_DIR = os.path.join(ROOT_DIR,'models')
 
-def create_test_config(model, type='OD', optimized=False, single_class=False):
+def create_test_config(type,model_name, optimized=False, single_class=False):
         class TestConfig(Config):
-            SPLIT_MODEL = False
-            WRITE_TIMELINE = True
-            if type is 'DL':
-                DL_MODEL_NAME=model
-                DL_MODEL_PATH='models/'+model+'/{}'
-            else:
-                OD_MODEL_NAME=model
-                OD_MODEL_PATH='models/'+model+'/{}'
-            if optimized:
-                USE_OPTIMIZED=True
-            else:
-                USE_OPTIMIZED=False
-            if single_class:
-                NUM_CLASSES=1
-            else:
-                NUM_CLASSES=90
+            MODEL_PATH='models/'+model_name+'/{}'
+            def __init__(self):
+                super(TestConfig, self).__init__(type)
+                self.SPLIT_MODEL = False
+                self.WRITE_TIMELINE = True
+                self.MODEL_NAME=model_name
+                if optimized:
+                    self.USE_OPTIMIZED=True
+                else:
+                    self.USE_OPTIMIZED=False
+                if single_class:
+                    self.NUM_CLASSES=1
+                else:
+                    self.NUM_CLASSES=90
 
         return TestConfig()
 
 # Read sequentail Models or Gather all Models from models/
-config = Config()
+config = Config('od')
 if config.SEQ_MODELS:
-    models = config.SEQ_MODELS
+    model_names = config.SEQ_MODELS
 else:
     for root, dirs, files in os.walk(MODELS_DIR):
         if root.count(os.sep) - MODELS_DIR.count(os.sep) == 0:
             for idx,model in enumerate(dirs):
-                models=[]
-                models.append(dirs)
-                models = np.squeeze(models)
-                models.sort()
+                model_names=[]
+                models_names.append(dirs)
+                model_names = np.squeeze(model_names)
+                model_names.sort()
 
-print("> start testing following sequention of models: \n{}".format(models))
-for mod in models:
-    print("> testing model: {}".format(mod))
+print("> start testing following sequention of models: \n{}".format(model_names))
+for model_name in model_names:
+    print("> testing model: {}".format(model_name))
     # conditionals
     optimized=False
     single_class=False
     # Test Model
-    if 'hands' in mod or 'person' in mod:
+    if 'hands' in model_name or 'person' in model_name:
         single_class=True
-    if 'deeplab' in mod:
-        config = create_test_config(mod,'DL',optimized,single_class)
-        print("TEST")
-        model = Model('dl', config.DL_MODEL_NAME, config.DL_MODEL_PATH).prepare_dl_model()
-        segmentation(model,config)
+    if 'deeplab' in model_name:
+        config = create_test_config('dl',model_name,optimized,single_class)
+        model = Model(config).prepare_model()
+        segmentation(model)
     else:
-        config = create_test_config(mod,'OD',optimized,single_class)
-        model = Model('od', config.OD_MODEL_NAME, config.OD_MODEL_PATH, config.LABEL_PATH,
-                    config.NUM_CLASSES, config.SPLIT_MODEL, config.SSD_SHAPE).prepare_od_model()
-        detection(model,config)
+        config = create_test_config('od',model_name,optimized,single_class)
+        model = Model(config).prepare_model()
+        detection(model)
 
     # Check if there is an optimized graph
-    model_dir =  os.path.join(os.getcwd(),'models',mod)
+    model_dir =  os.path.join(os.getcwd(),'models',model_name)
     for root, dirs, files in os.walk(model_dir):
         for file in files:
             if 'optimized' in file:
@@ -82,12 +78,11 @@ for mod in models:
 
     # Again for the optimized graph
     if optimized:
-        if 'deeplab' in mod:
-            config = create_test_config(mod,'DL',optimized,single_class)
-            model = Model('dl', config.DL_MODEL_NAME, config.DL_MODEL_PATH).prepare_dl_model()
-            segmentation(model,config)
+        if 'deeplab' in model_name:
+            config = create_test_config('dl',model_name,optimized,single_class)
+            model = Model(config).prepare_model()
+            segmentation(model)
         else:
-            config = create_test_config(mod,'OD',optimized,single_class)
-            model = Model('od', config.OD_MODEL_NAME, config.OD_MODEL_PATH, config.LABEL_PATH,
-                        config.NUM_CLASSES, config.SPLIT_MODEL, config.SSD_SHAPE).prepare_od_model()
-            detection(model,config)
+            config = create_test_config('dl',model_name,optimized,single_class)
+            model = Model(config).prepare_od_model()
+            detection(model)

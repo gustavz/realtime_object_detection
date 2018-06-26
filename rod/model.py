@@ -13,27 +13,27 @@ from tensorflow.core.framework import graph_pb2
 from rod.config import Config
 import tf_utils
 
-class Model(Config):
+class Model(object):
     """
     Model Class to handle all kind of detection preparation
     """
-    def __init__(self,type):
-        super(Model, self).__init__(type)
+    def __init__(self,config):
+        self.config = config
         self.detection_graph = tf.Graph()
         self.tf_config = tf.ConfigProto(allow_soft_placement=True)
         self.tf_config.gpu_options.allow_growth=True
         self.category_index = None
         self.score = None
         self.expand = None
-        print ('> Model: {}'.format(self.MODEL_PATH))
+        print ('> Model: {}'.format(self.config.MODEL_PATH))
 
     def download_model(self):
-        if self.TYPE == 'dl':
+        if self.config.TYPE == 'dl':
             download_base = 'http://download.tensorflow.org/models/'
-        elif self.TYPE == 'od':
+        elif self.config.TYPE == 'od':
             download_base = 'http://download.tensorflow.org/models/object_detection/'
-        model_file = self.MODEL_NAME + '.tar.gz'
-        if not os.path.isfile(self.MODEL_PATH):
+        model_file = self.config.MODEL_NAME + '.tar.gz'
+        if not os.path.isfile(self.config.MODEL_PATH) and self.config.DOWNLOAD_MODEL:
             print('> Model not found. Downloading it now.')
             opener = urllib.request.URLopener()
             opener.retrieve(download_base + model_file, model_file)
@@ -54,26 +54,26 @@ class Model(Config):
 
     def load_frozenmodel(self):
         print('> Loading frozen model into memory')
-        if (self.TYPE == 'od' and self.SPLIT_MODEL):
+        if (self.config.TYPE == 'od' and self.config.SPLIT_MODEL):
             # load a frozen Model and split it into GPU and CPU graphs
             # Hardcoded split points for ssd_mobilenet
             input_graph = tf.Graph()
             with tf.Session(graph=input_graph,config=self.tf_config):
-                if self.SSD_SHAPE == 600:
+                if self.config.SSD_SHAPE == 600:
                     shape = 7326
                 else:
                     shape = 1917
-                self.score = tf.placeholder(tf.float32, shape=(None, shape, self.NUM_CLASSES), name=self.SPLIT_NODES[0])
-                self.expand = tf.placeholder(tf.float32, shape=(None, shape, 1, 4), name=self.SPLIT_NODES[1])
+                self.score = tf.placeholder(tf.float32, shape=(None, shape, self.config.NUM_CLASSES), name=self.config.SPLIT_NODES[0])
+                self.expand = tf.placeholder(tf.float32, shape=(None, shape, 1, 4), name=self.config.SPLIT_NODES[1])
                 for node in input_graph.as_graph_def().node:
-                    if node.name == self.SPLIT_NODES[0]:
+                    if node.name == self.config.SPLIT_NODES[0]:
                         score_def = node
-                    if node.name == self.SPLIT_NODES[1]:
+                    if node.name == self.config.SPLIT_NODES[1]:
                         expand_def = node
 
             with self.detection_graph.as_default():
                 od_graph_def = tf.GraphDef()
-                with tf.gfile.GFile(self.MODEL_PATH, 'rb') as fid:
+                with tf.gfile.GFile(self.config.MODEL_PATH, 'rb') as fid:
                     serialized_graph = fid.read()
                     od_graph_def.ParseFromString(serialized_graph)
 
@@ -87,11 +87,11 @@ class Model(Config):
                         edges[n] = [self._node_name(x) for x in node.input]
                         node_seq[n] = seq
                         seq += 1
-                    for d in self.SPLIT_NODES:
+                    for d in self.config.SPLIT_NODES:
                         assert d in name_to_node_map, "%s is not in graph" % d
 
                     nodes_to_keep = set()
-                    next_to_visit = self.SPLIT_NODES[:]
+                    next_to_visit = self.config.SPLIT_NODES[:]
 
                     while next_to_visit:
                         n = next_to_visit[0]
@@ -126,15 +126,15 @@ class Model(Config):
             # default model loading procedure
             with self.detection_graph.as_default():
               od_graph_def = tf.GraphDef()
-              with tf.gfile.GFile(self.MODEL_PATH, 'rb') as fid:
+              with tf.gfile.GFile(self.config.MODEL_PATH, 'rb') as fid:
                 serialized_graph = fid.read()
                 od_graph_def.ParseFromString(serialized_graph)
                 tf.import_graph_def(od_graph_def, name='')
 
     def load_labelmap(self):
         print('> Loading label map')
-        label_map = tf_utils.load_labelmap(self.LABEL_PATH)
-        categories = tf_utils.convert_label_map_to_categories(label_map, max_num_classes=self.NUM_CLASSES, use_display_name=True)
+        label_map = tf_utils.load_labelmap(self.config.LABEL_PATH)
+        categories = tf_utils.convert_label_map_to_categories(label_map, max_num_classes=self.config.NUM_CLASSES, use_display_name=True)
         self.category_index = tf_utils.create_category_index(categories)
 
     def get_tensordict(self, outputs):
@@ -148,11 +148,11 @@ class Model(Config):
         return self.tensor_dict
 
     def prepare_model(self):
-        if self.TYPE is 'od':
+        if self.config.TYPE is 'od':
             self.download_model()
             self.load_frozenmodel()
             self.load_labelmap()
-        elif self.TYPE is 'dl':
+        elif self.config.TYPE is 'dl':
             self.download_model()
             self.load_frozenmodel()
         return self

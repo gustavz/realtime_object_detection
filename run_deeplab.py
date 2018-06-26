@@ -13,19 +13,20 @@ from skimage import measure
 
 from rod.visualizer import Visualizer
 from rod.helper import FPS, WebcamVideoStream
+from rod.config import Config
 from rod.model import Model
 
 
 def segmentation(model):
     detection_graph = model.detection_graph
     # fixed input sizes as model needs resize either way
-    video_stream = WebcamVideoStream(model.VIDEO_INPUT,640,480).start()
+    video_stream = WebcamVideoStream(model.config.VIDEO_INPUT,640,480).start()
     resize_ratio = 1.0 * 513 / max(video_stream.real_width,video_stream.real_height)
     target_size = (int(resize_ratio * video_stream.real_width),
                     int(resize_ratio * video_stream.real_height)) #(513, 384)
     tf_config = model.tf_config
-    fps = FPS(model.FPS_INTERVAL).start()
-    visualizer = Visualizer('dl')
+    fps = FPS(model.config.FPS_INTERVAL).start()
+    visualizer = Visualizer(model.config)
     print("> Starting Segmentaion")
     with detection_graph.as_default():
         with tf.Session(graph=detection_graph,config=tf_config) as sess:
@@ -40,10 +41,10 @@ def segmentation(model):
                 ids = []
                 map_labeled = measure.label(seg_map, connectivity=1)
                 for region in measure.regionprops(map_labeled):
-                    if region.area > model.MINAREA:
+                    if region.area > model.config.MINAREA:
                         box = region.bbox
                         id = seg_map[tuple(region.coords[0])]
-                        label = model.LABEL_NAMES[id]
+                        label = model.config.LABEL_NAMES[id]
                         boxes.append(box)
                         labels.append(label)
                         ids.append(id)
@@ -57,7 +58,8 @@ def segmentation(model):
 
 def main():
     model_type = 'dl'
-    model = Model(model_type).prepare_model()
+    config = Config(model_type)
+    model = Model(config).prepare_model()
     segmentation(model)
 
 if __name__ == '__main__':

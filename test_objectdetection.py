@@ -13,6 +13,7 @@ import cv2
 
 from rod.helper import Timer, WebcamVideoStream, SessionWorker, TimeLiner, load_images
 from rod.model import Model
+from rod.config import Config
 from rod.visualizer import Visualizer
 from rod.tf_utils import reframe_box_masks_to_image_masks
 
@@ -42,7 +43,7 @@ def detection(model):
                 detection_masks_reframed = tf.cast(tf.greater(detection_masks_reframed, 0.5), tf.uint8)
                 # Follow the convention by adding back the batch dimension
                 tensor_dict['detection_masks'] = tf.expand_dims(detection_masks_reframed, 0)
-            if model.SPLIT_MODEL:
+            if model.config.SPLIT_MODEL:
                 score_out = detection_graph.get_tensor_by_name('Postprocessor/convert_scores:0')
                 expand_out = detection_graph.get_tensor_by_name('Postprocessor/ExpandDims_1:0')
                 score_in = detection_graph.get_tensor_by_name('Postprocessor/convert_scores_1:0')
@@ -52,7 +53,7 @@ def detection(model):
                 expand = model.expand
 
             # Timeliner
-            if model.WRITE_TIMELINE:
+            if model.config.WRITE_TIMELINE:
                 options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                 run_metadata = tf.RunMetadata()
                 timeliner = TimeLiner()
@@ -60,14 +61,14 @@ def detection(model):
                 options = tf.RunOptions(trace_level=tf.RunOptions.NO_TRACE)
                 run_metadata = False
             masks = None
-            images = load_images(model.IMAGE_PATH,model.LIMIT_IMAGES)
+            images = load_images(model.config.IMAGE_PATH,model.config.LIMIT_IMAGES)
             timer = Timer()
-            visualizer = Visualizer('od')
+            visualizer = Visualizer(model.config)
             print('> Starting Detection')
             for image in images:
-                if model.SPLIT_MODEL:
+                if model.config.SPLIT_MODEL:
                     # split model in seperate gpu and cpu session threads
-                    frame = cv2.resize(cv2.imread(image),(model.WIDTH,model.HEIGHT))
+                    frame = cv2.resize(cv2.imread(image),(model.config.WIDTH,model.config.HEIGHT))
                     frame_expanded = np.expand_dims(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), axis=0)
                     timer.tic()
                     # GPU Session
@@ -75,10 +76,10 @@ def detection(model):
                             feed_dict={image_tensor: frame_expanded},
                             options=options, run_metadata=run_metadata)
                     timer.tictic()
-                    if model.WRITE_TIMELINE:
+                    if model.config.WRITE_TIMELINE:
                         timeliner.write_timeline(run_metadata.step_stats,
                                                 '{}/timeline_{}_SM1.json'.format(
-                                                model.RESULT_PATH,model.DISPLAY_NAME))
+                                                model.config.RESULT_PATH,model.config.DISPLAY_NAME))
                     timer.tic()
                     # CPU Session
                     boxes, scores, classes, num = sess.run(
@@ -86,23 +87,23 @@ def detection(model):
                             feed_dict={score_in:score, expand_in: expand},
                             options=options, run_metadata=run_metadata)
                     timer.toc()
-                    if model.WRITE_TIMELINE:
+                    if model.config.WRITE_TIMELINE:
                         timeliner.write_timeline(run_metadata.step_stats,
                                                 '{}/timeline_{}_SM2.json'.format(
-                                                model.RESULT_PATH,model.DISPLAY_NAME))
+                                                model.config.RESULT_PATH,model.config.DISPLAY_NAME))
                 else:
                     # default session
-                    frame = cv2.resize(cv2.imread(image),(model.WIDTH,model.HEIGHT))
+                    frame = cv2.resize(cv2.imread(image),(model.config.WIDTH,model.config.HEIGHT))
                     frame_expanded = np.expand_dims(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), axis=0)
                     timer.tic()
                     output_dict = sess.run(tensor_dict,
                             feed_dict={image_tensor: frame_expanded},
                             options=options, run_metadata=run_metadata)
                     timer.toc()
-                    if model.WRITE_TIMELINE:
+                    if model.config.WRITE_TIMELINE:
                         timeliner.write_timeline(run_metadata.step_stats,
                                                 '{}/timeline_{}.json'.format(
-                                                model.RESULT_PATH,model.DISPLAY_NAME))
+                                                model.config.RESULT_PATH,model.config.DISPLAY_NAME))
                     num = output_dict['num_detections'][0]
                     classes = output_dict['detection_classes'][0]
                     boxes = output_dict['detection_boxes'][0]
@@ -119,15 +120,16 @@ def detection(model):
                 # Visualization
                 visualizer.visualize_objectdetection(frame,boxes,classes,scores,masks,category_index,
                                                     timer.get_frame(),timer.get_fps())
-                if model.SAVE_RESULT:
-                    cv2.imwrite('{}/{}_{}.jpg'.format(model.RESULT_PATH,timer.get_frame(),model.DISPLAY_NAME),frame)
+                if model.config.SAVE_RESULT:
+                    cv2.imwrite('{}/{}_{}.jpg'.format(model.config.RESULT_PATH,timer.get_frame(),model.config.DISPLAY_NAME),frame)
     visualizer.stop()
     timer.stop()
 
 
 def main():
     model_type = 'od'
-    model = Model(model_type).prepare_model()
+    config = Config(model_type)
+    model = Model(config).prepare_model()
     detection(model)
 
 if __name__ == '__main__':
