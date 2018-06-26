@@ -11,55 +11,54 @@ import tensorflow as tf
 import cv2
 from skimage import measure
 
-from rod.vis_utils import draw_single_box_on_image, visualize_deeplab
+from rod.visualizer import Visualizer
 from rod.helper import FPS, WebcamVideoStream
 from rod.model import Model
-from rod.config import Config
 
 
-def segmentation(model,config):
+def segmentation(model):
     detection_graph = model.detection_graph
     # fixed input sizes as model needs resize either way
-    vs = WebcamVideoStream(config.VIDEO_INPUT,640,480).start()
-    resize_ratio = 1.0 * 513 / max(vs.real_width,vs.real_height)
-    target_size = (int(resize_ratio * vs.real_width), int(resize_ratio * vs.real_height)) #(513, 384)
+    video_stream = WebcamVideoStream(model.VIDEO_INPUT,640,480).start()
+    resize_ratio = 1.0 * 513 / max(video_stream.real_width,video_stream.real_height)
+    target_size = (int(resize_ratio * video_stream.real_width),
+                    int(resize_ratio * video_stream.real_height)) #(513, 384)
     tf_config = model.tf_config
-    fps = FPS(config.FPS_INTERVAL).start()
+    fps = FPS(model.FPS_INTERVAL).start()
+    visualizer = Visualizer('dl')
     print("> Starting Segmentaion")
     with detection_graph.as_default():
         with tf.Session(graph=detection_graph,config=tf_config) as sess:
-            while vs.isActive():
-                frame = vs.resized(target_size)
+            while video_stream.isActive() and visualizer.isActive():
+                frame = video_stream.resized(target_size)
                 batch_seg_map = sess.run('SemanticPredictions:0',
                                         feed_dict={'ImageTensor:0':
                                         [cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)]})
                 seg_map = batch_seg_map[0]
-                #boxes = []
-                #labels = []
-                #ids = []
+                boxes = []
+                labels = []
+                ids = []
                 map_labeled = measure.label(seg_map, connectivity=1)
                 for region in measure.regionprops(map_labeled):
-                    if region.area > config.MINAREA:
+                    if region.area > model.MINAREA:
                         box = region.bbox
                         id = seg_map[tuple(region.coords[0])]
-                        label = config.LABEL_NAMES[id]
-                        #boxes.append(box)
-                        #labels.append(label)
-                        #ids.append(id)
-                        if config.VISUALIZE:
-                            draw_single_box_on_image(frame,box,label,id,config.DISCO_MODE)
-
-                vis = visualize_deeplab(frame,seg_map,fps._glob_numFrames,config.MAX_FRAMES,fps.fps_local(),
-                                        config.PRINT_INTERVAL,config.PRINT_TH,config.DL_DISPLAY_NAME,
-                                        config.VISUALIZE,config.VIS_FPS,config.DISCO_MODE,config.ALPHA)
-                if not vis:
-                    break
+                        label = model.LABEL_NAMES[id]
+                        boxes.append(box)
+                        labels.append(label)
+                        ids.append(id)
+                visualizer.visualize_deeplab(frame,boxes,labels,ids,seg_map,fps._glob_numFrames,fps.fps_local())
                 fps.update()
+    # End everything
+    video_stream.stop()
+    visualizer.stop()
     fps.stop()
-    vs.stop()
 
+
+def main():
+    model_type = 'dl'
+    model = Model(model_type).prepare_model()
+    segmentation(model)
 
 if __name__ == '__main__':
-    config = Config()
-    model = Model('dl', config.DL_MODEL_NAME, config.DL_MODEL_PATH).prepare_dl_model()
-    segmentation(model,config)
+    main()

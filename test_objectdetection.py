@@ -10,15 +10,14 @@ import numpy as np
 import os
 import tensorflow as tf
 import cv2
-import datetime
+
 from rod.helper import Timer, WebcamVideoStream, SessionWorker, TimeLiner, load_images
 from rod.model import Model
-from rod.config import Config
-from rod.vis_utils import visualize_objectdetection
+from rod.visualizer import Visualizer
 from rod.tf_utils import reframe_box_masks_to_image_masks
 
 
-def detection(model,config):
+def detection(model):
     # Tf Session
     tf_config = model.tf_config
     detection_graph = model.detection_graph
@@ -39,11 +38,11 @@ def detection(model,config):
                 detection_boxes = tf.slice(detection_boxes, [0, 0], [real_num_detection, -1])
                 detection_masks = tf.slice(detection_masks, [0, 0, 0], [real_num_detection, -1, -1])
                 detection_masks_reframed = reframe_box_masks_to_image_masks(
-                        detection_masks, detection_boxes, config.HEIGHT, config.WIDTH)
+                        detection_masks, detection_boxes, model.HEIGHT, model.WIDTH)
                 detection_masks_reframed = tf.cast(tf.greater(detection_masks_reframed, 0.5), tf.uint8)
                 # Follow the convention by adding back the batch dimension
                 tensor_dict['detection_masks'] = tf.expand_dims(detection_masks_reframed, 0)
-            if config.SPLIT_MODEL:
+            if model.SPLIT_MODEL:
                 score_out = detection_graph.get_tensor_by_name('Postprocessor/convert_scores:0')
                 expand_out = detection_graph.get_tensor_by_name('Postprocessor/ExpandDims_1:0')
                 score_in = detection_graph.get_tensor_by_name('Postprocessor/convert_scores_1:0')
@@ -53,22 +52,22 @@ def detection(model,config):
                 expand = model.expand
 
             # Timeliner
-            if config.WRITE_TIMELINE:
+            if model.WRITE_TIMELINE:
                 options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                 run_metadata = tf.RunMetadata()
                 timeliner = TimeLiner()
             else:
                 options = tf.RunOptions(trace_level=tf.RunOptions.NO_TRACE)
                 run_metadata = False
-
-            images = load_images(config.IMAGE_PATH,config.LIMIT_IMAGES)
-            timer = Timer().start()
+            masks = None
+            images = load_images(model.IMAGE_PATH,model.LIMIT_IMAGES)
+            timer = Timer()
+            visualizer = Visualizer('od')
             print('> Starting Detection')
             for image in images:
-                if config.SPLIT_MODEL:
+                if model.SPLIT_MODEL:
                     # split model in seperate gpu and cpu session threads
-                    masks = None # No Mask Detection possible yet
-                    frame = cv2.resize(cv2.imread(image),(config.WIDTH,config.HEIGHT))
+                    frame = cv2.resize(cv2.imread(image),(model.WIDTH,model.HEIGHT))
                     frame_expanded = np.expand_dims(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), axis=0)
                     timer.tic()
                     # GPU Session
@@ -76,10 +75,10 @@ def detection(model,config):
                             feed_dict={image_tensor: frame_expanded},
                             options=options, run_metadata=run_metadata)
                     timer.tictic()
-                    if config.WRITE_TIMELINE:
+                    if model.WRITE_TIMELINE:
                         timeliner.write_timeline(run_metadata.step_stats,
                                                 '{}/timeline_{}_SM1.json'.format(
-                                                config.RESULT_PATH,config.OD_DISPLAY_NAME))
+                                                model.RESULT_PATH,model.DISPLAY_NAME))
                     timer.tic()
                     # CPU Session
                     boxes, scores, classes, num = sess.run(
@@ -87,31 +86,29 @@ def detection(model,config):
                             feed_dict={score_in:score, expand_in: expand},
                             options=options, run_metadata=run_metadata)
                     timer.toc()
-                    if config.WRITE_TIMELINE:
+                    if model.WRITE_TIMELINE:
                         timeliner.write_timeline(run_metadata.step_stats,
                                                 '{}/timeline_{}_SM2.json'.format(
-                                                config.RESULT_PATH,config.OD_DISPLAY_NAME))
+                                                model.RESULT_PATH,model.DISPLAY_NAME))
                 else:
                     # default session
-                    frame = cv2.resize(cv2.imread(image),(config.WIDTH,config.HEIGHT))
+                    frame = cv2.resize(cv2.imread(image),(model.WIDTH,model.HEIGHT))
                     frame_expanded = np.expand_dims(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), axis=0)
                     timer.tic()
                     output_dict = sess.run(tensor_dict,
                             feed_dict={image_tensor: frame_expanded},
                             options=options, run_metadata=run_metadata)
                     timer.toc()
-                    if config.WRITE_TIMELINE:
+                    if model.WRITE_TIMELINE:
                         timeliner.write_timeline(run_metadata.step_stats,
                                                 '{}/timeline_{}.json'.format(
-                                                config.RESULT_PATH,config.OD_DISPLAY_NAME))
+                                                model.RESULT_PATH,model.DISPLAY_NAME))
                     num = output_dict['num_detections'][0]
                     classes = output_dict['detection_classes'][0]
                     boxes = output_dict['detection_boxes'][0]
                     scores = output_dict['detection_scores'][0]
                     if 'detection_masks' in output_dict:
                         masks = output_dict['detection_masks'][0]
-                    else:
-                        masks = None
 
                 # reformat detection
                 num = int(num)
@@ -120,21 +117,18 @@ def detection(model,config):
                 scores = np.squeeze(scores)
 
                 # Visualization
-                vis = visualize_objectdetection(frame,boxes,classes,scores,masks,category_index,timer.get_frame(),
-                                                config.MAX_FRAMES,timer.get_fps(),config.PRINT_INTERVAL,config.PRINT_TH,
-                                                config.OD_DISPLAY_NAME,config.VISUALIZE,config.VIS_FPS,config.DISCO_MOE,config.ALPHA)
-                if not vis:
-                    break
-                if config.SAVE_RESULT:
-                    cv2.imwrite('{}/{}_{}.jpg'.format(config.RESULT_PATH,timer.get_frame(),config.OD_DISPLAY_NAME),frame)
-
-    cv2.destroyAllWindows()
+                visualizer.visualize_objectdetection(frame,boxes,classes,scores,masks,category_index,
+                                                    timer.get_frame(),timer.get_fps())
+                if model.SAVE_RESULT:
+                    cv2.imwrite('{}/{}_{}.jpg'.format(model.RESULT_PATH,timer.get_frame(),model.DISPLAY_NAME),frame)
+    visualizer.stop()
     timer.stop()
 
 
+def main():
+    model_type = 'od'
+    model = Model(model_type).prepare_model()
+    detection(model)
+
 if __name__ == '__main__':
-    config = Config()
-    config.display()
-    model = Model('od', config.OD_MODEL_NAME, config.OD_MODEL_PATH, config.LABEL_PATH,
-                config.NUM_CLASSES, config.SPLIT_MODEL, config.SSD_SHAPE).prepare_od_model()
-    detection(model,config)
+    main()

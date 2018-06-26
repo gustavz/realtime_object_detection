@@ -11,26 +11,25 @@ import tensorflow as tf
 import cv2
 from skimage import measure
 
-from tensorflow.python.client import timeline
 from rod.helper import TimeLiner, Timer, load_images
-from rod.vis_utils import draw_single_box_on_image, visualize_deeplab
+from rod.visualizer import Visualizer
 from rod.model import Model
-from rod.config import Config
 
 
-def segmentation(model,config):
-    images = load_images(config.IMAGE_PATH,config.LIMIT_IMAGES)
+def segmentation(model):
+    images = load_images(model.IMAGE_PATH,model.LIMIT_IMAGES)
     # Tf Session + Timeliner
     tf_config = model.tf_config
     detection_graph = model.detection_graph
-    if config.WRITE_TIMELINE:
+    if model.WRITE_TIMELINE:
         options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
         run_metadata = tf.RunMetadata()
         timeliner = TimeLiner()
     else:
         options = tf.RunOptions(trace_level=tf.RunOptions.NO_TRACE)
         run_metadata = False
-    timer = Timer().start()
+    timer = Timer()
+    visualizer = Visualizer(model.TYPE)
     print("> Starting Segmentaion")
     with detection_graph.as_default():
         with tf.Session(graph=detection_graph, config=tf_config) as sess:
@@ -46,39 +45,31 @@ def segmentation(model,config):
                 				feed_dict={'ImageTensor:0': [cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)]},
                 				options=options, run_metadata=run_metadata)
                 timer.toc()
-                if config.WRITE_TIMELINE:
+                if model.WRITE_TIMELINE:
                     timeliner.write_timeline(run_metadata.step_stats,
                                             '{}/timeline_{}.json'.format(
-                                            config.RESULT_PATH,config.DL_DISPLAY_NAME))
+                                            model.RESULT_PATH,model.DISPLAY_NAME))
                 seg_map = batch_seg_map[0]
-                #boxes = []
-                #labels = []
-                #ids = []
+                boxes = []
+                labels = []
+                ids = []
                 map_labeled = measure.label(seg_map, connectivity=1)
                 for region in measure.regionprops(map_labeled):
-                    if region.area > config.MINAREA:
+                    if region.area > model.MINAREA:
                         box = region.bbox
                         id = seg_map[tuple(region.coords[0])]
-                        label = config.LABEL_NAMES[id]
-                        #boxes.append(box)
-                        #labels.append(label)
-                        #ids.append(id)
-                        if config.VISUALIZE:
-                            draw_single_box_on_image(frame,box,label,id,config.DISCO_MODE)
+                        label = model.LABEL_NAMES[id]
+                        boxes.append(box)
+                        labels.append(label)
+                        ids.append(id)
+                visualizer.visualize_deeplab(frame,boxes,labels,ids,seg_map,timer.get_frame(),timer.get_fps())
+                if model.SAVE_RESULT:
+                    cv2.imwrite('{}/{}_{}.jpg'.format(model.RESULT_PATH,timer.get_frame(),model.DISPLAY_NAME),frame)
 
-                vis = visualize_deeplab(frame,seg_map,timer.get_frame(),config.MAX_FRAMES,timer.get_fps(),
-                                        config.PRINT_INTERVAL,config.PRINT_TH,config.DL_DISPLAY_NAME,
-                                        config.VISUALIZE,config.VIS_FPS,config.DISCO_MODE,config.ALPHA)
-                if not vis:
-                    break
-                if config.SAVE_RESULT:
-                    cv2.imwrite('{}/{}_{}.jpg'.format(config.RESULT_PATH,timer.get_frame(),config.DL_DISPLAY_NAME),frame)
-
-	cv2.destroyAllWindows()
+	visualizer.stop()
     timer.stop()
 
 
 if __name__ == '__main__':
-    config = Config()
-    model = Model('dl', config.DL_MODEL_NAME, config.DL_MODEL_PATH).prepare_dl_model()
-    segmentation(model,config)
+    model = Model('dl').prepare_model()
+    segmentation(model)

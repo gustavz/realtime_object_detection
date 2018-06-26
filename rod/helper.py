@@ -96,10 +96,7 @@ class Timer(object):
         self._time = 1
         self._cache = []
         self._log = []
-
-    def start(self):
         self._first = True
-        return self
 
     def tic(self):
         self._tic = datetime.datetime.now()
@@ -196,7 +193,6 @@ class WebcamVideoStream(object):
             # if the thread indicator variable is set, stop the thread
             if self.stopped:
                 self.stream.release()
-                cv2.destroyAllWindows()
                 return
 
             # otherwise, read the next frame from the stream
