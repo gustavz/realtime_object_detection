@@ -25,15 +25,19 @@ class Config(object):
     ### Inference Config
     VIDEO_INPUT = cfg['VIDEO_INPUT']        # Input Must be OpenCV readable
     VISUALIZE = cfg['VISUALIZE']            # Disable for performance increase
+    VIS_FPS = cfg['VIS_FPS']                # Draw current FPS in the top left Image corner
     CPU_ONLY = cfg['CPU_ONLY']              # CPU Placement for speed test
     USE_OPTIMIZED = cfg['USE_OPTIMIZED']    # whether to use the optimized model (only possible if transform with script)
+    DISCO_MODE = cfg['DISCO_MODE']          # Secret Disco Visualization Mode
 
 
     ### Testing
     IMAGE_PATH = cfg['IMAGE_PATH']          # path for test.py test_images
     LIMIT_IMAGES = cfg['LIMIT_IMAGES']      # if set to None, all images are used
     WRITE_TIMELINE = cfg['WRITE_TIMELINE']  # write json timeline file (slows infrence)
-    SEQ_MODELS = cfg['SEQ_MODELS']        # List of Models to sequentially test (Default all Models)
+    SAVE_RESULT = cfg['SAVE_RESULT']        # save detection results to disk
+    RESULT_PATH = cfg['RESULT_PATH']        # path to save detection results
+    SEQ_MODELS = cfg['SEQ_MODELS']          # List of Models to sequentially test (Default all Models)
 
 
     ### Object_Detection
@@ -87,6 +91,8 @@ class Config(object):
             self.DL_MODEL_PATH = self.DL_MODEL_PATH.format("frozen_inference_graph.pb")
             self._OPT = ''
 
+        self.OD_DISPLAY_NAME = self.OD_MODEL_NAME+self._DEV+self._OPT
+        self.DL_DISPLAY_NAME = self.DL_MODEL_NAME+self._DEV+self._OPT
 
     def display(self):
         """Display Configuration values."""

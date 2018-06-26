@@ -122,7 +122,7 @@ def detection(model,config):
                     # Visualization
                     vis = visualize_objectdetection(frame,boxes,classes,scores,masks,category_index,fps._glob_numFrames,
                                                     config.MAX_FRAMES,fps.fps_local(),config.PRINT_INTERVAL,config.PRINT_TH,
-                                                    config.OD_MODEL_NAME+config._DEV+config._OPT,config.VISUALIZE)
+                                                    config.OD_DISPLAY_NAME,config.VISUALIZE,config.VIS_FPS,config.DISCO_MODE,config.ALPHA)
                     if not vis:
                         break
 
@@ -148,7 +148,7 @@ def detection(model,config):
                         tracker_boxes[idx,:] = conv_track2detect(tracker_box, vs.real_width, vs.real_height)
                     vis = visualize_objectdetection(frame,tracker_boxes,classes,scores,masks,category_index,fps._glob_numFrames,
                                                     config.MAX_FRAMES,fps.fps_local(),config.PRINT_INTERVAL,config.PRINT_TH,
-                                                    config.OD_MODEL_NAME+config._DEV+config._OPT,config.VISUALIZE)
+                                                    config.OD_DISPLAY_NAME,config.VISUALIZE,config.VIS_FPS,config.DISCO_MODE,config.ALPHA)
                     if not vis:
                         break
 

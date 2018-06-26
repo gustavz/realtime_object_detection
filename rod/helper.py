@@ -233,7 +233,7 @@ def load_images(image_path,limit=None):
             if idx >=limit:
                 images.sort()
                 return images
-            if file.endswith(".jpg"):
+            if file.endswith(".jpg") or file.endswith(".JPG") or file.endswith(".JPEG") or file.endswith(".png"):
                 images.append(os.path.join(root, file))
     images.sort()
     return images
@@ -272,7 +272,7 @@ def conv_track2detect(box, width, height):
 class SessionWorker(object):
     """
     TensorFlow Session Thread for split_model speed Hack
-    
+
     usage:
      before:
          results = sess.run([opt1,opt2],feed_dict={input_x:x,input_y:y})
@@ -287,8 +287,8 @@ class SessionWorker(object):
          results = q['results']
          extras = q['extras']
 
-    extras: None or input image frame. 
-    	(reason: GPU detection thread does not wait for result. 
+    extras: None or input image frame.
+    	(reason: GPU detection thread does not wait for result.
     		Therefore, keep frame if VISUALIZE=TRUE.)
     """
     def __init__(self,tag,graph,config):

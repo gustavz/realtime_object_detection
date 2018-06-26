@@ -7,9 +7,11 @@
 import collections
 import numpy as np
 import cv2
+import random
 
 STANDARD_COLORS = [
   (0, 0, 0), # Blank color for background
+  (0, 252, 124), # LawnGreen
   (255, 248, 240), # AliceBlue
   (0, 255, 127), # Chartreuse
   (255, 255, 0), # Aqua
@@ -140,6 +142,12 @@ STANDARD_COLORS = [
 
 STANDARD_COLORS_ARRAY = np.asarray(STANDARD_COLORS).astype(np.uint8)
 
+def shuffle_colors():
+    np.random.shuffle(STANDARD_COLORS_ARRAY)
+    np.random.shuffle(STANDARD_COLORS)
+
+
+
 def draw_bounding_box_on_image(image,
                                ymin,
                                xmin,
@@ -193,7 +201,7 @@ def draw_bounding_box_on_image(image,
 
 
 
-def draw_mask_on_image(image, mask, color=(238, 245, 255), alpha=0.3):
+def draw_mask_on_image(image, mask, alpha=0.3):
   """
   Draws mask on an image.
 
@@ -203,7 +211,6 @@ def draw_mask_on_image(image, mask, color=(238, 245, 255), alpha=0.3):
     color: standard color 3 channel tuple
     alpha: transparency value between 0 and 1. (default: 0.3)
   """
-
   mask = STANDARD_COLORS_ARRAY[mask]
   cv2.addWeighted(mask,alpha,image,1.0,0,image)
 
@@ -220,7 +227,8 @@ def visualize_boxes_and_labels_on_image(
     max_boxes_to_draw=20,
     min_score_thresh=0.5,
     agnostic_mode=False,
-    line_thickness=4):
+    line_thickness=4,
+    alpha = 0.3):
     """visualizes binary classes, scores, masks and bounding boxes on an numpy array image
 
     Args:
@@ -282,6 +290,7 @@ def visualize_boxes_and_labels_on_image(
     for box, color in box_to_color_map.items():
         ymin, xmin, ymax, xmax = box
         if instance_masks is not None:
+            #draw_mask_on_image(image,box_to_instance_masks_map[box])
             # stack all masks
             if first:
                 first = False
@@ -302,7 +311,7 @@ def visualize_boxes_and_labels_on_image(
 
     # Draw Masks on Image (only one color for all masks)
     if mask is not None:
-        draw_mask_on_image(image,mask)
+        draw_mask_on_image(image,mask,alpha)
 
     return image
 
@@ -312,15 +321,23 @@ def draw_text_on_image(image, string, position, color = (77, 255, 9)):
     visualizes colored text on image on given position with OpenCV
     """
     cv2.putText(image,string,(position),
-        cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2)
+        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
 
-def exit_visualization(millis):
+def exit_visualization(millis,image,cur_frame,model_name):
     """
-    returns false if openCV exit is requested
+    - returns false on key 'q'
+    - saves screenshot on key 's'
+    - else: returns true
     """
-    if cv2.waitKey(millis) & 0xFF == ord('q'):
+    k = cv2.waitKey(millis) & 0xFF
+    if k  == ord('q'): # wait for 'q' key to exit
+        print("> user Exit request")
         return False
+    elif k == ord('s'): # wait for 's' key to save screenshot
+        save_path = 'test_results/{}_{}.jpg'.format(cur_frame,model_name)
+        cv2.imwrite(save_path,image)
+        print("> saving screenshot to: {}".format(save_path))
     return True
 
 def exit_print(cur_frame,max_frames):
@@ -340,14 +357,18 @@ def print_detection(boxes,scores,classes,category_index,cur_frame,max_frames=500
             label = category_index[_class]['name']
             print("label: {}\nscore: {}\nbox: {}".format(label, score, box))
 
-def draw_single_box_on_image(image,box,label):
+def draw_single_box_on_image(image,box,label,id,disco_mode=False):
     """
     draws single box and label on image
     """
     p1 = (box[1], box[0])
     p2 = (box[3], box[2])
-    cv2.rectangle(image, p1, p2, (77,255,9), 2)
-    draw_text_on_image(image,label,(p1[0],p1[1]-10))
+    if disco_mode:
+        color = random.choice(STANDARD_COLORS)
+    else:
+        color = STANDARD_COLORS[id]
+    cv2.rectangle(image, p1, p2, color, 2)
+    draw_text_on_image(image,label,(p1[0],p1[1]-10),color)
 
 
 def visualize_objectdetection(image,
@@ -362,10 +383,15 @@ def visualize_objectdetection(image,
                             print_interval=100,
                             print_th=0.5,
                             model_name='realtime_object_detection',
-                            visualize=True):
+                            visualize=True,
+                            vis_fps=True,
+                            disco_mode=False,
+                            alpha = 0.3):
     """
     visualization function for object_detection
     """
+    if disco_mode:
+        shuffle_colors()
     if visualize:
         visualize_boxes_and_labels_on_image(
         image,
@@ -375,10 +401,12 @@ def visualize_objectdetection(image,
         category_index,
         instance_masks=masks,
         use_normalized_coordinates=True,
-        line_thickness=2)
-        draw_text_on_image(image,"fps: {}".format(fps), (10,30))
+        line_thickness=2,
+        alpha = alpha)
+        if vis_fps:
+            draw_text_on_image(image,"fps: {}".format(fps), (5,20))
         cv2.imshow(model_name, image)
-        vis = exit_visualization(1)
+        vis = exit_visualization(1,image,cur_frame,model_name)
     else:
         print_detection(boxes,scores,classes,category_index,cur_frame,max_frames,print_interval,print_th)
         vis = exit_print(cur_frame,max_frames)
@@ -392,15 +420,21 @@ def visualize_deeplab(image,
                     print_interval=100,
                     print_th=0.5,
                     model_name='DeepLab',
-                    visualize=True):
+                    visualize=True,
+                    vis_fps=True,
+                    disco_mode=False,
+                    alpha=0.3):
     """
     visualization function for deeplab
     """
+    if disco_mode:
+        shuffle_colors()
     if visualize:
-        draw_mask_on_image(image, seg_map)
-        draw_text_on_image(image,"fps: {}".format(fps),(10,30))
+        draw_mask_on_image(image, seg_map,alpha)
+        if vis_fps:
+            draw_text_on_image(image,"fps: {}".format(fps),(5,20))
         cv2.imshow(model_name,image)
-        vis = exit_visualization(1)
+        vis = exit_visualization(1,image,cur_frame,model_name)
     else:
         vis = exit_print(cur_frame,max_frames)
     return vis

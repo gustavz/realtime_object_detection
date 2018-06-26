@@ -2,14 +2,18 @@
 ### Inference Config
 VIDEO_INPUT: 0                 # Input Must be OpenCV readable
 VISUALIZE: True                # Disable for performance increase
+VIS_FPS: True                  # Draw current FPS in the top left Image corner
 CPU_ONLY: False                # CPU Placement for speed test
 USE_OPTIMIZED: False           # whether to use the optimized model (only possible if transform with script)
+DISCO_MODE: True              # Secret Disco Visualization Mode
 
 
 ### Testing
-IMAGE_PATH: 'test_images'      # path for test.py test_images
+IMAGE_PATH: 'test_images'      # path for test_*.py test_images
 LIMIT_IMAGES: None             # if set to None, all images are used
 WRITE_TIMELINE: True           # write json timeline file (slows infrence)
+SAVE_RESULT: False             # save detection results to disk
+RESULT_PATH: 'test_results'    # path to save detection results
 SEQ_MODELS: []                 # List of Models to sequentially test (Default all Models)
 
 
@@ -35,7 +39,7 @@ NUM_CLASSES: 90
 
 
 ### DeepLab
-ALPHA: 0.3                     # mask overlay factor
+ALPHA: 0.3                     # mask overlay factor (also for mask_rcnn)
 BBOX: True                     # compute boundingbox in postprocessing
 MINAREA: 500                   # min Pixel Area to apply bounding boxes (avoid noise)
 ## Model
