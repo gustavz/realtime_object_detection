@@ -439,7 +439,6 @@ class ObjectDetectionModel(Model):
                     self.timeliner.write_timeline(self._run_metadata.step_stats,
                                             '{}/timeline_{}.json'.format(
                                             self.config.RESULT_PATH,self.config.DISPLAY_NAME))
-            self.detection = True
             self.reformat_detection()
             # write detection to image file
             if self.config.SAVE_RESULT and self.input_type is 'image':
@@ -452,6 +451,7 @@ class ObjectDetectionModel(Model):
         # Tracking
         else:
             self.run_tracker()
+        self.detection = True
 
 
 ##################################
