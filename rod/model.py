@@ -1,21 +1,33 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
+Created on Thu Dec 21 12:01:40 2017
+
 @author: www.github.com/GustavZ
 """
-
+import numpy as np
 import tensorflow as tf
 import tarfile
 import copy
 import os
+import sys
+from skimage import measure
 import six.moves.urllib as urllib
 from tensorflow.core.framework import graph_pb2
+
+from rod.helper import FPS, WebcamVideoStream, SessionWorker, conv_detect2track, conv_track2detect, ImageStream, TimeLiner
+from rod.visualizer import Visualizer
+from rod.tf_utils import reframe_box_masks_to_image_masks
 from rod.config import Config
+from rod.visualizer import Visualizer
 import tf_utils
 
+##################################
+########## Model Class ###########
+##################################
 class Model(object):
     """
-    Model Class to handle all kind of detection preparation
+    Base Tensorflow Inference Model Class
     """
     def __init__(self,config):
         self.config = config
@@ -25,12 +37,20 @@ class Model(object):
         self.category_index = None
         self.score = None
         self.expand = None
+        self.masks = None
+        self._run_options = tf.RunOptions(trace_level=tf.RunOptions.NO_TRACE)
+        self._run_metadata = False
+        self.category_indey = None
+        self.detection = True
         print ('> Model: {}'.format(self.config.MODEL_PATH))
 
     def download_model(self):
-        if self.config.TYPE == 'dl':
+        """
+        downlaods model from model_zoo
+        """
+        if self.config.MODEL_TYPE == 'dl':
             download_base = 'http://download.tensorflow.org/models/'
-        elif self.config.TYPE == 'od':
+        elif self.config.MODEL_TYPE == 'od':
             download_base = 'http://download.tensorflow.org/models/object_detection/'
         model_file = self.config.MODEL_NAME + '.tar.gz'
         if not os.path.isfile(self.config.MODEL_PATH) and self.config.DOWNLOAD_MODEL:
@@ -53,8 +73,11 @@ class Model(object):
             return n.split(":")[0]
 
     def load_frozenmodel(self):
+        """
+        loads graph from frozen model file
+        """
         print('> Loading frozen model into memory')
-        if (self.config.TYPE == 'od' and self.config.SPLIT_MODEL):
+        if (self.config.MODEL_TYPE == 'od' and self.config.SPLIT_MODEL):
             # load a frozen Model and split it into GPU and CPU graphs
             # Hardcoded split points for ssd_mobilenet
             input_graph = tf.Graph()
@@ -132,12 +155,18 @@ class Model(object):
                 tf.import_graph_def(od_graph_def, name='')
 
     def load_labelmap(self):
+        """
+        creates categorie_index from label_map
+        """
         print('> Loading label map')
         label_map = tf_utils.load_labelmap(self.config.LABEL_PATH)
         categories = tf_utils.convert_label_map_to_categories(label_map, max_num_classes=self.config.NUM_CLASSES, use_display_name=True)
         self.category_index = tf_utils.create_category_index(categories)
 
     def get_tensordict(self, outputs):
+        """
+        returns tensordict for given tensornames list
+        """
         ops = self.detection_graph.get_operations()
         all_tensor_names = {output.name for op in ops for output in op.outputs}
         self.tensor_dict = {}
@@ -148,11 +177,349 @@ class Model(object):
         return self.tensor_dict
 
     def prepare_model(self):
-        if self.config.TYPE is 'od':
+        """
+        first step prepare model
+        needs to be called by subclass in re-write process
+
+        Necessary: subclass needs to init
+        self._input_stream
+        """
+        if self.config.MODEL_TYPE is 'od':
             self.download_model()
             self.load_frozenmodel()
             self.load_labelmap()
-        elif self.config.TYPE is 'dl':
+        elif self.config.MODEL_TYPE is 'dl':
             self.download_model()
             self.load_frozenmodel()
+        self.fps = FPS(self.config.FPS_INTERVAL).start()
+        self._visualizer = Visualizer(self.config).start()
         return self
+
+    def isActive(self):
+        """
+        checks if stream and visualizer are active
+        """
+        return self._input_stream.isActive() and self._visualizer.isActive()
+
+    def stop(self):
+        """
+        stops everything
+        """
+        self._input_stream.stop()
+        self._visualizer.stop()
+        self.fps.stop()
+        if self.config.SPLIT_MODEL and self.config.MODEL_TYPE is 'od':
+            self._gpu_worker.stop()
+            self._cpu_worker.stop()
+
+    def detect(self):
+        """
+        needs to be written by subclass
+        """
+        pass
+
+    def run(self):
+        """
+        runs detection loop on video or image
+        listens on isActive()
+        """
+        print("> starting detection")
+        self.fps.start()
+        self._visualizer = Visualizer(self.config).start()
+        while self.isActive():
+            # detection
+            self.detect()
+            # Visualization
+            if self.detection:
+                self._visualizer.visualize_detection(self.frame,self.boxes,
+                                                    self.classes,self.scores,
+                                                    self.masks,self.fps.fps_local(),
+                                                    self.category_index)
+                self.fps.update()
+        self.stop()
+
+
+##################################
+### ObjectDetectionModel Class ###
+##################################
+class ObjectDetectionModel(Model):
+    """
+    object_detection model class
+    """
+    def __init__(self,config):
+        super(ObjectDetectionModel, self).__init__(config)
+
+    def prepare_model(self,input_type):
+        """
+        prepares Object_Detection model
+        input_type: must be 'image' or 'video'
+        """
+        assert input_type in ['image','video'], "only 'image' or 'video' input possible"
+        super(ObjectDetectionModel, self).prepare_model()
+        self.input_type = input_type
+        # Tracker
+        if self.config.USE_TRACKER:
+            sys.path.append(os.getcwd()+'/rod/kcf')
+            import KCF
+            self._tracker = KCF.kcftracker(False, True, False, False)
+            self._tracker_counter = 0
+            self._track = False
+        print("> Building Graph")
+        with self.detection_graph.as_default():
+            with tf.Session(graph=self.detection_graph,config=self.tf_config) as self._sess:
+                # Input Configuration
+                if self.input_type is 'video':
+                    self._input_stream = WebcamVideoStream(self.config.VIDEO_INPUT,self.config.WIDTH,
+                                                            self.config.HEIGHT).start()
+                elif self.input_type is 'image':
+                    self._input_stream = ImageStream(self.config.IMAGE_PATH,self.config.LIMIT_IMAGES,
+                                                    (self.config.WIDTH,self.config.HEIGHT)).start()
+                    # Timeliner for image detection
+                    if self.config.WRITE_TIMELINE:
+                        self._run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                        self._run_metadata = tf.RunMetadata()
+                        self.timeliner = TimeLiner()
+                # Define Input and Ouput tensors
+                self._tensor_dict = self.get_tensordict(['num_detections', 'detection_boxes', 'detection_scores','detection_classes', 'detection_masks'])
+                self._image_tensor = self.detection_graph.get_tensor_by_name('image_tensor:0')
+                # Mask Transformations
+                if 'detection_masks' in self._tensor_dict:
+                    # Reframe is required to translate mask from box coordinates to image coordinates and fit the image size.
+                    detection_boxes = tf.squeeze(self._tensor_dict['detection_boxes'], [0])
+                    detection_masks = tf.squeeze(self._tensor_dict['detection_masks'], [0])
+                    real_num_detection = tf.cast(self._tensor_dict['num_detections'][0], tf.int32)
+                    detection_boxes = tf.slice(detection_boxes, [0, 0], [real_num_detection, -1])
+                    detection_masks = tf.slice(detection_masks, [0, 0, 0], [real_num_detection, -1, -1])
+                    detection_masks_reframed = reframe_box_masks_to_image_masks(
+                                                detection_masks, detection_boxes,self.config.HEIGHT,self.config.WIDTH)
+                    detection_masks_reframed = tf.cast(tf.greater(detection_masks_reframed, 0.5), tf.uint8)
+                    self._tensor_dict['detection_masks'] = tf.expand_dims(detection_masks_reframed, 0)
+                if self.config.SPLIT_MODEL:
+                    self._score_out = self.detection_graph.get_tensor_by_name('{}:0'.format(self.config.SPLIT_NODES[0]))
+                    self._expand_out = self.detection_graph.get_tensor_by_name('{}:0'.format(self.config.SPLIT_NODES[1]))
+                    self._score_in = self.detection_graph.get_tensor_by_name('{}_1:0'.format(self.config.SPLIT_NODES[0]))
+                    self._expand_in = self.detection_graph.get_tensor_by_name('{}_1:0'.format(self.config.SPLIT_NODES[1]))
+                    # Threading
+                    self._gpu_worker = SessionWorker("GPU",self.detection_graph,self.tf_config)
+                    self._cpu_worker = SessionWorker("CPU",self.detection_graph,self.tf_config)
+                    self._gpu_opts = [self._score_out,self._expand_out]
+                    self._cpu_opts = [self._tensor_dict['detection_boxes'],
+                                    self._tensor_dict['detection_scores'],
+                                    self._tensor_dict['detection_classes'],
+                                    self._tensor_dict['num_detections']]
+            return self
+
+    def run_default_sess(self):
+        """
+        runs default session
+        """
+        # default session)
+        self.frame = self._input_stream.read()
+        output_dict = self._sess.run(self._tensor_dict,
+                                    feed_dict={self._image_tensor:
+                                    self._visualizer.expand_and_convertRGB_image(self.frame)},
+                                    options=self._run_options, run_metadata=self._run_metadata)
+        self.num = output_dict['num_detections'][0]
+        self.classes = output_dict['detection_classes'][0]
+        self.boxes = output_dict['detection_boxes'][0]
+        self.scores = output_dict['detection_scores'][0]
+        if 'detection_masks' in output_dict:
+            self.masks = output_dict['detection_masks'][0]
+
+    def run_thread_sess(self):
+        """
+        runs seperate gpu and cpu session threads
+        """
+        if self._gpu_worker.is_sess_empty():
+            # put new queue
+            self.frame = self._input_stream.read()
+            gpu_feeds = {self._image_tensor: self._visualizer.expand_and_convertRGB_image(self.frame)}
+            if self.config.VISUALIZE:
+                gpu_extras = self.frame # for visualization frame
+            else:
+                gpu_extras = None
+            self._gpu_worker.put_sess_queue(self._gpu_opts,gpu_feeds,gpu_extras)
+        g = self._gpu_worker.get_result_queue()
+        if g is None:
+            # gpu thread has no output queue. ok skip, let's check cpu thread.
+            pass
+        else:
+            # gpu thread has output queue.
+            score,expand,self._frame = g["results"][0],g["results"][1],g["extras"]
+            if self._cpu_worker.is_sess_empty():
+                # When cpu thread has no next queue, put new queue.
+                # else, drop gpu queue.
+                cpu_feeds = {self._score_in: score, self._expand_in: expand}
+                cpu_extras = self.frame
+                self._cpu_worker.put_sess_queue(self._cpu_opts,cpu_feeds,cpu_extras)
+        c = self._cpu_worker.get_result_queue()
+        if c is None:
+            # cpu thread has no output queue. ok, nothing to do. continue
+            return False# If CPU RESULT has not been set yet, no fps update
+        else:
+            self.boxes,self.scores,self.classes,self.num,self.frame = c["results"][0],c["results"][1],c["results"][2],c["results"][3],c["extras"]
+        return True
+
+    def run_split_sess(self):
+        """
+        runs split session WITHOUT threading
+        optional: timeline writer
+        """
+        self.frame = self._input_stream.read()
+        score, expand = self._sess.run(self._gpu_opts,feed_dict={self._image_tensor:
+                                        self._visualizer.expand_and_convertRGB_image(self.frame)},
+                                        options=self._run_options, run_metadata=self._run_metadata)
+        if self.config.WRITE_TIMELINE:
+            self.timeliner.write_timeline(self._run_metadata.step_stats,
+                                        '{}/timeline_{}_SM1.json'.format(
+                                        self.config.RESULT_PATH,self.config.DISPLAY_NAME))
+        # CPU Session
+        self.boxes,self.scores,self.classes,self.num = self._sess.run(self._cpu_opts,
+                                                                    feed_dict={self._score_in:score,
+                                                                    self._expand_in: expand},
+                                                                    options=self._run_options,
+                                                                    run_metadata=self._run_metadata)
+        if self.config.WRITE_TIMELINE:
+            self.timeliner.write_timeline(self._run_metadata.step_stats,
+                                        '{}/timeline_{}_SM2.json'.format(
+                                        self.config.RESULT_PATH,self.config.DISPLAY_NAME))
+    def run_tracker(self):
+        """
+        runs KCF tracker on videoStream frame
+        !does not work on images, obviously!
+        """
+        self.frame = self._input_stream.read()
+        if self._first_track:
+            self._trackers = []
+            self._tracker_boxes = self.boxes
+            for box in self.boxes[~np.all(self.boxes == 0, axis=1)]:
+                    self._tracker.init(conv_detect2track(box,self._input_stream.real_width,
+                                        self._input_stream.real_height),self.tracker_frame)
+                    self._trackers.append(self._tracker)
+            self._first_track = False
+
+        for idx,self._tracker in enumerate(self._trackers):
+            tracker_box = self._tracker.update(self.frame)
+            self._tracker_boxes[idx,:] = conv_track2detect(tracker_box,
+                                                    self._input_stream.real_width,
+                                                    self._input_stream.real_height)
+        self._tracker_counter += 1
+        self.boxes = self._tracker_boxes
+        # Deactivate Tracker
+        if self._tracker_counter >= self.config.TRACKER_FRAMES:
+            self._track = False
+            self._tracker_counter = 0
+
+    def reformat_detection(self):
+        """
+        reformats detection
+        """
+        self.num = int(self.num)
+        self.boxes = np.squeeze(self.boxes)
+        self.classes = np.squeeze(self.classes).astype(np.uint8)
+        self.scores = np.squeeze(self.scores)
+
+    def detect(self):
+        """
+        Object_Detection Detection function
+        optional: multi threading split session, timline writer
+        """
+        self.detection = False
+        if not (self.config.USE_TRACKER and self._track):
+            if self.config.SPLIT_MODEL:
+                if self.config.MULTI_THREADING:
+                    self.detection = self.run_thread_sess()
+                    if not self.detection: # checks if thread has output
+                        return
+                else:
+                    self.run_split_sess()
+            else:
+                self.run_default_sess()
+                if self.config.WRITE_TIMELINE and self.input_type is 'image':
+                    self.timeliner.write_timeline(self._run_metadata.step_stats,
+                                            '{}/timeline_{}.json'.format(
+                                            self.config.RESULT_PATH,self.config.DISPLAY_NAME))
+            self.detection = True
+            self.reformat_detection()
+            # write detection to image file
+            if self.config.SAVE_RESULT and self.input_type is 'image':
+                self._visualizer.save_image(self.frame)
+            # Activate Tracker
+            if self.config.USE_TRACKER and self.num <= self.config.NUM_TRACKERS and self.input_type is 'video':
+                self.tracker_frame = self.frame
+                self._track = True
+                self._first_track = True
+        # Tracking
+        else:
+            self.run_tracker()
+
+
+##################################
+###### DeepLabModel Class ########
+##################################
+class DeepLabModel(Model):
+    def __init__(self,config):
+        super(DeepLabModel, self).__init__(config)
+
+    def prepare_model(self,input_type):
+        """
+        prepares DeepLab model
+        input_type: must be 'image' or 'video'
+        """
+        assert input_type in ['image','video'], "only image or video input possible"
+        super(DeepLabModel, self).prepare_model()
+        self.input_type = input_type
+        # fixed input sizes as model needs resize either way
+        # Input configurations
+        self.category_index = None
+        if self.input_type is 'video':
+            self._input_stream = WebcamVideoStream(self.config.VIDEO_INPUT,self.config.WIDTH,self.config.HEIGHT).start()
+        elif self.input_type is 'image':
+            self._input_stream = ImageStream(self.config.IMAGE_PATH,self.config.LIMIT_IMAGES).start()
+            if self.config.WRITE_TIMELINE:
+                self._run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                self._run_metadata = tf.RunMetadata()
+                self._timeliner = TimeLiner()
+        print("> Building Graph")
+        with self.detection_graph.as_default():
+            with tf.Session(graph=self.detection_graph,config=self.tf_config) as self._sess:
+                return self
+
+    def detect(self):
+        """
+        DeepLab Detection function
+        """
+        self.frame = self._input_stream.read()
+        width,height,_ = self.frame.shape
+        resize_ratio = 1.0 * 513 / max(self._input_stream.real_width,self._input_stream.real_height)
+        target_size = (int(resize_ratio * self._input_stream.real_width),int(resize_ratio * self._input_stream.real_height)) #(513, 384)
+        self.frame = cv2.resize(self.frame, target_size)
+        batch_seg_map = self._sess.run('SemanticPredictions:0',
+                                        feed_dict={'ImageTensor:0':
+                                        [cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)]},
+                                        options=self._run_options, run_metadata=self._run_metadata)
+        if self.config.WRITE_TIMELINE and self.input_type is 'image':
+            self._timeliner.write_timeline(self._run_metadata.step_stats,
+                                    '{}/timeline_{}.json'.format(
+                                    self.config.RESULT_PATH,self.config.DISPLAY_NAME))
+        seg_map = batch_seg_map[0]
+        self.boxes = []
+        self.labels = []
+        self.ids = []
+        map_labeled = measure.label(seg_map, connectivity=1)
+        for region in measure.regionprops(map_labeled):
+            if region.area > self.config.MINAREA:
+                box = region.bbox
+                id = seg_map[tuple(region.coords[0])]
+                label = self.config.LABEL_NAMES[id]
+                self.boxes.append(box)
+                self.labels.append(label)
+                self.ids.append(id)
+        # write detection to image file
+        if self.config.SAVE_RESULT and self.input_type is 'image':
+            self._visualizer.save_image(self.frame)
+        # workaround
+        self.num = len(self.boxes)
+        self.classes = self.ids
+        self.scores = self.labels
+        self.masks = seg_map

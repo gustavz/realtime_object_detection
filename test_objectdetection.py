@@ -49,8 +49,8 @@ def detection(model):
                 score_in = detection_graph.get_tensor_by_name('Postprocessor/convert_scores_1:0')
                 expand_in = detection_graph.get_tensor_by_name('Postprocessor/ExpandDims_1_1:0')
                 # Threading
-                score = model.score
-                expand = model.expand
+                #score = model.score
+                #expand = model.expand
 
             # Timeliner
             if model.config.WRITE_TIMELINE:

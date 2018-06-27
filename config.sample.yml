@@ -27,7 +27,10 @@ PRINT_INTERVAL: 500            # intervall [frames] to print detections to conso
 PRINT_TH: 0.5                  # detection threshold for det_intervall
 ## speed hack
 SPLIT_MODEL: True              # Splits Model into a GPU and CPU session (currently only works for ssd_mobilenets)
+MULTI_THREADING: True          # Additional Split Model Speed up through multi threading
 SSD_SHAPE: 300                 # used for the split model algorithm (currently only supports ssd networks trained on 300x300 and 600x600 input)
+SPLIT_NODES: ['Postprocessor/convert_scores','Postprocessor/ExpandDims_1']
+                               # hardcoded split points for ssd_mobilenet_v1
 ## Tracking
 USE_TRACKER: False             # Use a Tracker (currently only works properly WITHOUT split_model)
 TRACKER_FRAMES: 20             # Number of tracked frames between detections

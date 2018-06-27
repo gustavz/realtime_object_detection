@@ -8,6 +8,7 @@ Created on Thu Dec 21 12:01:40 2017
 import numpy as np
 import tensorflow as tf
 import os
+import sys
 
 from rod.helper import FPS, WebcamVideoStream, SessionWorker, conv_detect2track, conv_track2detect
 from rod.model import Model
@@ -19,7 +20,6 @@ from rod.tf_utils import reframe_box_masks_to_image_masks
 def detection(model):
     # Tracker
     if model.config.USE_TRACKER:
-        import sys
         sys.path.append(os.getcwd()+'/rod/kcf')
         import KCF
         tracker = KCF.kcftracker(False, True, False, False)

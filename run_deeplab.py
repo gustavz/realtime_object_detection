@@ -48,7 +48,7 @@ def segmentation(model):
                         boxes.append(box)
                         labels.append(label)
                         ids.append(id)
-                visualizer.visualize_deeplab(frame,boxes,labels,ids,seg_map,fps._glob_numFrames,fps.fps_local())
+                visualizer.visualize_detection(frame,boxes,ids,labels,seg_map,fps.fps_local())
                 fps.update()
     # End everything
     video_stream.stop()

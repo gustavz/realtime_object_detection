@@ -50,9 +50,9 @@ class Config(object):
     PRINT_TH = cfg['PRINT_TH']              # detection threshold for det_intervall
     ## speed hack
     SPLIT_MODEL = cfg['SPLIT_MODEL']        # Splits Model into a GPU and CPU session (currently only works for ssd_mobilenets)
+    MULTI_THREADING = cfg['MULTI_THREADING']# Additional Split Model Speed up through multi threading
     SSD_SHAPE = cfg['SSD_SHAPE']            # used for the split model algorithm (currently only supports ssd networks trained on 300x300 and 600x600 input)
-    SPLIT_NODES = ['Postprocessor/convert_scores','Postprocessor/ExpandDims_1']
-                                            # hardcoded split points for ssd_mobilenet_v1
+    SPLIT_NODES = cfg['SPLIT_NODES']       # hardcoded split points for ssd_mobilenet_v1
     ## Tracking
     USE_TRACKER = cfg['USE_TRACKER']        # Use a Tracker (currently only works properly WITHOUT split_model)
     TRACKER_FRAMES = cfg['TRACKER_FRAMES']  # Number of tracked frames between detections
@@ -77,14 +77,14 @@ class Config(object):
         'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tv'])
 
 
-    def __init__(self,type):
-        assert type in ['od','dl'], "only deeplab or object_detection models"
+    def __init__(self,model_type):
+        assert model_type in ['od','dl'], "only deeplab or object_detection models"
         #  model type
-        self.TYPE = type
-        if self.TYPE is 'od':
+        self.MODEL_TYPE = model_type
+        if self.MODEL_TYPE is 'od':
             self.MODEL_PATH = self.OD_MODEL_PATH
             self.MODEL_NAME = self.OD_MODEL_NAME
-        elif self.TYPE is 'dl':
+        elif self.MODEL_TYPE is 'dl':
             self.MODEL_PATH = self.DL_MODEL_PATH
             self.MODEL_NAME = self.DL_MODEL_NAME
         ## CPU Placement

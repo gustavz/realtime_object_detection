@@ -155,10 +155,11 @@ class Visualizer(object):
         self._font_face = cv2.FONT_HERSHEY_SIMPLEX
         self._font_scale = 0.5
         self._line_type = cv2.LINE_AA
+        self.cur_frame = 0
 
         # public params
         self.image = None
-        self.exit_vis = False
+        self.stopped = False
 
 
     def _shuffle_colors(self):
@@ -313,35 +314,34 @@ class Visualizer(object):
                     color = color, thickness = self._font_thickness)
 
 
-    def _exit_visualization(self,millis,cur_frame):
+    def _exit_visualization(self,millis=1):
         """
         - sets exit variable on key 'q'
         - saves screenshot on key 's'
         """
         k = cv2.waitKey(millis) & 0xFF
         if k  == ord('q'): # wait for 'q' key to exit
-            print("> user exit request")
-            self.exit_vis = True
+            print("> User exit request")
+            self.stopped = True
         elif k == ord('s'): # wait for 's' key to save screenshot
-            save_path = '{}/detection{}_{}.jpg'.format(self.config.RESULT_PATH,cur_frame,self.config.DISPLAY_NAME)
-            cv2.imwrite(save_path,self.image)
-            print("> saving screenshot to: {}".format(save_path))
+            save_image(self.image)
 
 
-    def _exit_print(self,cur_frame):
+
+    def _exit_print(self):
         """
         sets exit variable if max frames are reached
         """
-        if cur_frame >= self.config.MAX_FRAMES:
-            self.exit_vis = True
+        if self.cur_frame >= self.config.MAX_FRAMES:
+            self.stopped = True
 
 
-    def _print_detection(self,boxes,scores,classes,category_index,cur_frame):
+    def _print_detection(self,boxes,scores,classes,category_index):
         """
         prints detection result above threshold to console
         """
         for box, score, _class in zip(boxes, scores, classes):
-            if cur_frame%self.config.PRINT_INTERVAL==0 and score > self.config.PRINT_TH:
+            if self.cur_frame%self.config.PRINT_INTERVAL==0 and score > self.config.PRINT_TH:
                 label = category_index[_class]['name']
                 print("label: {}\nscore: {}\nbox: {}".format(label, score, box))
 
@@ -359,71 +359,50 @@ class Visualizer(object):
         cv2.rectangle(self.image, p1, p2, color, 2)
         self._draw_text_on_image(label,(p1[0],p1[1]-10),color)
 
-
-    def set_image(self,image):
-        """
-        Sets image for class
-        """
-        self.image = image
-
-
-    def visualize_objectdetection(self,
-                                image,
-                                boxes,
-                                classes,
-                                scores,
-                                masks,
-                                category_index,
-                                cur_frame,
-                                fps='N/A'):
+    def visualize_detection(self,
+                            image,
+                            boxes,
+                            classes,
+                            scores, #labels
+                            masks,  #seg_map
+                            fps='N/A',
+                            category_index=None):
         """
         visualization function for object_detection
         """
-        self.set_image(image)
+        self.image = image
+        self.cur_frame += 1
         if self.config.DISCO_MODE:
             self._shuffle_colors()
-        if self.config.VISUALIZE:
-            self._visualize_boxes_and_labels_on_image(
-            boxes,
-            classes,
-            scores,
-            category_index,
-            instance_masks=masks,
-            use_normalized_coordinates=True)
-            if self.config.VIS_FPS:
-                self._draw_text_on_image("fps: {}".format(fps), (5,20))
-            self.show_image()
-            self._exit_visualization(1,cur_frame)
-        else:
-            self._print_detection(boxes,scores,classes,category_index,cur_frame)
-            self._exit_print(cur_frame)
-
-
-    def visualize_deeplab(self,
-                        image,
-                        boxes,
-                        labels,
-                        ids,
-                        seg_map,
-                        cur_frame,
-                        fps='N/A'):
-        """
-        visualization function for deeplab
-        """
-        self.set_image(image)
-        for box,id,label in zip(boxes,ids,labels):
-            self._draw_single_box_on_image(box,label,id)
-        if self.config.DISCO_MODE:
-            self._shuffle_colors()
-        if self.config.VISUALIZE:
-            self._draw_mask_on_image(seg_map)
-            if self.config.VIS_FPS:
-                self._draw_text_on_image("fps: {}".format(fps),(5,20))
-            self.show_image()
-            self._exit_visualization(1,cur_frame)
-        else:
-            self._exit_print(cur_frame)
-
+        # object_detection workaround
+        if self.config.MODEL_TYPE is 'od':
+            if self.config.VISUALIZE:
+                self._visualize_boxes_and_labels_on_image(
+                boxes,
+                classes,
+                scores,
+                category_index,
+                instance_masks=masks,
+                use_normalized_coordinates=True)
+                if self.config.VIS_FPS:
+                    self._draw_text_on_image("fps: {}".format(fps), (5,20))
+                self.show_image()
+                self._exit_visualization()
+            else:
+                self._print_detection(boxes,scores,classes,category_index)
+                self._exit_print()
+        # deeplab workaround
+        elif self.config.MODEL_TYPE is 'dl':
+            if self.config.VISUALIZE:
+                for box,id,label in zip(boxes,classes,scores): #classes=ids,scores=labels
+                    self._draw_single_box_on_image(box,label,id)
+                self._draw_mask_on_image(masks) #masks = seg_map
+                if self.config.VIS_FPS:
+                    self._draw_text_on_image("fps: {}".format(fps),(5,20))
+                self.show_image()
+                self._exit_visualization()
+            else:
+                self._exit_print()
 
     def show_image(self):
         """
@@ -431,11 +410,26 @@ class Visualizer(object):
         """
         cv2.imshow(self.config.DISPLAY_NAME, self.image)
 
-
     def isActive(self):
-        return not self.exit_vis
+        return not self.stopped
 
+    def start(self):
+        print("> Press 'q' to Exit")
+        self.cur_frame = 0
+        self.stopped = False
+        return self
 
     def stop(self):
-        self.exit_vis = True
+        self.stopped = True
         cv2.destroyAllWindows()
+
+    def expand_and_convertRGB_image(self,image):
+        return np.expand_dims(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), axis=0)
+
+    def save_image(self,image):
+        save_path = '{}/detection{}_{}.jpg'.format(self.config.RESULT_PATH,self.cur_frame,self.config.DISPLAY_NAME)
+        cv2.imwrite(save_path,image)
+        print("> Saving detection to: {}".format(save_path))
+
+    def resize_image(self,image,shape):
+        return cv2.resize(image,shape)

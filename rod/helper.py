@@ -98,6 +98,9 @@ class Timer(object):
         self._log = []
         self._first = True
 
+    def start(self):
+        return self
+
     def tic(self):
         self._tic = datetime.datetime.now()
 
@@ -157,6 +160,53 @@ class Timer(object):
         print ("> [INFO] resulting median fps: {}".format(self._medianfps))
 
 
+class ImageStream(object):
+    """
+    Test Image handling class
+    """
+    def __init__(self,image_path,limit=None,image_shape=None):
+        self.image_shape = image_shape
+        self.image_path = image_path
+        self.image = None
+        self.images = []
+        self.stopped = False
+        self.limit = limit
+        if not limit:
+            self.limit = float('inf')
+
+    def start(self):
+        self.load_images()
+        self.stopped = False
+        return self
+
+    def load_images(self):
+        for root, dirs, files in os.walk(self.image_path):
+            for idx,file in enumerate(files):
+                if idx >=self.limit:
+                    self.images.sort()
+                    return self.images
+                if file.endswith(".jpg") or file.endswith(".JPG") or file.endswith(".JPEG") or file.endswith(".png"):
+                    self.images.append(os.path.join(root, file))
+        self.images.sort()
+
+    def read(self):
+        if self.image_shape is not None:
+            self.image = cv2.resize(cv2.imread(self.images.pop()),(self.image_shape[:2]))
+        else:
+            self.image = cv2.imread(self.images.pop())
+        self.real_width,self.real_height,_ = self.image.shape
+        return self.image
+
+    def isActive(self):
+        if self.images and not self.stopped:
+            return True
+        else:
+            return False
+
+    def stop(self):
+        self.stopped = True
+
+
 class WebcamVideoStream(object):
     """
     Class for Video Input frame capture
@@ -179,11 +229,10 @@ class WebcamVideoStream(object):
         #Debug stream shape
         self.real_width = int(self.stream.get(3))
         self.real_height = int(self.stream.get(4))
-        print("> Start video stream with shape: {},{}".format(self.real_width,self.real_height))
-        print("> Press 'q' to Exit")
 
     def start(self):
         # start the thread to read frames from the video stream
+        print("> Start video stream with shape: {},{}".format(self.real_width,self.real_height))
         threading.Thread(target=self.update, args=()).start()
         return self
 
@@ -217,22 +266,6 @@ class WebcamVideoStream(object):
     def resized(self,target_size):
         return cv2.resize(self.frame, target_size)
 
-"""
-Load Test Images
-"""
-def load_images(image_path,limit=None):
-    if not limit:
-        limit = float('inf')
-    images = []
-    for root, dirs, files in os.walk(image_path):
-        for idx,file in enumerate(files):
-            if idx >=limit:
-                images.sort()
-                return images
-            if file.endswith(".jpg") or file.endswith(".JPG") or file.endswith(".JPEG") or file.endswith(".png"):
-                images.append(os.path.join(root, file))
-    images.sort()
-    return images
 
 """
 Tracker converter functions
