@@ -35,8 +35,9 @@ or if you want to switch off the speed hack set `SPLIT_MODEL` to `False`, <br />
     ```
     from rod.model import ObjectDetectionModel, DeepLabModel
     from rod.config import Config
-    model_type = 'od' #or 'dl'
-    input_type = 'video' # 'image'
+    
+    model_type = 'od'                                              #or 'dl'
+    input_type = 'video'                                           #or 'image'
     config = Config(model_type)
     model = ObjectDetectionModel(config).prepare_model(input_type) #or DeepLabModel
     model.run()
