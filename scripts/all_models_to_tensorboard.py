@@ -16,6 +16,8 @@ from tensorflow.python.summary import summary
 import os
 import sys
 import numpy as np
+from rod.helper import get_model_list, check_if_optimized_model
+from rod.config import Config
 
 ROOT_DIR = os.getcwd()
 
@@ -41,13 +43,7 @@ def create_tfevent_from_pb(model,optimized=False):
 
 # Gather all Model Names in models/
 MODELS_DIR = os.path.join(ROOT_DIR,'models')
-for root, dirs, files in os.walk(MODELS_DIR):
-    if root.count(os.sep) - MODELS_DIR.count(os.sep) == 0:
-        for idx,model in enumerate(dirs):
-            models=[]
-            models.append(dirs)
-            models = np.squeeze(models)
-            models.sort()
+models = get_model_list(MODELS_DIR)
 
 # Create Tensorboard readable tfevent files in models/{}/log
 for model in models:
@@ -55,9 +51,6 @@ for model in models:
     create_tfevent_from_pb(model,optimized)
     # Check if there is an optimized graph
     model_dir =  os.path.join(MODELS_DIR,model)
-    for root, dirs, files in os.walk(model_dir):
-        for file in files:
-            if 'optimized' in file:
-                optimized=True
-                print '> found: optimized graph'
-    create_tfevent_from_pb(model,optimized)
+    optimized = check_if_optimized_model(model_dir)
+    if optimized:
+        create_tfevent_from_pb(model,optimized)

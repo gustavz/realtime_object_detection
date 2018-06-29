@@ -216,7 +216,7 @@ class Model(object):
         """
         needs to be written by subclass
         """
-        pass
+        self.detection = False
 
     def run(self):
         """
@@ -224,19 +224,26 @@ class Model(object):
         listens on isActive()
         """
         print("> starting detection")
-        self.fps.start()
-        self._visualizer = Visualizer(self.config).start()
+        self.start_fps_and_vis()
         while self.isActive():
             # detection
             self.detect()
             # Visualization
             if self.detection:
-                self._visualizer.visualize_detection(self.frame,self.boxes,
-                                                    self.classes,self.scores,
-                                                    self.masks,self.fps.fps_local(),
-                                                    self.category_index)
+                self.visualize_detection()
                 self.fps.update()
         self.stop()
+
+    def start_fps_and_vis(self):
+        self.fps.start()
+        self._visualizer = Visualizer(self.config).start()
+
+    def visualize_detection(self):
+        self._visualizer.visualize_detection(self.frame,self.boxes,
+                                            self.classes,self.scores,
+                                            self.masks,self.fps.fps_local(),
+                                            self.category_index)
+
 
 
 ##################################
@@ -271,16 +278,21 @@ class ObjectDetectionModel(Model):
                 if self.input_type is 'video':
                     self._input_stream = WebcamVideoStream(self.config.VIDEO_INPUT,self.config.WIDTH,
                                                             self.config.HEIGHT).start()
+                    height = self._input_stream.real_height
+                    width = self._input_stream.real_width
                 elif self.input_type is 'image':
                     self._input_stream = ImageStream(self.config.IMAGE_PATH,self.config.LIMIT_IMAGES,
                                                     (self.config.WIDTH,self.config.HEIGHT)).start()
+                    height = self.config.HEIGHT
+                    width = self.config.WIDTH
                     # Timeliner for image detection
                     if self.config.WRITE_TIMELINE:
                         self._run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                         self._run_metadata = tf.RunMetadata()
                         self.timeliner = TimeLiner()
                 # Define Input and Ouput tensors
-                self._tensor_dict = self.get_tensordict(['num_detections', 'detection_boxes', 'detection_scores','detection_classes', 'detection_masks'])
+                self._tensor_dict = self.get_tensordict(['num_detections', 'detection_boxes',
+                                                        'detection_scores','detection_classes', 'detection_masks'])
                 self._image_tensor = self.detection_graph.get_tensor_by_name('image_tensor:0')
                 # Mask Transformations
                 if 'detection_masks' in self._tensor_dict:
@@ -290,8 +302,7 @@ class ObjectDetectionModel(Model):
                     real_num_detection = tf.cast(self._tensor_dict['num_detections'][0], tf.int32)
                     detection_boxes = tf.slice(detection_boxes, [0, 0], [real_num_detection, -1])
                     detection_masks = tf.slice(detection_masks, [0, 0, 0], [real_num_detection, -1, -1])
-                    detection_masks_reframed = reframe_box_masks_to_image_masks(
-                                                detection_masks, detection_boxes,self.config.HEIGHT,self.config.WIDTH)
+                    detection_masks_reframed = reframe_box_masks_to_image_masks(detection_masks, detection_boxes,height,width)
                     detection_masks_reframed = tf.cast(tf.greater(detection_masks_reframed, 0.5), tf.uint8)
                     self._tensor_dict['detection_masks'] = tf.expand_dims(detection_masks_reframed, 0)
                 if self.config.SPLIT_MODEL:
@@ -440,9 +451,6 @@ class ObjectDetectionModel(Model):
                                             '{}/timeline_{}.json'.format(
                                             self.config.RESULT_PATH,self.config.DISPLAY_NAME))
             self.reformat_detection()
-            # write detection to image file
-            if self.config.SAVE_RESULT and self.input_type is 'image':
-                self._visualizer.save_image(self.frame)
             # Activate Tracker
             if self.config.USE_TRACKER and self.num <= self.config.NUM_TRACKERS and self.input_type is 'video':
                 self.tracker_frame = self.frame
@@ -490,13 +498,13 @@ class DeepLabModel(Model):
         DeepLab Detection function
         """
         self.frame = self._input_stream.read()
-        width,height,_ = self.frame.shape
+        height,width,_ = self.frame.shape
         resize_ratio = 1.0 * 513 / max(self._input_stream.real_width,self._input_stream.real_height)
-        target_size = (int(resize_ratio * self._input_stream.real_width),int(resize_ratio * self._input_stream.real_height)) #(513, 384)
-        self.frame = cv2.resize(self.frame, target_size)
+        target_size = (int(resize_ratio * self._input_stream.real_width),int(resize_ratio * self._input_stream.real_height)) #(513, 342)?(513,384)
+        self.frame = self._visualizer.resize_image(self.frame, target_size)
         batch_seg_map = self._sess.run('SemanticPredictions:0',
                                         feed_dict={'ImageTensor:0':
-                                        [cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)]},
+                                        [self._visualizer.convertRGB_image(self.frame)]},
                                         options=self._run_options, run_metadata=self._run_metadata)
         if self.config.WRITE_TIMELINE and self.input_type is 'image':
             self._timeliner.write_timeline(self._run_metadata.step_stats,
@@ -506,18 +514,16 @@ class DeepLabModel(Model):
         self.boxes = []
         self.labels = []
         self.ids = []
-        map_labeled = measure.label(seg_map, connectivity=1)
-        for region in measure.regionprops(map_labeled):
-            if region.area > self.config.MINAREA:
-                box = region.bbox
-                id = seg_map[tuple(region.coords[0])]
-                label = self.config.LABEL_NAMES[id]
-                self.boxes.append(box)
-                self.labels.append(label)
-                self.ids.append(id)
-        # write detection to image file
-        if self.config.SAVE_RESULT and self.input_type is 'image':
-            self._visualizer.save_image(self.frame)
+        if self.config.BBOX:
+            map_labeled = measure.label(seg_map, connectivity=1)
+            for region in measure.regionprops(map_labeled):
+                if region.area > self.config.MINAREA:
+                    box = region.bbox
+                    id = seg_map[tuple(region.coords[0])]
+                    label = self.config.LABEL_NAMES[id]
+                    self.boxes.append(box)
+                    self.labels.append(label)
+                    self.ids.append(id)
         # workaround
         self.num = len(self.boxes)
         self.classes = self.ids

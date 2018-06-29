@@ -3,7 +3,7 @@ Realtime Object Detection based on Tensorflow's [Object Detection API](https://g
 > Version 1: use branch [r1.0](https://github.com/GustavZ/realtime_object_detection/tree/r1.0) for the original repo that was focused on high performance inference of `ssd_mobilenet` <br />
 (*x10 Performance Increase on Nvidia Jetson TX2*)
 
-> Version 2: use branch [Master](https://github.com/GustavZ/realtime_object_detection/tree/master) or [r2.1](https://github.com/GustavZ/realtime_object_detection/tree/r2.1) to be additionally able to run and test Mask-Detection Models, KCF-Tracking and DeepLab Models (*merge of the repo [realtime_segmenation](https://github.com/GustavZ/realtime_segmenation)*)
+> Version 2: use branch [Master](https://github.com/GustavZ/realtime_object_detection/tree/master) or to be additionally able to run and test Mask-Detection Models, KCF-Tracking and DeepLab Models (*merge of the repo [realtime_segmenation](https://github.com/GustavZ/realtime_segmenation)*)
 
 > ROS Support: To use this Repo as ROS-Package including detection and segmentation ROS-Nodes use branch [ros](https://github.com/GustavZ/realtime_object_detection/tree/ros).
 Alternativley use the repo [objectdetection_ros](https://github.com/GustavZ/objectdetection_ros)
@@ -31,10 +31,15 @@ For example: If you are not interested in visualization: set `VISUALIZE` to `Fal
 or if you want to switch off the speed hack set `SPLIT_MODEL` to `False`, <br />
 - to be able to use KCF_Tracking inside `scripts/` run `bash build_kcf.sh` to build it and set `USE_TRACKER` to `True` to use it <br />
 (currently only works for pure object detection models without `SPLIT_MODEL`)
-- for realtime inference using video stream run: `python run_objectdetection.py` or `python run_deeplab.py`
-- for benchmark tests on sample images run: `python test_objectdetection.py`or `python test_deeplab.py` <br />
-(put them as `.jpg`  into `test_images/`. timeline results will appear in `test_results/`)
-- Enjoy!
+- new class structure, create your own test file with:
+    from rod.model import ObjectDetectionModel, DeepLabModel
+    from rod.config import Config
+    model_type = 'od' #or 'dl'
+    input_type = 'video' # 'image'
+    config = Config(model_type)
+    model = ObjectDetectionModel(config).prepare_model(input_type) #or DeepLabModel
+    model.run()
+- Alternativley run `python.py` + `objectdetection_video.py` or `objectdetection_image.py` or `deeplab_video.py` or `deeplab_image.py` or `allmodels_image.py`
 
 
 ## Scripts:

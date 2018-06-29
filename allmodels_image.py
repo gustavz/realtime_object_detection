@@ -9,14 +9,14 @@ Created on Wed Jan 10 09:45:23 2018
 import os
 import sys
 import numpy as np
-from test_objectdetection import detection
-from test_deeplab import segmentation
+
 from rod.config import Config
-from rod.model import Model
-from time import sleep
+from rod.helper import get_model_list, check_if_optimized_model
+from rod.model import ObjectDetectionModel, DeepLabModel
 
 ROOT_DIR = os.getcwd()
 MODELS_DIR = os.path.join(ROOT_DIR,'models')
+INPUT_TYPE = 'image'
 
 def create_test_config(type,model_name, optimized=False, single_class=False):
         class TestConfig(Config):
@@ -34,7 +34,6 @@ def create_test_config(type,model_name, optimized=False, single_class=False):
                     self.NUM_CLASSES=1
                 else:
                     self.NUM_CLASSES=90
-
         return TestConfig()
 
 # Read sequentail Models or Gather all Models from models/
@@ -42,15 +41,9 @@ config = Config('od')
 if config.SEQ_MODELS:
     model_names = config.SEQ_MODELS
 else:
-    for root, dirs, files in os.walk(MODELS_DIR):
-        if root.count(os.sep) - MODELS_DIR.count(os.sep) == 0:
-            for idx,model in enumerate(dirs):
-                model_names=[]
-                models_names.append(dirs)
-                model_names = np.squeeze(model_names)
-                model_names.sort()
+    model_names = get_model_list(MODELS_DIR)
 
-print("> start testing following sequention of models: \n{}".format(model_names))
+# Sequential testing
 for model_name in model_names:
     print("> testing model: {}".format(model_name))
     # conditionals
@@ -61,28 +54,22 @@ for model_name in model_names:
         single_class=True
     if 'deeplab' in model_name:
         config = create_test_config('dl',model_name,optimized,single_class)
-        model = Model(config).prepare_model()
-        segmentation(model)
+        model = DeepLabModel(config).prepare_model(INPUT_TYPE)
     else:
         config = create_test_config('od',model_name,optimized,single_class)
-        model = Model(config).prepare_model()
-        detection(model)
+        model = ObjectDetectionModel(config).prepare_model(INPUT_TYPE)
 
     # Check if there is an optimized graph
     model_dir =  os.path.join(os.getcwd(),'models',model_name)
-    for root, dirs, files in os.walk(model_dir):
-        for file in files:
-            if 'optimized' in file:
-                optimized=True
-                print '> found: optimized graph'
+    optimized = check_if_optimized_model(model_dir)
 
     # Again for the optimized graph
     if optimized:
         if 'deeplab' in model_name:
             config = create_test_config('dl',model_name,optimized,single_class)
-            model = Model(config).prepare_model()
-            segmentation(model)
+            model = DeepLabModel(config).prepare_model(INPUT_TYPE)
         else:
-            config = create_test_config('dl',model_name,optimized,single_class)
-            model = Model(config).prepare_od_model()
-            detection(model)
+            config = create_test_config('od',model_name,optimized,single_class)
+            model = ObjectDetectionModel(config).prepare_model(INPUT_TYPE)
+
+    model.run()

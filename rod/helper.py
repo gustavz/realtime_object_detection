@@ -194,7 +194,7 @@ class ImageStream(object):
             self.image = cv2.resize(cv2.imread(self.images.pop()),(self.image_shape[:2]))
         else:
             self.image = cv2.imread(self.images.pop())
-        self.real_width,self.real_height,_ = self.image.shape
+        self.real_height,self.real_width,_ = self.image.shape
         return self.image
 
     def isActive(self):
@@ -234,6 +234,7 @@ class WebcamVideoStream(object):
         # start the thread to read frames from the video stream
         print("> Start video stream with shape: {},{}".format(self.real_width,self.real_height))
         threading.Thread(target=self.update, args=()).start()
+        self.stopped = False
         return self
 
     def update(self):
@@ -296,6 +297,33 @@ def conv_track2detect(box, width, height):
 
     newbox = np.array([ymin,xmin,ymax,xmax])
     return newbox
+
+
+def get_model_list(models_path):
+    """
+    Returns List of Model names in models_path
+    """
+    for root, dirs, files in os.walk(models_path):
+        if root.count(os.sep) - models_path.count(os.sep) == 0:
+            for idx,model in enumerate(dirs):
+                model_list=[]
+                models_list.append(dirs)
+                model_list = np.squeeze(model_list)
+                model_list.sort()
+    print("> Loaded following sequention of models: \n{}".format(model_list))
+    return model_list
+
+
+def check_if_optimized_model(model_dir):
+    """
+    check if there is an optimized graph in the model_dir
+    """
+    for root, dirs, files in os.walk(model_dir):
+        for file in files:
+            if 'optimized' in file:
+                return True
+                print('> found: optimized graph')
+    return False
 
 
 class SessionWorker(object):

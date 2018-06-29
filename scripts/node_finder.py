@@ -15,16 +15,13 @@ from rod.config import Config
 ## RUN THIS SCRIPT FROM THE ROOT DIR (NOT FROM /SCRIPTS)
 
 
-MODEL = 'OD' # Change to 'OD' or 'DL'
+MODEL_TYPE = 'od' # Change to 'OD' or 'DL'
 NODE_NAMES = ['Momentum','Optimizer','BatchNorm', 'Loss']
 NODE_OPS = ['Placeholder','Identity','CheckNumerics','BatchNorm']
 
 ## Don't Change ##
-config = Config()
-if MODEL == 'OD':
-    MODEL_PATH = config.OD_MODEL_PATH
-elif MODEL == 'DL':
-    MODEL_PATH = config.DL_MODEL_PATH
+config = Config(MODEL_TYPE)
+MODEL_PATH = config.MODEL_PATH
 
 print("> exploring Model: {}".format(MODEL_PATH))
 
