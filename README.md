@@ -32,6 +32,7 @@ or if you want to switch off the speed hack set `SPLIT_MODEL` to `False`, <br />
 - to be able to use KCF_Tracking inside `scripts/` run `bash build_kcf.sh` to build it and set `USE_TRACKER` to `True` to use it <br />
 (currently only works for pure object detection models without `SPLIT_MODEL`)
 - new class structure, create your own test file with:
+    ```
     from rod.model import ObjectDetectionModel, DeepLabModel
     from rod.config import Config
     model_type = 'od' #or 'dl'
@@ -39,6 +40,7 @@ or if you want to switch off the speed hack set `SPLIT_MODEL` to `False`, <br />
     config = Config(model_type)
     model = ObjectDetectionModel(config).prepare_model(input_type) #or DeepLabModel
     model.run()
+    ```
 - Alternativley run `python.py` + `objectdetection_video.py` or `objectdetection_image.py` or `deeplab_video.py` or `deeplab_image.py` or `allmodels_image.py`
 
 
