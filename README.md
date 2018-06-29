@@ -1,5 +1,6 @@
 # realtime_object_detection
-Realtime Object Detection based on Tensorflow's [Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection) and [DeepLab Project](https://github.com/tensorflow/models/tree/master/research/deeplab) <br />
+Realtime Object Detection based on Tensorflow's [Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection) and [DeepLab Project](https://github.com/tensorflow/models/tree/master/research/deeplab)
+<img src="test_images/rod.png" width="75.0%">
 > Version 1: use branch [r1.0](https://github.com/GustavZ/realtime_object_detection/tree/r1.0) for the original repo that was focused on high performance inference of `ssd_mobilenet` <br />
 (*x10 Performance Increase on Nvidia Jetson TX2*)
 
@@ -7,10 +8,6 @@ Realtime Object Detection based on Tensorflow's [Object Detection API](https://g
 
 > ROS Support: To use this Repo as ROS-Package including detection and segmentation ROS-Nodes use branch [ros](https://github.com/GustavZ/realtime_object_detection/tree/ros).
 Alternativley use the repo [objectdetection_ros](https://github.com/GustavZ/objectdetection_ros)
-
-<img src="test_images/rod.png" width="100.0%">
-This block diagram tries to explain this project's functionality. <br />
-Some Features are not yet available, but coming soon.
 
 ## About the Project
 The Idea was to create a scaleable realtime-capable object detection pipeline that runs on various systems. <br />
