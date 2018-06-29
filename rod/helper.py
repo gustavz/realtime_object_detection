@@ -207,7 +207,7 @@ class ImageStream(object):
         self.stopped = True
 
 
-class WebcamVideoStream(object):
+class VideoStream(object):
     """
     Class for Video Input frame capture
     Based on OpenCV VideoCapture

@@ -15,7 +15,7 @@ from skimage import measure
 import six.moves.urllib as urllib
 from tensorflow.core.framework import graph_pb2
 
-from rod.helper import FPS, WebcamVideoStream, SessionWorker, conv_detect2track, conv_track2detect, ImageStream, TimeLiner
+from rod.helper import FPS, VideoStream, SessionWorker, conv_detect2track, conv_track2detect, ImageStream, TimeLiner
 from rod.visualizer import Visualizer
 from rod.tf_utils import reframe_box_masks_to_image_masks
 from rod.config import Config
@@ -276,7 +276,7 @@ class ObjectDetectionModel(Model):
             with tf.Session(graph=self.detection_graph,config=self._tf_config) as self._sess:
                 # Input Configuration
                 if self.input_type is 'video':
-                    self._input_stream = WebcamVideoStream(self.config.VIDEO_INPUT,self.config.WIDTH,
+                    self._input_stream = VideoStream(self.config.VIDEO_INPUT,self.config.WIDTH,
                                                             self.config.HEIGHT).start()
                     height = self._input_stream.real_height
                     width = self._input_stream.real_width
@@ -481,7 +481,7 @@ class DeepLabModel(Model):
         # Input configurations
         self.category_index = None
         if self.input_type is 'video':
-            self._input_stream = WebcamVideoStream(self.config.VIDEO_INPUT,self.config.WIDTH,self.config.HEIGHT).start()
+            self._input_stream = VideoStream(self.config.VIDEO_INPUT,self.config.WIDTH,self.config.HEIGHT).start()
         elif self.input_type is 'image':
             self._input_stream = ImageStream(self.config.IMAGE_PATH,self.config.LIMIT_IMAGES).start()
             if self.config.WRITE_TIMELINE:

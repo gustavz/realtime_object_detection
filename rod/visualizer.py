@@ -170,7 +170,7 @@ class Visualizer(object):
         self.config = config
         # private params
         self._line_thickness = 2
-        self._font_thickness = 2
+        self._font_thickness = 1
         self._font_face = cv2.FONT_HERSHEY_SIMPLEX
         self._font_scale = 0.5
         self._line_type = cv2.LINE_AA

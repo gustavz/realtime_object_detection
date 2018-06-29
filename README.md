@@ -8,6 +8,9 @@ Realtime Object Detection based on Tensorflow's [Object Detection API](https://g
 > ROS Support: To use this Repo as ROS-Package including detection and segmentation ROS-Nodes use branch [ros](https://github.com/GustavZ/realtime_object_detection/tree/ros).
 Alternativley use the repo [objectdetection_ros](https://github.com/GustavZ/objectdetection_ros)
 
+<img src="test_images/rod.png" width="100.0%">
+This block diagram tries to explain this project's functionality. <br />
+Some Features are not yet available, but coming soon.
 
 ## About the Project
 The Idea was to create a scaleable realtime-capable object detection pipeline that runs on various systems. <br />
@@ -35,7 +38,7 @@ or if you want to switch off the speed hack set `SPLIT_MODEL` to `False`, <br />
     ```
     from rod.model import ObjectDetectionModel, DeepLabModel
     from rod.config import Config
-    
+
     model_type = 'od'                                              #or 'dl'
     input_type = 'video'                                           #or 'image'
     config = Config(model_type)
