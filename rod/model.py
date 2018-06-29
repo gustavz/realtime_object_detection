@@ -32,16 +32,13 @@ class Model(object):
     def __init__(self,config):
         self.config = config
         self.detection_graph = tf.Graph()
-        self.tf_config = tf.ConfigProto(allow_soft_placement=True)
-        self.tf_config.gpu_options.allow_growth=True
         self.category_index = None
-        self.score = None
-        self.expand = None
         self.masks = None
+        self._tf_config = tf.ConfigProto(allow_soft_placement=True)
+        self._tf_config.gpu_options.allow_growth=True
         self._run_options = tf.RunOptions(trace_level=tf.RunOptions.NO_TRACE)
         self._run_metadata = False
-        self.category_indey = None
-        self.detection = True
+        self._wait_thread = False
         print ('> Model: {}'.format(self.config.MODEL_PATH))
 
     def download_model(self):
@@ -81,7 +78,7 @@ class Model(object):
             # load a frozen Model and split it into GPU and CPU graphs
             # Hardcoded split points for ssd_mobilenet
             input_graph = tf.Graph()
-            with tf.Session(graph=input_graph,config=self.tf_config):
+            with tf.Session(graph=input_graph,config=self._tf_config):
                 if self.config.SSD_SHAPE == 600:
                     shape = 7326
                 else:
@@ -203,7 +200,7 @@ class Model(object):
 
     def stop(self):
         """
-        stops everything
+        stops all sub classes
         """
         self._input_stream.stop()
         self._visualizer.stop()
@@ -216,7 +213,7 @@ class Model(object):
         """
         needs to be written by subclass
         """
-        self.detection = False
+        self.detection = None
 
     def run(self):
         """
@@ -224,25 +221,28 @@ class Model(object):
         listens on isActive()
         """
         print("> starting detection")
-        self.start_fps_and_vis()
+        self.start()
         while self.isActive():
             # detection
             self.detect()
             # Visualization
-            if self.detection:
+            if not self._wait_thread:
                 self.visualize_detection()
                 self.fps.update()
         self.stop()
 
-    def start_fps_and_vis(self):
+    def start(self):
+        """
+        starts fps and visualizer class
+        """
         self.fps.start()
         self._visualizer = Visualizer(self.config).start()
 
     def visualize_detection(self):
-        self._visualizer.visualize_detection(self.frame,self.boxes,
-                                            self.classes,self.scores,
-                                            self.masks,self.fps.fps_local(),
-                                            self.category_index)
+        self.detection = self._visualizer.visualize_detection(self.frame,self.boxes,
+                                                            self.classes,self.scores,
+                                                            self.masks,self.fps.fps_local(),
+                                                            self.category_index)
 
 
 
@@ -273,7 +273,7 @@ class ObjectDetectionModel(Model):
             self._track = False
         print("> Building Graph")
         with self.detection_graph.as_default():
-            with tf.Session(graph=self.detection_graph,config=self.tf_config) as self._sess:
+            with tf.Session(graph=self.detection_graph,config=self._tf_config) as self._sess:
                 # Input Configuration
                 if self.input_type is 'video':
                     self._input_stream = WebcamVideoStream(self.config.VIDEO_INPUT,self.config.WIDTH,
@@ -311,8 +311,8 @@ class ObjectDetectionModel(Model):
                     self._score_in = self.detection_graph.get_tensor_by_name('{}_1:0'.format(self.config.SPLIT_NODES[0]))
                     self._expand_in = self.detection_graph.get_tensor_by_name('{}_1:0'.format(self.config.SPLIT_NODES[1]))
                     # Threading
-                    self._gpu_worker = SessionWorker("GPU",self.detection_graph,self.tf_config)
-                    self._cpu_worker = SessionWorker("CPU",self.detection_graph,self.tf_config)
+                    self._gpu_worker = SessionWorker("GPU",self.detection_graph,self._tf_config)
+                    self._cpu_worker = SessionWorker("CPU",self.detection_graph,self._tf_config)
                     self._gpu_opts = [self._score_out,self._expand_out]
                     self._cpu_opts = [self._tensor_dict['detection_boxes'],
                                     self._tensor_dict['detection_scores'],
@@ -366,10 +366,11 @@ class ObjectDetectionModel(Model):
         c = self._cpu_worker.get_result_queue()
         if c is None:
             # cpu thread has no output queue. ok, nothing to do. continue
-            return False# If CPU RESULT has not been set yet, no fps update
+            self._wait_thread = True
+            return # If CPU RESULT has not been set yet, no fps update
         else:
+            self._wait_thread = False
             self.boxes,self.scores,self.classes,self.num,self.frame = c["results"][0],c["results"][1],c["results"][2],c["results"][3],c["extras"]
-        return True
 
     def run_split_sess(self):
         """
@@ -435,12 +436,11 @@ class ObjectDetectionModel(Model):
         Object_Detection Detection function
         optional: multi threading split session, timline writer
         """
-        self.detection = False
         if not (self.config.USE_TRACKER and self._track):
             if self.config.SPLIT_MODEL:
                 if self.config.MULTI_THREADING:
-                    self.detection = self.run_thread_sess()
-                    if not self.detection: # checks if thread has output
+                    self.run_thread_sess()
+                    if self._wait_thread: # checks if thread has output
                         return
                 else:
                     self.run_split_sess()
@@ -459,7 +459,7 @@ class ObjectDetectionModel(Model):
         # Tracking
         else:
             self.run_tracker()
-        self.detection = True
+
 
 
 ##################################
@@ -490,7 +490,7 @@ class DeepLabModel(Model):
                 self._timeliner = TimeLiner()
         print("> Building Graph")
         with self.detection_graph.as_default():
-            with tf.Session(graph=self.detection_graph,config=self.tf_config) as self._sess:
+            with tf.Session(graph=self.detection_graph,config=self._tf_config) as self._sess:
                 return self
 
     def detect(self):

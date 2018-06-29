@@ -15,7 +15,7 @@ class Visualizer(object):
     Visualizer Class to handle all kind of detection visualizations on an image
     """
     STANDARD_COLORS = [
-        (0, 150, 255),#Black
+        (0, 0, 0),#Black
         (60, 180, 75),#Green
         (230, 25, 75),#Red
         (255, 225, 25),#Yellow
@@ -425,6 +425,8 @@ class Visualizer(object):
         # write detection to image file
         if self.config.SAVE_RESULT:
             self.save_image()
+
+        return self.image
 
     def show_image(self):
         """
