@@ -299,17 +299,18 @@ class Visualizer(object):
         first = True
         mask = None
         # Draw all boxes onto image.
-        for box, color in box_to_color_map.items():
+        for idx,(box, color) in enumerate(box_to_color_map.items()):
             ymin, xmin, ymax, xmax = box
             if instance_masks is not None:
-                #draw_mask_on_image(image,box_to_instance_masks_map[box])
+                #self._draw_mask_on_image(box_to_instance_masks_map[box]*(idx+1))
+
                 # stack all masks
                 if first:
                     first = False
-                    mask = box_to_instance_masks_map[box]
+                    mask = box_to_instance_masks_map[box]*(idx+1)
                 else:
                     mask = np.bitwise_or(mask, box_to_instance_masks_map[box])
-
+                
             self._draw_bounding_box_on_image(
                 ymin,
                 xmin,

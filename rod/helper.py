@@ -307,7 +307,7 @@ def get_model_list(models_path):
         if root.count(os.sep) - models_path.count(os.sep) == 0:
             for idx,model in enumerate(dirs):
                 model_list=[]
-                models_list.append(dirs)
+                model_list.append(dirs)
                 model_list = np.squeeze(model_list)
                 model_list.sort()
     print("> Loaded following sequention of models: \n{}".format(model_list))
