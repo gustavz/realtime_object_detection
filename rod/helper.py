@@ -52,7 +52,6 @@ class FPS(object):
         print('> [INFO] elapsed frames (total): {}'.format(self._glob_numFrames))
         print('> [INFO] elapsed time (total): {:.2f}'.format(self.elapsed()))
         print('> [INFO] approx. FPS: {:.2f}'.format(self.fps()))
-        #print('> [INFO] median. FPS: {:.2f}'.format(np.median(self._log)))
 
     def update(self):
         self._first = True
@@ -64,11 +63,6 @@ class FPS(object):
           print("> FPS: {}".format(self.fps_local()))
           self._local_numFrames = 0
           self._local_start = self._curr_time
-
-        #self._log.append(self.fps_local())
-        #if len(self._log) > 1000:
-        #    self._log = []
-
 
     def elapsed(self):
         return (self._glob_end - self._glob_start).total_seconds()
@@ -160,16 +154,39 @@ class Timer(object):
         print ("> [INFO] resulting median fps: {}".format(self._medianfps))
 
 
-class ImageStream(object):
+class InputStream(object):
+    """
+    input stream base class
+    """
+    def __init__(self):
+        self.real_height = 0
+        self.real_width = 0
+        self.stopped = False
+        self.frame = None
+
+    def start(self):
+        self.stopped = False
+        return self
+
+    def stop(self):
+        self.stopped = True
+
+    def isActive(self):
+        return not self.stopped
+
+    def read(self):
+        return self.frame
+
+
+class ImageStream(InputStream):
     """
     Test Image handling class
     """
     def __init__(self,image_path,limit=None,image_shape=None):
-        self.image_shape = image_shape
-        self.image_path = image_path
-        self.image = None
-        self.images = []
-        self.stopped = False
+        super(ImageStream, self).__init__()
+        self.frame_shape = image_shape
+        self.frame_path = image_path
+        self.frames = []
         self.limit = limit
         if not limit:
             self.limit = float('inf')
@@ -180,22 +197,22 @@ class ImageStream(object):
         return self
 
     def load_images(self):
-        for root, dirs, files in os.walk(self.image_path):
+        for root, dirs, files in os.walk(self.frame_path):
             for idx,file in enumerate(files):
                 if idx >=self.limit:
-                    self.images.sort()
-                    return self.images
+                    self.frames.sort()
+                    return self.frames
                 if file.endswith(".jpg") or file.endswith(".JPG") or file.endswith(".JPEG") or file.endswith(".png"):
-                    self.images.append(os.path.join(root, file))
-        self.images.sort()
+                    self.frames.append(os.path.join(root, file))
+        self.frames.sort()
 
     def read(self):
-        if self.image_shape is not None:
-            self.image = cv2.resize(cv2.imread(self.images.pop()),(self.image_shape[:2]))
+        if self.frame_shape is not None:
+            self.frame = cv2.resize(cv2.imread(self.frames.pop()),(self.frame_shape[:2]))
         else:
-            self.image = cv2.imread(self.images.pop())
-        self.real_height,self.real_width,_ = self.image.shape
-        return self.image
+            self.frame = cv2.imread(self.frames.pop())
+        self.real_height,self.real_width,_ = self.frame.shape
+        return self.frame
 
     def isActive(self):
         if self.images and not self.stopped:
@@ -203,17 +220,15 @@ class ImageStream(object):
         else:
             return False
 
-    def stop(self):
-        self.stopped = True
 
-
-class VideoStream(object):
+class VideoStream(InputStream):
     """
     Class for Video Input frame capture
     Based on OpenCV VideoCapture
     adapted from https://www.pyimagesearch.com/2015/12/21/increasing-webcam-fps-with-python-and-opencv/
     """
     def __init__(self, src, width, height):
+        super(VideoStream, self).__init__()
         # initialize the video camera stream and read the first frame
         # from the stream
         self.frame_counter = 1
@@ -223,9 +238,6 @@ class VideoStream(object):
         self.stream.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
         self.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
         (self.grabbed, self.frame) = self.stream.read()
-        # initialize the variable used to indicate if the thread should
-        # be stopped
-        self.stopped = False
         #Debug stream shape
         self.real_width = int(self.stream.get(3))
         self.real_height = int(self.stream.get(4))
@@ -248,14 +260,6 @@ class VideoStream(object):
             # otherwise, read the next frame from the stream
             (self.grabbed, self.frame) = self.stream.read()
             self.frame_counter += 1
-
-    def read(self):
-        # return the frame most recently read
-        return self.frame
-
-    def stop(self):
-        # indicate that the thread should be stopped
-        self.stopped = True
 
     def isActive(self):
         # check if VideoCapture is still Opened

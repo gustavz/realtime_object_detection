@@ -1,6 +1,7 @@
 import rospy
 from cv_bridge import CvBridge, CvBridgeError
 from objdetection.msg import Detection, Object, Segmentation
+from objdetection.src.realtime_object_detection.helper import InputStream
 from sensor_msgs.msg import RegionOfInterest, Image
 
 class DetectionPublisher(object):
@@ -40,18 +41,18 @@ class DetectionPublisher(object):
 
 class SegmentationPublisher(object):
     """
-    Publish ROS detection messages
+    Publish ROS Segmentation messages
     """
     def __init__(self):
         self.SegPub = rospy.Publisher('Segmentation', Segmentation, queue_size=10)
         self._bridge = CvBridge()
 
-    def publish(self, boxes, classes, labels, seg_map, fps=0):
+    def publish(self, boxes, labels, seg_map, fps=0):
         # init detection message
         msg = Segmentation()
         boxes = []
         for i in range(boxes.shape[0]):
-            class_name = label[i]
+            class_name = labels[i]
             ymin, xmin, ymax, xmax = tuple(boxes[i].tolist())
             box = RegionOfInterest()
             box.x_offset = xmin + (xmax-xmin)/2.0
@@ -61,18 +62,18 @@ class SegmentationPublisher(object):
             # fill segmentation message
             msg.boxes.append(box)
             msg.class_names.append(class_name)
-
-        msg.seg_map = self._bridge.cv2_to_imgmsg(seg_map, encoding="passthrough")
+        if masks is not None:
+            msg.seg_map = self._bridge.cv2_to_imgmsg(seg_map, encoding="passthrough")
         msg.fps = fps
         # publish detection message
         self.SegPub.publish(msg)
 
-class ROSInput(object):
+class ROSStream(InputStream):
     """
     Capture video via ROS topic
     """
     def __init__(self, input):
-        self._image = None
+        super(ROSStream, self).__init__()
         self._bridge = CvBridge()
         rospy.Subscriber(input, Image, self.imageCallback)
 
@@ -81,17 +82,4 @@ class ROSInput(object):
             image_raw = self._bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
             print(e)
-        self._image = image_raw
-
-    def isActive(self):
-        return True
-
-    @property
-    def image(self):
-        return self._image
-
-    def cleanup(self):
-        pass
-
-    def isEnabled(self):
-        return self._enabled
+        self.frame = image_raw

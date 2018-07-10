@@ -16,6 +16,7 @@ import six.moves.urllib as urllib
 from tensorflow.core.framework import graph_pb2
 
 from rod.helper import FPS, VideoStream, SessionWorker, conv_detect2track, conv_track2detect, ImageStream, TimeLiner
+from rod.ros import ROSStream, DetectionPublisher, SegmentationPublisher
 from rod.visualizer import Visualizer
 from rod.tf_utils import reframe_box_masks_to_image_masks
 from rod.config import Config
@@ -200,7 +201,7 @@ class Model(object):
 
     def stop(self):
         """
-        stops all sub classes
+        stops all Model sub classes
         """
         self._input_stream.stop()
         self._visualizer.stop()
@@ -244,6 +245,83 @@ class Model(object):
                                                             self.masks,self.fps.fps_local(),
                                                             self.category_index)
 
+    def prepare_ros(self,node):
+        """
+        prepares ros Node and ROSInputstream
+        """
+        assert node in ['detection_node','deeplab_node'], "only 'detection_node' and 'deeplab_node' supported"
+        import rospy
+        rospy.init_node(node)
+        self._input_stream = ROSStream(self.config.ROS_INPUT)
+        if node is 'detection_node':
+            self._ros_publisher = DetectionPublisher()
+        if node is 'deeplab_node':
+            self._ros_publisher = SegmentationPublisher()
+
+        # check for frame
+        while True:
+            self.frame = input_image.read()
+            time.sleep(1)
+            print("...waiting for ROS image")
+            if self.frame is not None:
+                self.stream_height,self.stream_width = frame.shape[0:2]
+                break
+
+    def prepare_timeliner(self):
+        """
+        prepares timeliner and sets tf Run options
+        """
+        self._run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+        self._run_metadata = tf.RunMetadata()
+        self.timeliner = TimeLiner()
+
+    def prepare_tracker(self):
+        """
+        prepares KCF tracker
+        """
+        sys.path.append(os.getcwd()+'/rod/kcf')
+        import KCF
+        self._tracker = KCF.kcftracker(False, True, False, False)
+        self._tracker_counter = 0
+        self._track = False
+
+    def run_tracker(self):
+        """
+        runs KCF tracker on videoStream frame
+        !does not work on images, obviously!
+        """
+        self.frame = self._input_stream.read()
+        if self._first_track:
+            self._trackers = []
+            self._tracker_boxes = self.boxes
+            for box in self.boxes[~np.all(self.boxes == 0, axis=1)]:
+                    self._tracker.init(conv_detect2track(box,self._input_stream.real_width,
+                                        self._input_stream.real_height),self.tracker_frame)
+                    self._trackers.append(self._tracker)
+            self._first_track = False
+
+        for idx,self._tracker in enumerate(self._trackers):
+            tracker_box = self._tracker.update(self.frame)
+            self._tracker_boxes[idx,:] = conv_track2detect(tracker_box,
+                                                    self._input_stream.real_width,
+                                                    self._input_stream.real_height)
+        self._tracker_counter += 1
+        self.boxes = self._tracker_boxes
+        # Deactivate Tracker
+        if self._tracker_counter >= self.config.TRACKER_FRAMES:
+            self._track = False
+            self._tracker_counter = 0
+
+    def activate_tracker(self):
+        """
+        activates KCF tracker
+        deactivates mask detection
+        """
+        self.masks = None
+        self.tracker_frame = self.frame
+        self._track = True
+        self._first_track = True
+
 
 
 ##################################
@@ -256,6 +334,29 @@ class ObjectDetectionModel(Model):
     def __init__(self,config):
         super(ObjectDetectionModel, self).__init__(config)
 
+    def prepare_input_stream(self):
+        """
+        prepares Input Stream
+        stream types: 'video','image','ros'
+        gets called by prepare model
+        """
+        if self.input_type is 'video':
+            self._input_stream = VideoStream(self.config.VIDEO_INPUT,self.config.WIDTH,
+                                                    self.config.HEIGHT).start()
+            self.stream_height = self._input_stream.real_height
+            self.stream_width = self._input_stream.real_width
+        elif self.input_type is 'image':
+            self._input_stream = ImageStream(self.config.IMAGE_PATH,self.config.LIMIT_IMAGES,
+                                            (self.config.WIDTH,self.config.HEIGHT)).start()
+            self.stream_height = self.config.HEIGHT
+            self.stream_width = self.config.WIDTH
+            # Timeliner for image detection
+            if self.config.WRITE_TIMELINE:
+                prepare_timeliner()
+        elif self.input_type is 'ros':
+            prepare_ros('detection_node')
+
+
     def prepare_model(self,input_type):
         """
         prepares Object_Detection model
@@ -266,30 +367,12 @@ class ObjectDetectionModel(Model):
         self.input_type = input_type
         # Tracker
         if self.config.USE_TRACKER:
-            sys.path.append(os.getcwd()+'/rod/kcf')
-            import KCF
-            self._tracker = KCF.kcftracker(False, True, False, False)
-            self._tracker_counter = 0
-            self._track = False
+            prepare_tracker()
         print("> Building Graph")
         with self.detection_graph.as_default():
             with tf.Session(graph=self.detection_graph,config=self._tf_config) as self._sess:
-                # Input Configuration
-                if self.input_type is 'video':
-                    self._input_stream = VideoStream(self.config.VIDEO_INPUT,self.config.WIDTH,
-                                                            self.config.HEIGHT).start()
-                    height = self._input_stream.real_height
-                    width = self._input_stream.real_width
-                elif self.input_type is 'image':
-                    self._input_stream = ImageStream(self.config.IMAGE_PATH,self.config.LIMIT_IMAGES,
-                                                    (self.config.WIDTH,self.config.HEIGHT)).start()
-                    height = self.config.HEIGHT
-                    width = self.config.WIDTH
-                    # Timeliner for image detection
-                    if self.config.WRITE_TIMELINE:
-                        self._run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-                        self._run_metadata = tf.RunMetadata()
-                        self.timeliner = TimeLiner()
+                # Prepare Input Stream
+                prepare_input_stream()
                 # Define Input and Ouput tensors
                 self._tensor_dict = self.get_tensordict(['num_detections', 'detection_boxes',
                                                         'detection_scores','detection_classes', 'detection_masks'])
@@ -302,7 +385,7 @@ class ObjectDetectionModel(Model):
                     real_num_detection = tf.cast(self._tensor_dict['num_detections'][0], tf.int32)
                     detection_boxes = tf.slice(detection_boxes, [0, 0], [real_num_detection, -1])
                     detection_masks = tf.slice(detection_masks, [0, 0, 0], [real_num_detection, -1, -1])
-                    detection_masks_reframed = reframe_box_masks_to_image_masks(detection_masks, detection_boxes,height,width)
+                    detection_masks_reframed = reframe_box_masks_to_image_masks(detection_masks, detection_boxes,self.stream_height,self.stream_width)
                     detection_masks_reframed = tf.cast(tf.greater(detection_masks_reframed, 0.5), tf.uint8)
                     self._tensor_dict['detection_masks'] = tf.expand_dims(detection_masks_reframed, 0)
                 if self.config.SPLIT_MODEL:
@@ -395,32 +478,7 @@ class ObjectDetectionModel(Model):
             self.timeliner.write_timeline(self._run_metadata.step_stats,
                                         '{}/timeline_{}_SM2.json'.format(
                                         self.config.RESULT_PATH,self.config.DISPLAY_NAME))
-    def run_tracker(self):
-        """
-        runs KCF tracker on videoStream frame
-        !does not work on images, obviously!
-        """
-        self.frame = self._input_stream.read()
-        if self._first_track:
-            self._trackers = []
-            self._tracker_boxes = self.boxes
-            for box in self.boxes[~np.all(self.boxes == 0, axis=1)]:
-                    self._tracker.init(conv_detect2track(box,self._input_stream.real_width,
-                                        self._input_stream.real_height),self.tracker_frame)
-                    self._trackers.append(self._tracker)
-            self._first_track = False
 
-        for idx,self._tracker in enumerate(self._trackers):
-            tracker_box = self._tracker.update(self.frame)
-            self._tracker_boxes[idx,:] = conv_track2detect(tracker_box,
-                                                    self._input_stream.real_width,
-                                                    self._input_stream.real_height)
-        self._tracker_counter += 1
-        self.boxes = self._tracker_boxes
-        # Deactivate Tracker
-        if self._tracker_counter >= self.config.TRACKER_FRAMES:
-            self._track = False
-            self._tracker_counter = 0
 
     def reformat_detection(self):
         """
@@ -453,12 +511,14 @@ class ObjectDetectionModel(Model):
             self.reformat_detection()
             # Activate Tracker
             if self.config.USE_TRACKER and self.num <= self.config.NUM_TRACKERS and self.input_type is 'video':
-                self.tracker_frame = self.frame
-                self._track = True
-                self._first_track = True
+                activate_tracker()
         # Tracking
         else:
             self.run_tracker()
+
+        # Publish ROS Message
+        if self.input_type is 'ros':
+            self._ros_publisher.publish(self.boxes, self.scores, self.classes, self.num, self.category_index, self.masks, fps.fps_local())
 
 
 
@@ -469,6 +529,18 @@ class DeepLabModel(Model):
     def __init__(self,config):
         super(DeepLabModel, self).__init__(config)
 
+    def prepare_input_stream(self):
+        if self.input_type is 'video':
+            self._input_stream = VideoStream(self.config.VIDEO_INPUT,self.config.WIDTH,self.config.HEIGHT).start()
+        elif self.input_type is 'image':
+            self._input_stream = ImageStream(self.config.IMAGE_PATH,self.config.LIMIT_IMAGES).start()
+            if self.config.WRITE_TIMELINE:
+                self.prepare_timeliner()
+        elif self._input_type is 'ros':
+            self.prepare_ros('deeplab_node')
+
+
+
     def prepare_model(self,input_type):
         """
         prepares DeepLab model
@@ -477,17 +549,12 @@ class DeepLabModel(Model):
         assert input_type in ['image','video'], "only image or video input possible"
         super(DeepLabModel, self).prepare_model()
         self.input_type = input_type
-        # fixed input sizes as model needs resize either way
-        # Input configurations
+        # Tracker
+        if self.config.USE_TRACKER:
+            self.prepare_tracker()
+        # Input Stream
         self.category_index = None
-        if self.input_type is 'video':
-            self._input_stream = VideoStream(self.config.VIDEO_INPUT,self.config.WIDTH,self.config.HEIGHT).start()
-        elif self.input_type is 'image':
-            self._input_stream = ImageStream(self.config.IMAGE_PATH,self.config.LIMIT_IMAGES).start()
-            if self.config.WRITE_TIMELINE:
-                self._run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-                self._run_metadata = tf.RunMetadata()
-                self._timeliner = TimeLiner()
+        self.prepare_input_stream()
         print("> Building Graph")
         with self.detection_graph.as_default():
             with tf.Session(graph=self.detection_graph,config=self._tf_config) as self._sess:
@@ -497,35 +564,45 @@ class DeepLabModel(Model):
         """
         DeepLab Detection function
         """
-        self.frame = self._input_stream.read()
-        height,width,_ = self.frame.shape
-        resize_ratio = 1.0 * 513 / max(self._input_stream.real_width,self._input_stream.real_height)
-        target_size = (int(resize_ratio * self._input_stream.real_width),int(resize_ratio * self._input_stream.real_height)) #(513, 342)?(513,384)
-        self.frame = self._visualizer.resize_image(self.frame, target_size)
-        batch_seg_map = self._sess.run('SemanticPredictions:0',
-                                        feed_dict={'ImageTensor:0':
-                                        [self._visualizer.convertRGB_image(self.frame)]},
-                                        options=self._run_options, run_metadata=self._run_metadata)
-        if self.config.WRITE_TIMELINE and self.input_type is 'image':
-            self._timeliner.write_timeline(self._run_metadata.step_stats,
-                                    '{}/timeline_{}.json'.format(
-                                    self.config.RESULT_PATH,self.config.DISPLAY_NAME))
-        seg_map = batch_seg_map[0]
-        self.boxes = []
-        self.labels = []
-        self.ids = []
-        if self.config.BBOX:
-            map_labeled = measure.label(seg_map, connectivity=1)
-            for region in measure.regionprops(map_labeled):
-                if region.area > self.config.MINAREA:
-                    box = region.bbox
-                    id = seg_map[tuple(region.coords[0])]
-                    label = self.config.LABEL_NAMES[id]
-                    self.boxes.append(box)
-                    self.labels.append(label)
-                    self.ids.append(id)
-        # workaround
-        self.num = len(self.boxes)
-        self.classes = self.ids
-        self.scores = self.labels
-        self.masks = seg_map
+        if not (self.config.USE_TRACKER and self._track):
+            self.frame = self._input_stream.read()
+            height,width,_ = self.frame.shape
+            resize_ratio = 1.0 * 513 / max(self._input_stream.real_width,self._input_stream.real_height)
+            target_size = (int(resize_ratio * self._input_stream.real_width),int(resize_ratio * self._input_stream.real_height)) #(513, 342)?(513,384)
+            self.frame = self._visualizer.resize_image(self.frame, target_size)
+            batch_seg_map = self._sess.run('SemanticPredictions:0',
+                                            feed_dict={'ImageTensor:0':
+                                            [self._visualizer.convertRGB_image(self.frame)]},
+                                            options=self._run_options, run_metadata=self._run_metadata)
+            if self.config.WRITE_TIMELINE and self.input_type is 'image':
+                self._timeliner.write_timeline(self._run_metadata.step_stats,
+                                        '{}/timeline_{}.json'.format(
+                                        self.config.RESULT_PATH,self.config.DISPLAY_NAME))
+            seg_map = batch_seg_map[0]
+            self.boxes = []
+            self.labels = []
+            self.ids = []
+            if self.config.BBOX:
+                map_labeled = measure.label(seg_map, connectivity=1)
+                for region in measure.regionprops(map_labeled):
+                    if region.area > self.config.MINAREA:
+                        box = region.bbox
+                        id = seg_map[tuple(region.coords[0])]
+                        label = self.config.LABEL_NAMES[id]
+                        self.boxes.append(box)
+                        self.labels.append(label)
+                        self.ids.append(id)
+            # deeplab workaround
+            self.num = len(self.boxes)
+            self.classes = self.ids
+            self.scores = self.labels
+            self.masks = seg_map
+            # Activate Tracker
+            if self.config.USE_TRACKER and self.num <= self.config.NUM_TRACKERS and self.input_type is 'video':
+                activate_tracker()
+        else:
+            self.run_tracker()
+
+        # publish ros
+        if self.input_type is 'ros':
+            self._ros_publisher.publish(self.boxes, self.labels, self.masks, fps.fps_local())
