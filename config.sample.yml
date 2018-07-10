@@ -1,40 +1,41 @@
 ---
 ### Inference Config
-VIDEO_INPUT: 0                 # Input Must be OpenCV readable
-VISUALIZE: True                # Disable for performance increase
-VIS_FPS: True                  # Draw current FPS in the top left Image corner
-CPU_ONLY: False                # CPU Placement for speed test
-USE_OPTIMIZED: False           # whether to use the optimized model (only possible if transform with script)
-DISCO_MODE: False              # Secret Disco Visualization Mode
-DOWNLOAD_MODEL: False          # Only for Models available at the TF model_zoo
+VIDEO_INPUT: 0                      # Input Must be OpenCV readable
+ROS_INPUT: /camera/color/image_raw  # ROS Image Topic
+VISUALIZE: True                     # Disable for performance increase
+VIS_FPS: True                       # Draw current FPS in the top left Image corner
+CPU_ONLY: False                     # CPU Placement for speed test
+USE_OPTIMIZED: False                # whether to use the optimized model (only possible if transform with script)
+DISCO_MODE: False                   # Secret Disco Visualization Mode
+DOWNLOAD_MODEL: False               # Only for Models available at the TF model_zoo
 
 
 ### Testing
-IMAGE_PATH: 'test_images'      # path for test_*.py test_images
-LIMIT_IMAGES: None             # if set to None, all images are used
-WRITE_TIMELINE: True           # write json timeline file (slows infrence)
-SAVE_RESULT: False             # save detection results to disk
-RESULT_PATH: 'test_results'    # path to save detection results
-SEQ_MODELS: []                 # List of Models to sequentially test (Default all Models)
+IMAGE_PATH: 'test_images'           # path for test_*.py test_images
+LIMIT_IMAGES: None                  # if set to None, all images are used
+WRITE_TIMELINE: True                # write json timeline file (slows infrence)
+SAVE_RESULT: False                  # save detection results to disk
+RESULT_PATH: 'test_results'         # path to save detection results
+SEQ_MODELS: []                      # List of Models to sequentially test (Default all Models)
 
 
 ### Object_Detection
-WIDTH: 600                     # OpenCV only supports 4:3 formats others will be converted
-HEIGHT: 600                    # 600x600 leads to 640x480
-MAX_FRAMES: 5000               # only used if visualize==False
-FPS_INTERVAL: 5                # Interval [s] to print fps of the last interval in console
-PRINT_INTERVAL: 500            # intervall [frames] to print detections to console
-PRINT_TH: 0.5                  # detection threshold for det_intervall
+WIDTH: 600                          # OpenCV Video stream width
+HEIGHT: 600                         # OpenCV Video stream height
+MAX_FRAMES: 5000                    # only used if visualize==False
+FPS_INTERVAL: 5                     # Interval [s] to print fps of the last interval in console
+PRINT_INTERVAL: 500                 # intervall [frames] to print detections to console
+PRINT_TH: 0.5                       # detection threshold for det_intervall
 ## speed hack
-SPLIT_MODEL: True              # Splits Model into a GPU and CPU session (currently only works for ssd_mobilenets)
-MULTI_THREADING: True          # Additional Split Model Speed up through multi threading
-SSD_SHAPE: 300                 # used for the split model algorithm (currently only supports ssd networks trained on 300x300 and 600x600 input)
+SPLIT_MODEL: True                   # Splits Model into a GPU and CPU session (currently only works for ssd_mobilenets)
+MULTI_THREADING: True               # Additional Split Model Speed up through multi threading
+SSD_SHAPE: 300                      # used for the split model algorithm (currently only supports ssd networks trained on 300x300 and 600x600 input)
 SPLIT_NODES: ['Postprocessor/convert_scores','Postprocessor/ExpandDims_1']
-                               # hardcoded split points for ssd_mobilenet_v1
+                                    # hardcoded split points for ssd_mobilenet_v1
 ## Tracking
-USE_TRACKER: False             # Use a Tracker (currently only works properly WITHOUT split_model)
-TRACKER_FRAMES: 20             # Number of tracked frames between detections
-NUM_TRACKERS: 5                # Max number of objects to track
+USE_TRACKER: False                  # Use a Tracker (currently only works properly WITHOUT split_model)
+TRACKER_FRAMES: 20                  # Number of tracked frames between detections
+NUM_TRACKERS: 5                     # Max number of objects to track
 ## Model
 OD_MODEL_NAME: 'ssd_mobilenet_v11_coco'
 OD_MODEL_PATH: 'models/ssd_mobilenet_v11_coco/{}'

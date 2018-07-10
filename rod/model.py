@@ -518,7 +518,7 @@ class ObjectDetectionModel(Model):
 
         # Publish ROS Message
         if self.input_type is 'ros':
-            self._ros_publisher.publish(self.boxes, self.scores, self.classes, self.num, self.category_index, self.masks, fps.fps_local())
+            self._ros_publisher.publish(self.boxes,self.scores,self.classes,self.num,self.category_index,self.frame.shape,self.masks,fps.fps_local())
 
 
 
@@ -605,4 +605,4 @@ class DeepLabModel(Model):
 
         # publish ros
         if self.input_type is 'ros':
-            self._ros_publisher.publish(self.boxes, self.labels, self.masks, fps.fps_local())
+            self._ros_publisher.publish(self.boxes,self.labels,self.masks,self.frame.shape,fps.fps_local())

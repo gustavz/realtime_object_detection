@@ -24,6 +24,7 @@ class Config(object):
     """
     ### Inference Config
     VIDEO_INPUT = cfg['VIDEO_INPUT']        # Input Must be OpenCV readable
+    ROS_INPUT = cfg['ROS_INPUT']            # ROS Image Topic
     VISUALIZE = cfg['VISUALIZE']            # Disable for performance increase
     VIS_FPS = cfg['VIS_FPS']                # Draw current FPS in the top left Image corner
     CPU_ONLY = cfg['CPU_ONLY']              # CPU Placement for speed test

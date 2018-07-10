@@ -12,7 +12,7 @@ class DetectionPublisher(object):
         self.DetPub = rospy.Publisher('Detection', Detection, queue_size=10)
         self._bridge = CvBridge()
 
-    def publish(self, boxes, scores, classes, num, category_index, masks=None, fps=0):
+    def publish(self,boxes,scores,classes,num,category_index,image_shape,masks=None,fps=0):
         # init detection message
         msg = Detection()
         for i in range(boxes.shape[0]):
@@ -22,11 +22,12 @@ class DetectionPublisher(object):
                 else:
                     class_name = 'N/A'
                 ymin, xmin, ymax, xmax = tuple(boxes[i].tolist())
+                (left, right, top, bottom) = (int(xmin * image_shape[1]), int(xmax * image_shape[1]), int(ymin * image_shape[0]), int(ymax * image_shape[0]))
                 box = RegionOfInterest()
-                box.x_offset = xmin + (xmax-xmin)/2.0
-                box.y_offset = ymin + (ymax-ymin)/2.0
-                box.height = ymax - ymin
-                box.width = xmax - xmin
+                box.x_offset = left        # Leftmost pixel of the ROI
+                box.y_offset = top         # Topmost pixel of the ROI
+                box.height = bottom - top  # Height of ROI
+                box.width = right - left   # Width of ROI
                 # fill detection message with objects
                 obj = Object()
                 obj.box = box
@@ -47,18 +48,19 @@ class SegmentationPublisher(object):
         self.SegPub = rospy.Publisher('Segmentation', Segmentation, queue_size=10)
         self._bridge = CvBridge()
 
-    def publish(self, boxes, labels, seg_map, fps=0):
+    def publish(self,boxes,labels,seg_map,image_shape,fps=0):
         # init detection message
         msg = Segmentation()
         boxes = []
         for i in range(boxes.shape[0]):
             class_name = labels[i]
             ymin, xmin, ymax, xmax = tuple(boxes[i].tolist())
+            (left, right, top, bottom) = (int(xmin * image_shape[1]), int(xmax * image_shape[1]), int(ymin * image_shape[0]), int(ymax * image_shape[0]))
             box = RegionOfInterest()
-            box.x_offset = xmin + (xmax-xmin)/2.0
-            box.y_offset = ymin + (ymax-ymin)/2.0
-            box.height = ymax - ymin
-            box.width = xmax - xmin
+            box.x_offset = left        # Leftmost pixel of the ROI
+            box.y_offset = top         # Topmost pixel of the ROI
+            box.height = bottom - top  # Height of ROI
+            box.width = right - left   # Width of ROI
             # fill segmentation message
             msg.boxes.append(box)
             msg.class_names.append(class_name)
