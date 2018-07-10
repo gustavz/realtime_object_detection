@@ -1,7 +1,7 @@
 import rospy
 from cv_bridge import CvBridge, CvBridgeError
 from objdetection.msg import Detection, Object, Segmentation
-from objdetection.src.realtime_object_detection.helper import InputStream
+from helper import InputStream
 from sensor_msgs.msg import RegionOfInterest, Image
 
 class DetectionPublisher(object):

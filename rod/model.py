@@ -16,7 +16,6 @@ import six.moves.urllib as urllib
 from tensorflow.core.framework import graph_pb2
 
 from rod.helper import FPS, VideoStream, SessionWorker, conv_detect2track, conv_track2detect, ImageStream, TimeLiner
-from rod.ros import ROSStream, DetectionPublisher, SegmentationPublisher
 from rod.visualizer import Visualizer
 from rod.tf_utils import reframe_box_masks_to_image_masks
 from rod.config import Config
@@ -248,9 +247,11 @@ class Model(object):
     def prepare_ros(self,node):
         """
         prepares ros Node and ROSInputstream
+        only in ros branch usable due to ROS realted package stuff
         """
         assert node in ['detection_node','deeplab_node'], "only 'detection_node' and 'deeplab_node' supported"
         import rospy
+        from rod.ros import ROSStream, DetectionPublisher, SegmentationPublisher
         rospy.init_node(node)
         self._input_stream = ROSStream(self.config.ROS_INPUT)
         if node is 'detection_node':
@@ -367,12 +368,12 @@ class ObjectDetectionModel(Model):
         self.input_type = input_type
         # Tracker
         if self.config.USE_TRACKER:
-            prepare_tracker()
+            self.prepare_tracker()
         print("> Building Graph")
         with self.detection_graph.as_default():
             with tf.Session(graph=self.detection_graph,config=self._tf_config) as self._sess:
                 # Prepare Input Stream
-                prepare_input_stream()
+                self.prepare_input_stream()
                 # Define Input and Ouput tensors
                 self._tensor_dict = self.get_tensordict(['num_detections', 'detection_boxes',
                                                         'detection_scores','detection_classes', 'detection_masks'])
