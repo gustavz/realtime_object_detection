@@ -33,7 +33,7 @@ SSD_SHAPE: 300                      # used for the split model algorithm (curren
 SPLIT_NODES: ['Postprocessor/convert_scores','Postprocessor/ExpandDims_1']
                                     # hardcoded split points for ssd_mobilenet_v1
 ## Tracking
-USE_TRACKER: False                  # Use a Tracker (currently only works properly WITHOUT split_model)
+USE_TRACKER: False                  # Use a Tracker (deactivates mask detection)
 TRACKER_FRAMES: 20                  # Number of tracked frames between detections
 NUM_TRACKERS: 5                     # Max number of objects to track
 ## Model

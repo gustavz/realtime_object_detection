@@ -36,6 +36,8 @@ class Model(object):
         self.masks = None
         self._tf_config = tf.ConfigProto(allow_soft_placement=True)
         self._tf_config.gpu_options.allow_growth=True
+        #self._tf_config.gpu_options.force_gpu_compatible=True
+        #self._tf_config.gpu_options.per_process_gpu_memory_fraction = 0.01
         self._run_options = tf.RunOptions(trace_level=tf.RunOptions.NO_TRACE)
         self._run_metadata = False
         self._wait_thread = False
@@ -63,13 +65,13 @@ class Model(object):
         else:
             print('> Model found. Proceed.')
 
-    def _node_name(self,n):
+    def node_name(self,n):
         if n.startswith("^"):
             return n[1:]
         else:
             return n.split(":")[0]
 
-    def load_frozenmodel(self):
+    def load_frozen_graph(self):
         """
         loads graph from frozen model file
         """
@@ -77,34 +79,36 @@ class Model(object):
         if (self.config.MODEL_TYPE == 'od' and self.config.SPLIT_MODEL):
             # load a frozen Model and split it into GPU and CPU graphs
             # Hardcoded split points for ssd_mobilenet
-            input_graph = tf.Graph()
-            with tf.Session(graph=input_graph,config=self._tf_config):
-                if self.config.SSD_SHAPE == 600:
-                    shape = 7326
-                else:
-                    shape = 1917
-                self.score = tf.placeholder(tf.float32, shape=(None, shape, self.config.NUM_CLASSES), name=self.config.SPLIT_NODES[0])
-                self.expand = tf.placeholder(tf.float32, shape=(None, shape, 1, 4), name=self.config.SPLIT_NODES[1])
-                for node in input_graph.as_graph_def().node:
-                    if node.name == self.config.SPLIT_NODES[0]:
-                        score_def = node
-                    if node.name == self.config.SPLIT_NODES[1]:
-                        expand_def = node
+            tf.reset_default_graph()
+            if self.config.SSD_SHAPE == 600:
+                shape = 7326
+            else:
+                shape = 1917
+            self.score = tf.placeholder(tf.float32, shape=(None, shape, self.config.NUM_CLASSES), name=self.config.SPLIT_NODES[0])
+            self.expand = tf.placeholder(tf.float32, shape=(None, shape, 1, 4), name=self.config.SPLIT_NODES[1])
+            #self.tofloat = tf.placeholder(tf.float32, shape=(None), name=self.config.SPLIT_NODES[2])
+            for node in tf.get_default_graph().as_graph_def().node:
+                if node.name == self.config.SPLIT_NODES[0]:
+                    score_def = node
+                if node.name == self.config.SPLIT_NODES[1]:
+                    expand_def = node
+                #if node.name == self.config.SPLIT_NODES[2]:
+                #    tofloat_def = node
 
             with self.detection_graph.as_default():
-                od_graph_def = tf.GraphDef()
+                graph_def = tf.GraphDef()
                 with tf.gfile.GFile(self.config.MODEL_PATH, 'rb') as fid:
                     serialized_graph = fid.read()
-                    od_graph_def.ParseFromString(serialized_graph)
+                    graph_def.ParseFromString(serialized_graph)
 
                     edges = {}
                     name_to_node_map = {}
                     node_seq = {}
                     seq = 0
-                    for node in od_graph_def.node:
-                        n = self._node_name(node.name)
+                    for node in graph_def.node:
+                        n = self.node_name(node.name)
                         name_to_node_map[n] = node
-                        edges[n] = [self._node_name(x) for x in node.input]
+                        edges[n] = [self.node_name(x) for x in node.input]
                         node_seq[n] = seq
                         seq += 1
                     for d in self.config.SPLIT_NODES:
@@ -145,13 +149,13 @@ class Model(object):
         else:
             # default model loading procedure
             with self.detection_graph.as_default():
-              od_graph_def = tf.GraphDef()
+              graph_def = tf.GraphDef()
               with tf.gfile.GFile(self.config.MODEL_PATH, 'rb') as fid:
                 serialized_graph = fid.read()
-                od_graph_def.ParseFromString(serialized_graph)
-                tf.import_graph_def(od_graph_def, name='')
+                graph_def.ParseFromString(serialized_graph)
+                tf.import_graph_def(graph_def, name='')
 
-    def load_labelmap(self):
+    def load_category_index(self):
         """
         creates categorie_index from label_map
         """
@@ -160,7 +164,7 @@ class Model(object):
         categories = tf_utils.convert_label_map_to_categories(label_map, max_num_classes=self.config.NUM_CLASSES, use_display_name=True)
         self.category_index = tf_utils.create_category_index(categories)
 
-    def get_tensordict(self, outputs):
+    def get_tensor_dict(self, outputs):
         """
         returns tensordict for given tensornames list
         """
@@ -183,11 +187,11 @@ class Model(object):
         """
         if self.config.MODEL_TYPE is 'od':
             self.download_model()
-            self.load_frozenmodel()
-            self.load_labelmap()
+            self.load_frozen_graph()
+            self.load_category_index()
         elif self.config.MODEL_TYPE is 'dl':
             self.download_model()
-            self.load_frozenmodel()
+            self.load_frozen_graph()
         self.fps = FPS(self.config.FPS_INTERVAL).start()
         self._visualizer = Visualizer(self.config).start()
         return self
@@ -375,7 +379,7 @@ class ObjectDetectionModel(Model):
                 # Prepare Input Stream
                 self.prepare_input_stream()
                 # Define Input and Ouput tensors
-                self._tensor_dict = self.get_tensordict(['num_detections', 'detection_boxes',
+                self._tensor_dict = self.get_tensor_dict(['num_detections', 'detection_boxes',
                                                         'detection_scores','detection_classes', 'detection_masks'])
                 self._image_tensor = self.detection_graph.get_tensor_by_name('image_tensor:0')
                 # Mask Transformations
@@ -512,7 +516,7 @@ class ObjectDetectionModel(Model):
             self.reformat_detection()
             # Activate Tracker
             if self.config.USE_TRACKER and self.num <= self.config.NUM_TRACKERS and self.input_type is 'video':
-                activate_tracker()
+                self.activate_tracker()
         # Tracking
         else:
             self.run_tracker()
@@ -600,7 +604,7 @@ class DeepLabModel(Model):
             self.masks = seg_map
             # Activate Tracker
             if self.config.USE_TRACKER and self.num <= self.config.NUM_TRACKERS and self.input_type is 'video':
-                activate_tracker()
+                self.activate_tracker()
         else:
             self.run_tracker()
 
