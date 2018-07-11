@@ -357,9 +357,9 @@ class ObjectDetectionModel(Model):
             self.stream_width = self.config.WIDTH
             # Timeliner for image detection
             if self.config.WRITE_TIMELINE:
-                prepare_timeliner()
+                self.prepare_timeliner()
         elif self.input_type is 'ros':
-            prepare_ros('detection_node')
+            self.prepare_ros('detection_node')
 
 
     def prepare_model(self,input_type):

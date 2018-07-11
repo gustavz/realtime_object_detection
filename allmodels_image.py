@@ -15,25 +15,29 @@ from rod.helper import get_model_list, check_if_optimized_model
 from rod.model import ObjectDetectionModel, DeepLabModel
 
 ROOT_DIR = os.getcwd()
-MODELS_DIR = os.path.join(ROOT_DIR,'models')
+#MODELS_DIR = os.path.join(ROOT_DIR,'models')
+MODELS_DIR = '/home/gustav/workspace/eetfm_automation/export_models'
 INPUT_TYPE = 'image'
 
 def create_test_config(type,model_name, optimized=False, single_class=False):
         class TestConfig(Config):
-            MODEL_PATH='models/'+model_name+'/{}'
+            OD_MODEL_PATH=MODELS_DIR+'/'+model_name+'/{}'
+            DL_MODEL_PATH=MODELS_DIR+'/'+model_name+'/{}'
+            OD_MODEL_NAME=model_name
+            DL_MODEL_NAME=model_name
+            SPLIT_MODEL = False
+            WRITE_TIMELINE = True
+            LIMIT_IMAGES = 20
+            if optimized:
+                USE_OPTIMIZED=True
+            else:
+                USE_OPTIMIZED=False
+            if single_class:
+                NUM_CLASSES=1
+            else:
+                NUM_CLASSES=90
             def __init__(self):
                 super(TestConfig, self).__init__(type)
-                self.SPLIT_MODEL = False
-                self.WRITE_TIMELINE = True
-                self.MODEL_NAME=model_name
-                if optimized:
-                    self.USE_OPTIMIZED=True
-                else:
-                    self.USE_OPTIMIZED=False
-                if single_class:
-                    self.NUM_CLASSES=1
-                else:
-                    self.NUM_CLASSES=90
         return TestConfig()
 
 # Read sequentail Models or Gather all Models from models/

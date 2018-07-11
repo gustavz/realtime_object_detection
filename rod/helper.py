@@ -215,7 +215,7 @@ class ImageStream(InputStream):
         return self.frame
 
     def isActive(self):
-        if self.images and not self.stopped:
+        if self.frames and not self.stopped:
             return True
         else:
             return False
