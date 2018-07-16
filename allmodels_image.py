@@ -26,8 +26,8 @@ def create_test_config(type,model_name, optimized=False, single_class=False):
             OD_MODEL_NAME=model_name
             DL_MODEL_NAME=model_name
             SPLIT_MODEL = False
-            WRITE_TIMELINE = True
-            LIMIT_IMAGES = 20
+            WRITE_TIMELINE = False
+            LIMIT_IMAGES = 50
             if optimized:
                 USE_OPTIMIZED=True
             else:

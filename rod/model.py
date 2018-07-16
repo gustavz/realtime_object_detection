@@ -11,6 +11,7 @@ import tarfile
 import copy
 import os
 import sys
+import time
 from skimage import measure
 import six.moves.urllib as urllib
 from tensorflow.core.framework import graph_pb2
@@ -255,21 +256,20 @@ class Model(object):
         """
         assert node in ['detection_node','deeplab_node'], "only 'detection_node' and 'deeplab_node' supported"
         import rospy
-        from rod.ros import ROSStream, DetectionPublisher, SegmentationPublisher
+        from ros import ROSStream, DetectionPublisher, SegmentationPublisher
         rospy.init_node(node)
         self._input_stream = ROSStream(self.config.ROS_INPUT)
         if node is 'detection_node':
             self._ros_publisher = DetectionPublisher()
         if node is 'deeplab_node':
             self._ros_publisher = SegmentationPublisher()
-
         # check for frame
         while True:
-            self.frame = input_image.read()
+            self.frame = self._input_stream.read()
             time.sleep(1)
             print("...waiting for ROS image")
             if self.frame is not None:
-                self.stream_height,self.stream_width = frame.shape[0:2]
+                self.stream_height,self.stream_width = self.frame.shape[0:2]
                 break
 
     def prepare_timeliner(self):
@@ -365,9 +365,9 @@ class ObjectDetectionModel(Model):
     def prepare_model(self,input_type):
         """
         prepares Object_Detection model
-        input_type: must be 'image' or 'video'
+        input_type: must be 'image', 'video', or 'ros'
         """
-        assert input_type in ['image','video'], "only 'image' or 'video' input possible"
+        assert input_type in ['image','video','ros'], "only 'image','video' and 'ros' input possible"
         super(ObjectDetectionModel, self).prepare_model()
         self.input_type = input_type
         # Tracker
@@ -523,7 +523,7 @@ class ObjectDetectionModel(Model):
 
         # Publish ROS Message
         if self.input_type is 'ros':
-            self._ros_publisher.publish(self.boxes,self.scores,self.classes,self.num,self.category_index,self.frame.shape,self.masks,fps.fps_local())
+            self._ros_publisher.publish(self.boxes,self.scores,self.classes,self.num,self.category_index,self.frame.shape,self.masks,self.fps.fps_local())
 
 
 
@@ -549,9 +549,9 @@ class DeepLabModel(Model):
     def prepare_model(self,input_type):
         """
         prepares DeepLab model
-        input_type: must be 'image' or 'video'
+        input_type: must be 'image', 'video', or 'ros'
         """
-        assert input_type in ['image','video'], "only image or video input possible"
+        assert input_type in ['image','video','ros'], "only image, video or ros input possible"
         super(DeepLabModel, self).prepare_model()
         self.input_type = input_type
         # Tracker
@@ -610,4 +610,4 @@ class DeepLabModel(Model):
 
         # publish ros
         if self.input_type is 'ros':
-            self._ros_publisher.publish(self.boxes,self.labels,self.masks,self.frame.shape,fps.fps_local())
+            self._ros_publisher.publish(self.boxes,self.labels,self.masks,self.frame.shape,self.fps.fps_local())
