@@ -79,3 +79,4 @@ currently supports `.xml`, `.mat`, `.csv`, `.record`, `.txt` annotations
 - [Mobile_Mask_RCNN](https://github.com/GustavZ/Mobile_Mask_RCNN): a Keras Model for training Mask R-CNN for mobile deployment
 - [tf_training](https://github.com/GustavZ/tf_training): Train Mobile Mask R-CNN Models on AWS Cloud
 - [tf_models](https://github.com/GustavZ/tf_models): My `tensorflow/models` fork which includes `yolov2` and `mask_rcnn_mobilenet_v1_coco`
+- [eetfm_automation](https://github.com/GustavZ/eetfm_automation): Export and Evaluation of TensorFlow Models Automation based on the Object Detection API
