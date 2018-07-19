@@ -347,6 +347,7 @@ class Visualizer(object):
                 scores,
                 category_index,
                 instance_masks=masks,
+                min_score_thresh=self.config.PRINT_TH,
                 use_normalized_coordinates=True)
                 if self.config.VIS_FPS:
                     self._draw_text_on_image("fps: {}".format(fps), (5,20))
