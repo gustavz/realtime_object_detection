@@ -299,10 +299,14 @@ class Model(object):
         if self._first_track:
             self._trackers = []
             self._tracker_boxes = self.boxes
+            num_tracked = 0
             for box in self.boxes[~np.all(self.boxes == 0, axis=1)]:
                     self._tracker.init(conv_detect2track(box,self._input_stream.real_width,
                                         self._input_stream.real_height),self.tracker_frame)
                     self._trackers.append(self._tracker)
+                    num_tracked += 1
+                    if num_tracked <= self.config.NUM_TRACKERS:
+                        break
             self._first_track = False
 
         for idx,self._tracker in enumerate(self._trackers):
@@ -355,11 +359,11 @@ class ObjectDetectionModel(Model):
                                             (self.config.WIDTH,self.config.HEIGHT)).start()
             self.stream_height = self.config.HEIGHT
             self.stream_width = self.config.WIDTH
-            # Timeliner for image detection
-            if self.config.WRITE_TIMELINE:
-                self.prepare_timeliner()
         elif self.input_type is 'ros':
             self.prepare_ros('detection_node')
+        # Timeliner for image detection
+        if self.config.WRITE_TIMELINE:
+            self.prepare_timeliner()
 
 
     def prepare_model(self,input_type):
@@ -509,13 +513,13 @@ class ObjectDetectionModel(Model):
                     self.run_split_sess()
             else:
                 self.run_default_sess()
-                if self.config.WRITE_TIMELINE and self.input_type is 'image':
+                if self.config.WRITE_TIMELINE:
                     self.timeliner.write_timeline(self._run_metadata.step_stats,
                                             '{}/timeline_{}.json'.format(
                                             self.config.RESULT_PATH,self.config.DISPLAY_NAME))
             self.reformat_detection()
             # Activate Tracker
-            if self.config.USE_TRACKER and self.num <= self.config.NUM_TRACKERS and self.input_type is 'video':
+            if self.config.USE_TRACKER and (self.input_type is not 'image'):
                 self.activate_tracker()
         # Tracking
         else:
