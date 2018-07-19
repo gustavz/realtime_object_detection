@@ -42,6 +42,9 @@ class Model(object):
         self._run_options = tf.RunOptions(trace_level=tf.RunOptions.NO_TRACE)
         self._run_metadata = False
         self._wait_thread = False
+        self._is_imageD = False
+        self._is_videoD = False
+        self._is_rosD = False
         print ('> Model: {}'.format(self.config.MODEL_PATH))
 
     def download_model(self):
@@ -247,7 +250,7 @@ class Model(object):
         self.detection = self._visualizer.visualize_detection(self.frame,self.boxes,
                                                             self.classes,self.scores,
                                                             self.masks,self.fps.fps_local(),
-                                                            self.category_index)
+                                                            self.category_index,self._is_imageD)
 
     def prepare_ros(self,node):
         """
@@ -257,6 +260,7 @@ class Model(object):
         assert node in ['detection_node','deeplab_node'], "only 'detection_node' and 'deeplab_node' supported"
         import rospy
         from ros import ROSStream, DetectionPublisher, SegmentationPublisher
+        self._is_rosD = True
         rospy.init_node(node)
         self._input_stream = ROSStream(self.config.ROS_INPUT)
         if node is 'detection_node':
@@ -350,11 +354,13 @@ class ObjectDetectionModel(Model):
         gets called by prepare model
         """
         if self.input_type is 'video':
+            self._is_videoD = True
             self._input_stream = VideoStream(self.config.VIDEO_INPUT,self.config.WIDTH,
                                                     self.config.HEIGHT).start()
             self.stream_height = self._input_stream.real_height
             self.stream_width = self._input_stream.real_width
         elif self.input_type is 'image':
+            self._is_imageD = True
             self._input_stream = ImageStream(self.config.IMAGE_PATH,self.config.LIMIT_IMAGES,
                                             (self.config.WIDTH,self.config.HEIGHT)).start()
             self.stream_height = self.config.HEIGHT
@@ -519,14 +525,14 @@ class ObjectDetectionModel(Model):
                                             self.config.RESULT_PATH,self.config.DISPLAY_NAME))
             self.reformat_detection()
             # Activate Tracker
-            if self.config.USE_TRACKER and (self.input_type is not 'image'):
+            if self.config.USE_TRACKER and not self._is_imageD:
                 self.activate_tracker()
         # Tracking
         else:
             self.run_tracker()
 
         # Publish ROS Message
-        if self.input_type is 'ros':
+        if self._is_rosD:
             self._ros_publisher.publish(self.boxes,self.scores,self.classes,self.num,self.category_index,self.frame.shape,self.masks,self.fps.fps_local())
 
 
@@ -540,8 +546,10 @@ class DeepLabModel(Model):
 
     def prepare_input_stream(self):
         if self.input_type is 'video':
+            self._is_videoD = True
             self._input_stream = VideoStream(self.config.VIDEO_INPUT,self.config.WIDTH,self.config.HEIGHT).start()
         elif self.input_type is 'image':
+            self._is_imageD = True
             self._input_stream = ImageStream(self.config.IMAGE_PATH,self.config.LIMIT_IMAGES).start()
             if self.config.WRITE_TIMELINE:
                 self.prepare_timeliner()
@@ -583,7 +591,7 @@ class DeepLabModel(Model):
                                             feed_dict={'ImageTensor:0':
                                             [self._visualizer.convertRGB_image(self.frame)]},
                                             options=self._run_options, run_metadata=self._run_metadata)
-            if self.config.WRITE_TIMELINE and self.input_type is 'image':
+            if self.config.WRITE_TIMELINE:
                 self._timeliner.write_timeline(self._run_metadata.step_stats,
                                         '{}/timeline_{}.json'.format(
                                         self.config.RESULT_PATH,self.config.DISPLAY_NAME))
@@ -607,11 +615,11 @@ class DeepLabModel(Model):
             self.scores = self.labels
             self.masks = seg_map
             # Activate Tracker
-            if self.config.USE_TRACKER and self.num <= self.config.NUM_TRACKERS and self.input_type is 'video':
+            if self.config.USE_TRACKER and not self._is_imageD:
                 self.activate_tracker()
         else:
             self.run_tracker()
 
         # publish ros
-        if self.input_type is 'ros':
+        if self._is_rosD:
             self._ros_publisher.publish(self.boxes,self.labels,self.masks,self.frame.shape,self.fps.fps_local())
