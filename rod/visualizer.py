@@ -36,7 +36,6 @@ class Visualizer(object):
         (128, 128, 0),#Olive
         (255, 215, 180),#Coral
         (0, 0, 128),#Navy
-        (255, 255, 255),#White
         (60, 180, 75),#Green
         (230, 25, 75),#Red
         (255, 225, 25),#Yellow
@@ -57,7 +56,6 @@ class Visualizer(object):
         (128, 128, 0),#Olive
         (255, 215, 180),#Coral
         (0, 0, 128),#Navy
-        (255, 255, 255),#White
         (60, 180, 75),#Green
         (230, 25, 75),#Red
         (255, 225, 25),#Yellow
@@ -78,7 +76,6 @@ class Visualizer(object):
         (128, 128, 0),#Olive
         (255, 215, 180),#Coral
         (0, 0, 128),#Navy
-        (255, 255, 255),#White
         (60, 180, 75),#Green
         (230, 25, 75),#Red
         (255, 225, 25),#Yellow
@@ -99,7 +96,7 @@ class Visualizer(object):
         (128, 128, 0),#Olive
         (255, 215, 180),#Coral
         (0, 0, 128),#Navy
-        (255, 255, 255),#White
+        (60, 180, 75),#Green
         ]
 
     STANDARD_COLORS_ARRAY = np.asarray(STANDARD_COLORS).astype(np.uint8)
@@ -286,7 +283,7 @@ class Visualizer(object):
             print("> User exit request")
             self.stopped = True
         elif k == ord('s'): # wait for 's' key to save screenshot
-            save_image(self.image)
+            self.save_image()
 
 
 
@@ -361,7 +358,8 @@ class Visualizer(object):
             if self.config.VISUALIZE:
                 for box,id,label in zip(boxes,classes,scores): #classes=ids,scores=labels
                     self._draw_single_box_on_image(box,label,id)
-                self._draw_mask_on_image(masks) #masks = seg_map
+                if masks is not None:
+                    self._draw_mask_on_image(masks) #masks = seg_map
                 if self.config.VIS_FPS:
                     self._draw_text_on_image("fps: {}".format(fps),(5,20))
                 self.show_image()

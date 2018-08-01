@@ -330,7 +330,7 @@ class Model(object):
         activates KCF tracker
         deactivates mask detection
         """
-        self.masks = None
+        #self.masks = None
         self.tracker_frame = self.frame
         self._track = True
         self._first_track = True
