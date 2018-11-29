@@ -441,7 +441,7 @@ class TimeLiner(object):
     def save(self, f_name):
         with open(f_name, 'w') as f:
             json.dump(self._timeline_dict, f)
-                        
+
     def write_timeline(self,step_stats,file_name):
         fetched_timeline = timeline.Timeline(step_stats)
         chrome_trace = fetched_timeline.generate_chrome_trace_format()
