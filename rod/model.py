@@ -21,7 +21,7 @@ from rod.visualizer import Visualizer
 from rod.tf_utils import reframe_box_masks_to_image_masks
 from rod.config import Config
 from rod.visualizer import Visualizer
-import tf_utils
+import rod.tf_utils as tf_utils
 
 ##################################
 ########## Model Class ###########
